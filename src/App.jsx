@@ -791,9 +791,6 @@ function BanterPage({chat,onSend,onRead}){
 }
 
 // ─── APP SHELL ────────────────────────────────────────────────────────────────
-const NAV=[{id:'matchday',l:'Αγώνες',icon:'⚽'},{id:'league',l:'League',icon:'🏆'},{id:'predict',l:'Predict',icon:'✏️'},{id:'history',l:'History',icon:'📋'},{id:'banter',l:'Ιερά Εξέταση',icon:'⚖️'}]
-
-
 // ─── ADD PLAYER MODAL ────────────────────────────────────────────────────────
 function AddPlayerModal({ onClose, onAdded }) {
   const [name,  setName]  = useState('')
@@ -834,46 +831,89 @@ function AddPlayerModal({ onClose, onAdded }) {
   )
 }
 
-export default function App({user,onLogout}){
+
+// ─── DESKTOP SIDEBAR ─────────────────────────────────────────────────────────
+function LeaderSidebar({ predictions, results }) {
+  const board = computeLeaderboard(ALL_FIXTURES, predictions, results)
+  const maxPts = ALL_FIXTURES.filter(m=>results?.[m.id]!=null).length*2
+  return (
+    <div>
+      {/* Mini leaderboard */}
+      <div style={{background:SURF,border:`1px solid ${LINE}`,borderRadius:14,padding:'14px 16px',marginBottom:16}}>
+        <div style={{fontSize:10,fontWeight:700,letterSpacing:'.1em',textTransform:'uppercase',color:MUTED,marginBottom:12}}>Κατάταξη</div>
+        {board.map((row,i)=>{
+          const p=PC[row.player]
+          return <div key={row.player} style={{display:'flex',alignItems:'center',gap:10,marginBottom:i<board.length-1?10:0}}>
+            <span style={{fontSize:18,width:24,textAlign:'center'}}>{['🥇','🥈','🥉'][i]}</span>
+            <div style={{width:32,height:32,borderRadius:'50%',background:p.p,display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:900,color:'#08090d'}}>{PLAYER_NAMES[row.player].substring(0,1)}</div>
+            <div style={{flex:1}}>
+              <div style={{fontSize:13,fontWeight:700,color:TEXT}}>{PLAYER_NAMES[row.player]}</div>
+              <div style={{fontSize:10,color:MUTED}}>{row.exact}🎯 {row.correct}✓</div>
+            </div>
+            <div style={{textAlign:'right'}}>
+              <div style={{fontSize:20,fontWeight:900,color:p.p,fontVariantNumeric:'tabular-nums'}}>{row.pts}</div>
+              <div style={{fontSize:9,color:MUTED}}>pts{maxPts>0?`/${maxPts}`:''}</div>
+            </div>
+          </div>
+        })}
+      </div>
+      {/* Graph */}
+      <H2HGraph predictions={predictions} results={results}/>
+    </div>
+  )
+}
+
+// ─── APP SHELL (RESPONSIVE) ─────────────────────────────────────────────────
+const NAV=[
+  {id:'matchday',l:'Αγώνες',  icon:'⚽'},
+  {id:'league',  l:'League',  icon:'🏆'},
+  {id:'predict', l:'Predict', icon:'✏️'},
+  {id:'history', l:'History', icon:'📋'},
+  {id:'banter',  l:'Banter',  icon:'💬'},
+]
+
+function useBreakpoint() {
+  const [bp, setBp] = useState(() => {
+    if (typeof window === 'undefined') return 'mobile'
+    return window.innerWidth >= 1024 ? 'desktop' : window.innerWidth >= 768 ? 'tablet' : 'mobile'
+  })
+  useEffect(() => {
+    const fn = () => setBp(window.innerWidth >= 1024 ? 'desktop' : window.innerWidth >= 768 ? 'tablet' : 'mobile')
+    window.addEventListener('resize', fn)
+    return () => window.removeEventListener('resize', fn)
+  }, [])
+  return bp
+}
+
+export default function App({ user, onLogout }) {
   const [screen,  setScreen]  = useState('matchday')
-  const [showGuide,setShowGuide] = useState(false)
-  const [showAddPlayer,setShowAddPlayer] = useState(false)
-  const [state,   setState]   = useState({predictions:{},results:{},chat:[]})
+  const [state,   setState]   = useState({ predictions:{}, results:{}, chat:[] })
   const [loading, setLoading] = useState(true)
   const [syncing, setSyncing] = useState(false)
   const [syncOk,  setSyncOk]  = useState(true)
-  const [showPwModal, setShowPwModal] = useState(false)
-  const [unreadChat,  setUnreadChat]  = useState(0)
-  const [lastChatLen, setLastChatLen] = useState(0)
-  const poll=useRef()
+  const [showGuide, setShowGuide] = useState(false)
+  const [showAddPlayer, setShowAddPlayer] = useState(false)
+  const poll = useRef()
+  const bp   = useBreakpoint()
+  const isDesktop = bp === 'desktop'
+  const isTablet  = bp === 'tablet'
+  const isMobile  = bp === 'mobile'
 
-  const load=useCallback(async()=>{
-    try{
-      const s=await api.getState()
+  const load = useCallback(async () => {
+    try {
+      const s = await api.getState()
       setState({
         ...s,
-        predictions:{...SEEDED_PREDS,...s.predictions,...Object.fromEntries(Object.keys({...SEEDED_PREDS,...s.predictions}).map(mid=>[mid,{...(SEEDED_PREDS[mid]||{}),...(s.predictions[mid]||{})}]))},
-        results:{...SEEDED_RES,...s.results},
+        predictions:{ ...SEEDED_PREDS,...s.predictions,
+          ...Object.fromEntries(Object.keys({...SEEDED_PREDS,...s.predictions}).map(mid=>[mid,{...(SEEDED_PREDS[mid]||{}),...(s.predictions[mid]||{})}])) },
+        results:{ ...SEEDED_RES, ...s.results },
       })
-      // Track unread chat
-      const chatLen=(s.chat||[]).length
-      setUnreadChat(prev=>{
-        if(screen==='banter') return 0
-        if(chatLen>lastChatLen) return prev+(chatLen-lastChatLen)
-        return prev
-      })
-      setLastChatLen(chatLen)
       setSyncOk(true)
-    }catch{setSyncOk(false)}finally{setLoading(false)}
-  },[screen,lastChatLen])
+    } catch { setSyncOk(false) }
+    finally { setLoading(false) }
+  },[])
 
-  useEffect(()=>{load();poll.current=setInterval(load,15000);return()=>clearInterval(poll.current)},[load])
-
-  // Reset unread when opening banter
-  function handleNav(id){
-    setScreen(id)
-    if(id==='banter') setUnreadChat(0)
-  }
+  useEffect(()=>{ load(); poll.current=setInterval(load,15000); return()=>clearInterval(poll.current) },[load])
 
   async function savePrediction(matchId,h,a,qual,predOT,otH,otA,predPen,penH,penA){
     setSyncing(true)
@@ -892,78 +932,133 @@ export default function App({user,onLogout}){
 
   async function handleLogout(){await api.logout();clearAuth();onLogout()}
 
-  if(loading) return <div style={{minHeight:'100vh',background:BG,display:'flex',alignItems:'center',justifyContent:'center',flexDirection:'column',gap:16,fontFamily:"'Space Grotesk',system-ui,sans-serif"}}>
-    <div style={{fontSize:24,fontWeight:700,letterSpacing:'.08em',color:GREEN}}>ΚΟΥΒΑΔΕΙΡΟΣ</div>
-    <Spinner size={28}/>
-  </div>
+  if(showGuide) return <Guide onBack={()=>setShowGuide(false)}/>
 
-  const pc=PC[user.id]||PC.boikos
+  if(loading) return(
+    <div style={{minHeight:'100dvh',background:BG,display:'flex',alignItems:'center',justifyContent:'center',flexDirection:'column',gap:16}}>
+      <div style={{fontSize:24,fontWeight:800,letterSpacing:'.06em',color:GREEN}}>ΚΟΥΒΑΔΕΙΡΟΣ</div>
+      <Spinner size={28}/>
+    </div>
+  )
 
+  const pc = PC[user.id] || PC.boikos
   const pages={
     matchday:<MatchdayPage predictions={state.predictions} results={state.results} onRefresh={load}/>,
     league:  <LeaguePage   predictions={state.predictions} results={state.results}/>,
     predict: <PredictPage  predictions={state.predictions} currentUser={user} onSave={savePrediction}/>,
     history: <HistoryPage  predictions={state.predictions} results={state.results}/>,
-    banter:  <BanterPage   chat={state.chat} onSend={sendChat} onRead={()=>setUnreadChat(0)}/>,
+    banter:  <BanterPage   chat={state.chat} onSend={sendChat}/>,
   }
 
-  return <div style={{background:BG,minHeight:'100svh',display:'flex',flexDirection:'column',width:'100%',maxWidth:'min(480px,100vw)',margin:'0 auto',fontFamily:"'Space Grotesk',system-ui,sans-serif",color:TEXT,fontSize:'clamp(13px,3vw,16px)'}}>
-    {/* Header */}
-    <div style={{background:'#0a0b0f',padding:'10px 16px',display:'flex',alignItems:'center',justifyContent:'space-between',borderBottom:`1px solid ${LINE}`,position:'sticky',top:0,zIndex:10}}>
+  // ── HEADER ───────────────────────────────────────────────────────────────────
+  const Header = () => (
+    <div style={{ background:'#0a0b0f', borderBottom:`1px solid ${LINE}`,
+      display:'flex', alignItems:'center', justifyContent:'space-between',
+      padding: isDesktop ? '0 32px' : '0 16px',
+      height: isDesktop ? 56 : 48,
+      position:'sticky', top:0, zIndex:20, flexShrink:0 }}>
+      {/* Brand */}
       <div style={{display:'flex',alignItems:'center',gap:10}}>
-        <div style={{fontSize:'clamp(14px,4vw,17px)',fontWeight:800,letterSpacing:'-.01em',color:TEXT}}>ΚΟΥΒΑΔΕΙΡΟΣ</div>
-        <div style={{fontSize:9,fontWeight:700,letterSpacing:'.08em',color:GREEN,background:`${GREEN}15`,border:`1px solid ${GREEN}35`,borderRadius:4,padding:'2px 6px'}}>26/27</div>
+        <div style={{fontSize:isDesktop?18:15,fontWeight:800,letterSpacing:'-.01em',color:TEXT}}>ΚΟΥΒΑΔΕΙΡΟΣ</div>
+        <div style={{fontSize:9,fontWeight:700,letterSpacing:'.08em',color:GREEN,background:`${GREEN}18`,border:`1px solid ${GREEN}35`,borderRadius:4,padding:'2px 6px'}}>26/27</div>
       </div>
-      <div style={{display:'flex',alignItems:'center',gap:10}}>
-        <div style={{width:7,height:7,borderRadius:'50%',background:syncOk?GREEN:RED,animation:syncing?'pulse-dot .7s infinite':undefined}}/>
-        {/* User avatar + pw change */}
-        <button onClick={()=>setShowPwModal(true)} title="Αλλαγή κωδικού" style={{display:'flex',alignItems:'center',gap:7,background:'none',border:'none',cursor:'pointer',padding:0}}>
-          <div style={{width:28,height:28,borderRadius:'50%',background:pc.p,display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:900,color:BG}}>{user.name.substring(0,1)}</div>
-          <span style={{fontSize:11,fontWeight:700,color:pc.p}}>{user.name}</span>
+
+      {/* Desktop nav — inline in header */}
+      {isDesktop && (
+        <div style={{display:'flex',gap:4}}>
+          {NAV.map(n=>(
+            <button key={n.id} onClick={()=>setScreen(n.id)} style={{
+              display:'flex',alignItems:'center',gap:7,padding:'8px 14px',
+              borderRadius:8, border:'none',
+              background:screen===n.id?'rgba(255,255,255,.1)':'transparent',
+              color:screen===n.id?TEXT:MUTED,cursor:'pointer',fontSize:13,fontWeight:600,
+              borderBottom:screen===n.id?`2px solid ${GREEN}`:'2px solid transparent',
+              transition:'all .15s'
+            }}>
+              <span>{n.icon}</span>{n.l}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Right controls */}
+      <div style={{display:'flex',alignItems:'center',gap:isDesktop?12:8}}>
+        <div style={{width:7,height:7,borderRadius:'50%',background:syncOk?GREEN:RED,animation:syncing?'pulse-d .7s infinite':undefined}}/>
+        {user?.role==='admin' && (
+          <button onClick={()=>setShowAddPlayer(true)} title="Προσθήκη παίκτη"
+            style={{background:'none',border:'none',cursor:'pointer',color:MUTED,display:'flex',alignItems:'center',padding:4}}>
+            <i className="ti ti-user-plus" style={{fontSize:isDesktop?17:15}}/>
+          </button>
+        )}
+        <button onClick={()=>setShowGuide(true)} title="Οδηγός"
+          style={{background:'none',border:'none',cursor:'pointer',color:MUTED,display:'flex',alignItems:'center',padding:4}}>
+          <i className="ti ti-info-circle" style={{fontSize:isDesktop?17:15}}/>
         </button>
-        <button onClick={handleLogout} title="Αποσύνδεση" style={{background:'rgba(255,77,109,.15)',border:`1px solid rgba(255,77,109,.3)`,borderRadius:8,cursor:'pointer',color:RED,fontSize:11,fontWeight:700,padding:'5px 9px',display:'flex',alignItems:'center',gap:4}}>
-          <i className="ti ti-logout" style={{fontSize:13}}/>
-          <span>Έξοδος</span>
+        <div style={{display:'flex',alignItems:'center',gap:7}}>
+          <div style={{width:isDesktop?32:26,height:isDesktop?32:26,borderRadius:'50%',background:pc.p,
+            display:'flex',alignItems:'center',justifyContent:'center',fontSize:isDesktop?13:11,fontWeight:900,color:'#08090d'}}>
+            {user.name.substring(0,1)}
+          </div>
+          {isDesktop && <span style={{fontSize:12,fontWeight:700,color:pc.p}}>{user.name}</span>}
+        </div>
+        <button onClick={handleLogout} style={{background:'none',border:'none',cursor:'pointer',color:MUTED,display:'flex',alignItems:'center',padding:4}}>
+          <i className="ti ti-logout" style={{fontSize:isDesktop?17:15}}/>
         </button>
       </div>
     </div>
+  )
 
-    {/* Content */}
-    <div style={{flex:1,overflowY:'auto'}}>{pages[screen]}</div>
-
-    {/* Bottom nav */}
-    <div style={{background:'#0a0b0f',borderTop:`1px solid ${LINE}`,display:'flex',justifyContent:'space-around',padding:'7px 0 max(10px,env(safe-area-inset-bottom))',position:'sticky',bottom:0,width:'100%',zIndex:10}}>
+  // ── BOTTOM NAV (mobile/tablet only) ─────────────────────────────────────────
+  const BottomNav = () => (
+    <div style={{ background:'#0a0b0f', borderTop:`1px solid ${LINE}`,
+      display:'flex', justifyContent:'space-around',
+      padding:`6px 0 ${isMobile?'max(8px,env(safe-area-inset-bottom))':'8px'}`,
+      position:'fixed', bottom:0, left:0, right:0, zIndex:20 }}>
       {NAV.map(n=>{
         const active=screen===n.id
-        const isBanter=n.id==='banter'
-        return <button key={n.id} onClick={()=>handleNav(n.id)} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:2,padding:'3px 4px',background:'none',border:'none',cursor:'pointer',minWidth:44,position:'relative',flex:1}}>
-          <span style={{fontSize:'clamp(16px,4vw,20px)',filter:active?undefined:'grayscale(.5) opacity(.45)'}}>{n.icon}</span>
-          {isBanter&&unreadChat>0&&<div style={{position:'absolute',top:-2,right:'calc(50% - 16px)',width:16,height:16,background:RED,borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',fontSize:9,fontWeight:800,color:'#fff',animation:'pulse-dot .8s ease-in-out infinite'}}>{unreadChat>9?'9+':unreadChat}</div>}
-          <span style={{fontSize:'clamp(7px,1.8vw,9px)',fontWeight:700,letterSpacing:'.03em',color:active?GREEN:MUTED,textTransform:'uppercase',lineHeight:1.1,textAlign:'center'}}>{n.l}</span>
-          {active&&<div style={{width:16,height:2,background:GREEN,borderRadius:1,marginTop:1}}/>}
-        </button>
+        return (
+          <button key={n.id} onClick={()=>setScreen(n.id)}
+            style={{display:'flex',flexDirection:'column',alignItems:'center',gap:3,
+              padding:'3px 8px',background:'none',border:'none',cursor:'pointer',minWidth:44,flex:1}}>
+            <span style={{fontSize:isTablet?22:19,filter:active?undefined:'grayscale(.6) opacity(.5)'}}>{n.icon}</span>
+            <span style={{fontSize:isTablet?10:9,fontWeight:700,letterSpacing:'.04em',color:active?GREEN:MUTED,textTransform:'uppercase'}}>{n.l}</span>
+            {active&&<div style={{width:16,height:2,background:GREEN,borderRadius:1}}/>}
+          </button>
+        )
       })}
     </div>
+  )
 
-    {showPwModal&&<ChangePasswordModal user={user} onClose={()=>setShowPwModal(false)}/>}
+  // ── DESKTOP SIDEBAR LAYOUT ──────────────────────────────────────────────────
+  if (isDesktop) {
+    return (
+      <div style={{display:'flex',flexDirection:'column',minHeight:'100dvh',background:BG,fontFamily:"'Space Grotesk',system-ui,sans-serif",color:TEXT}}>
+        {showAddPlayer && user?.role==='admin' && <AddPlayerModal onClose={()=>setShowAddPlayer(false)} onAdded={load}/>}
+        <Header/>
+        <div style={{flex:1,display:'grid',gridTemplateColumns:'var(--sidebar-w,300px) 1fr',maxWidth:1280,width:'100%',margin:'0 auto',padding:'24px 32px',gap:24,alignItems:'start'}}>
+          {/* Left sidebar: leaderboard + graph */}
+          <div style={{position:'sticky',top:80}}>
+            <LeaderSidebar predictions={state.predictions} results={state.results}/>
+          </div>
+          {/* Main content */}
+          <div style={{minWidth:0}}>
+            {pages[screen]}
+          </div>
+        </div>
+      </div>
+    )
+  }
 
-    <style>{`
-      @keyframes spin{to{transform:rotate(360deg)}}
-      @keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.3}}
-      @keyframes slide-up{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-      @keyframes glow-pulse{0%,100%{box-shadow:0 0 12px ${GREEN}20}50%{box-shadow:0 0 24px ${GREEN}40}}
-      *{-webkit-tap-highlight-color:transparent;box-sizing:border-box;}
-      ::-webkit-scrollbar{display:none}
-      input::placeholder{color:rgba(255,255,255,.3)}
-      button:disabled{opacity:.35;cursor:not-allowed}
-      select option{background:#111318}
-      @media(min-width:481px){
-        body>div{max-width:480px;margin:0 auto}
-      }
-      @media(min-width:900px){
-        body{background:#05060a}
-        #root>div{box-shadow:0 0 0 1px rgba(255,255,255,.06),0 24px 80px rgba(0,0,0,.6)}
-      }
-    `}</style>
-  </div>
+  // ── MOBILE / TABLET ─────────────────────────────────────────────────────────
+  return (
+    <div style={{background:BG,minHeight:'100dvh',display:'flex',flexDirection:'column',
+      maxWidth:isTablet?768:'100%',margin:'0 auto',fontFamily:"'Space Grotesk',system-ui,sans-serif",color:TEXT}}>
+      {showAddPlayer && user?.role==='admin' && <AddPlayerModal onClose={()=>setShowAddPlayer(false)} onAdded={load}/>}
+      <Header/>
+      <div style={{flex:1,overflowY:'auto',paddingBottom:isTablet?72:64}}>
+        {pages[screen]}
+      </div>
+      <BottomNav/>
+    </div>
+  )
 }

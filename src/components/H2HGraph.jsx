@@ -1,378 +1,256 @@
-import { useState, useEffect, useRef } from 'react'
-import { ALL_FIXTURES, PLAYERS, PLAYER_NAMES, PCOL, scoreMatch } from '../lib/data'
+import { useState, useRef } from 'react'
+import { ALL_FIXTURES, PLAYERS, PLAYER_NAMES, scoreMatch } from '../lib/data'
 
 const PC = {
-  boikos:        { color: '#ff2244', glow: '#ff224460' },
-  mavromichalis: { color: '#4d9fff', glow: '#4d9fff60' },
-  chousiadas:    { color: '#ff6b35', glow: '#ff6b3560' },
+  boikos:        { color:'#ff2244', glow:'#ff224460', area:'#ff224420' },
+  mavromichalis: { color:'#4d9fff', glow:'#4d9fff60', area:'#4d9fff20' },
+  chousiadas:    { color:'#ff6b35', glow:'#ff6b3560', area:'#ff6b3520' },
 }
 
-// Build timeline: cumulative pts per player after each played match
 function buildTimeline(predictions, results) {
   const played = ALL_FIXTURES
     .filter(m => results?.[m.id] != null)
-    .sort((a, b) => new Date(a.kickoff) - new Date(b.kickoff))
-
-  if (!played.length) return { events: [], maxPts: 0 }
-
-  let cum = { boikos: 0, mavromichalis: 0, chousiadas: 0 }
+    .sort((a,b) => new Date(a.kickoff) - new Date(b.kickoff))
+  if (!played.length) return { events:[], maxPts:0 }
+  let cum = { boikos:0, mavromichalis:0, chousiadas:0 }
   const events = played.map(m => {
     const actual = results[m.id]
+    const matchT = m.home.substring(0,3)+' vs '+m.away.substring(0,3)
     PLAYERS.forEach(p => {
-      const pred = predictions?.[m.id]?.[p]
-      const sc = pred ? scoreMatch(pred, actual) : null
+      const sc = scoreMatch(predictions?.[m.id]?.[p], actual)
       cum[p] += sc?.points ?? 0
     })
-    return {
-      id: m.id,
-      label: matchLabel(m),
-      pts: { ...cum },
-      scores: Object.fromEntries(PLAYERS.map(p => {
-        const pred = predictions?.[m.id]?.[p]
-        const sc = pred ? scoreMatch(pred, actual) : null
-        return [p, { pred, sc }]
-      })),
-      actual,
-      home: m.home, away: m.away,
-    }
+    return { id:m.id, label:matchT, pts:{...cum},
+      scores: Object.fromEntries(PLAYERS.map(p=>[p,{
+        pred:predictions?.[m.id]?.[p],
+        sc:scoreMatch(predictions?.[m.id]?.[p],actual)
+      }])), actual }
   })
-
-  const maxPts = Math.max(...PLAYERS.map(p => cum[p]), 2)
-  return { events, maxPts, final: cum }
+  const maxPts = Math.max(...PLAYERS.map(p=>cum[p]), 2)
+  return { events, maxPts, final:cum }
 }
 
-function matchLabel(m) {
-  const t = { OLY:'Ολυμ', AEK:'ΑΕΚ', PAOK:'ΠΑΟΚ', PAO:'ΠΑΟ', ARI:'Άρης',
-    ATR:'Ατρ', KIF:'Κηφ', LEV:'Λεβ', OFI:'ΟΦΗ', PNE:'Παν', VOL:'Βόλ',
-    KAL:'Καλ', IRA:'Ηρακ', AST:'Αστ', DYN:'Dyn', NEC:'NEC', PKS:'Pks' }
-  return `${t[m.home]||m.home} vs ${t[m.away]||m.away}`
+// SVG burger — scales with league progress
+function BurgerBg({ progress, W, H }) {
+  const cx = W*0.72, cy = H*0.5
+  const base = Math.max(40, Math.min(130, 40 + progress * 110))
+  const bw = base*1.4, bh = base
+  const op = 0.06 + progress * 0.1
+
+  return (
+    <g opacity={op} style={{pointerEvents:'none'}}>
+      {/* Top bun */}
+      <ellipse cx={cx} cy={cy - bh*0.35} rx={bw*0.52} ry={bh*0.28} fill="#c8860a"/>
+      <ellipse cx={cx} cy={cy - bh*0.42} rx={bw*0.44} ry={bh*0.18} fill="#e8a020"/>
+      {/* Sesame seeds */}
+      {[[0,-0.5],[0.25,-0.45],[-0.2,-0.47],[0.1,-0.38],[-0.15,-0.35]].map(([dx,dy],i)=>(
+        <ellipse key={i} cx={cx+dx*bw*0.55} cy={cy+dy*bh} rx={bw*0.03} ry={bw*0.015} fill="#fff" opacity="0.5"/>
+      ))}
+      {/* Cheese */}
+      <rect x={cx-bw*0.52} y={cy-bh*0.1} width={bw*1.04} height={bh*0.12} rx={3} fill="#f5c518"/>
+      {/* Patty */}
+      <rect x={cx-bw*0.5} y={cy+bh*0.04} width={bw} height={bh*0.18} rx={5} fill="#7a3a0a"/>
+      <rect x={cx-bw*0.48} y={cy+bh*0.05} width={bw*0.96} height={bh*0.08} rx={3} fill="#5a2a06"/>
+      {/* Lettuce */}
+      {[-0.4,-0.2,0,0.2,0.4].map((dx,i)=>(
+        <ellipse key={i} cx={cx+dx*bw*0.45} cy={cy+bh*0.24} rx={bw*0.15} ry={bh*0.07} fill="#2d8a2d"/>
+      ))}
+      {/* Tomato */}
+      <rect x={cx-bw*0.46} y={cy+bh*0.32} width={bw*0.92} height={bh*0.1} rx={4} fill="#cc2200"/>
+      {/* Bottom bun */}
+      <ellipse cx={cx} cy={cy+bh*0.48} rx={bw*0.52} ry={bh*0.16} fill="#c8860a"/>
+      <ellipse cx={cx} cy={cy+bh*0.52} rx={bw*0.48} ry={bh*0.09} fill="#e8a020"/>
+    </g>
+  )
 }
 
 export default function H2HGraph({ predictions, results }) {
   const { events, maxPts, final } = buildTimeline(predictions, results)
-  const [hoveredIdx, setHoveredIdx] = useState(null)
-  const svgRef = useRef()
+  const [hovIdx, setHovIdx] = useState(null)
+
+  const totalMatches = ALL_FIXTURES.length
+  const progress = events.length / Math.max(totalMatches, 1)
 
   if (!events.length) return (
-    <div style={{ background: '#111318', border: '1px solid #ffffff0e', borderRadius: 16,
-      padding: '32px 20px', textAlign: 'center', marginBottom: 12 }}>
-      <div style={{ fontSize: 32, marginBottom: 12 }}>📊</div>
-      <div style={{ fontSize: 14, fontWeight: 700, color: '#ffffff60', marginBottom: 6 }}>
-        Δεν υπάρχουν αγώνες ακόμα
-      </div>
-      <div style={{ fontSize: 12, color: '#ffffff35' }}>
-        Το γράφημα εξέλιξης εμφανίζεται μόλις καταχωρηθεί το πρώτο αποτέλεσμα
-      </div>
+    <div style={{background:'#111318',border:'1px solid #ffffff0e',borderRadius:16,padding:'32px 20px',textAlign:'center',marginBottom:12}}>
+      <div style={{fontSize:48,marginBottom:12}}>🍔</div>
+      <div style={{fontSize:14,fontWeight:700,color:'#ffffff50',marginBottom:6}}>Το γράφημα εξέλιξης εμφανίζεται μόλις αρχίσουν οι αγώνες</div>
+      <div style={{fontSize:12,color:'#ffffff30'}}>Το burger μεγαλώνει καθώς προχωρά η σεζόν...</div>
     </div>
   )
 
-  const W = 340, H = 200
-  const PAD = { top: 20, right: 16, bottom: 36, left: 28 }
-  const gW = W - PAD.left - PAD.right
-  const gH = H - PAD.top - PAD.bottom
+  const W=380, H=210
+  const PAD={top:22,right:20,bottom:38,left:30}
+  const gW=W-PAD.left-PAD.right, gH=H-PAD.top-PAD.bottom
+  const allPts=[{pts:{boikos:0,mavromichalis:0,chousiadas:0}},...events]
+  const N=allPts.length-1
+  const xFor=i=>PAD.left+(i/Math.max(N,1))*gW
+  const yFor=v=>PAD.top+gH-(v/maxPts)*gH
 
-  // Add a "start" point at 0
-  const allPoints = [{ pts: { boikos: 0, mavromichalis: 0, chousiadas: 0 }, label: 'Start' }, ...events]
-  const N = allPoints.length - 1
-  
-  const xFor = i => PAD.left + (i / Math.max(N, 1)) * gW
-  const yFor = v => PAD.top + gH - (v / maxPts) * gH
-
-  // Build SVG path for each player
-  const pathFor = p => {
-    return allPoints.map((ev, i) => {
-      const x = xFor(i)
-      const y = yFor(ev.pts[p] ?? 0)
-      return i === 0 ? `M ${x} ${y}` : `L ${x} ${y}`
-    }).join(' ')
-  }
-
-  // Smooth curve using cubic bezier
-  const smoothPath = p => {
-    const pts = allPoints.map((ev, i) => ({ x: xFor(i), y: yFor(ev.pts[p] ?? 0) }))
-    if (pts.length < 2) return `M ${pts[0]?.x} ${pts[0]?.y}`
-    let d = `M ${pts[0].x} ${pts[0].y}`
-    for (let i = 1; i < pts.length; i++) {
-      const prev = pts[i - 1]
-      const curr = pts[i]
-      const cpx = (prev.x + curr.x) / 2
-      d += ` C ${cpx} ${prev.y} ${cpx} ${curr.y} ${curr.x} ${curr.y}`
+  const smoothPath=p=>{
+    const pts=allPts.map((ev,i)=>({x:xFor(i),y:yFor(ev.pts[p]??0)}))
+    if(pts.length<2) return `M${pts[0].x} ${pts[0].y}`
+    let d=`M${pts[0].x} ${pts[0].y}`
+    for(let i=1;i<pts.length;i++){
+      const prev=pts[i-1],curr=pts[i],cpx=(prev.x+curr.x)/2
+      d+=` C${cpx} ${prev.y} ${cpx} ${curr.y} ${curr.x} ${curr.y}`
     }
     return d
   }
 
-  const hovered = hoveredIdx !== null ? allPoints[hoveredIdx + 1] : null
-  const leader = final ? PLAYERS.reduce((a, b) => (final[a] >= final[b] ? a : b)) : null
+  const areaPath=p=>{
+    const pts=allPts.map((ev,i)=>({x:xFor(i),y:yFor(ev.pts[p]??0)}))
+    const bot=PAD.top+gH
+    let d=`M${pts[0].x} ${bot} L${pts[0].x} ${pts[0].y}`
+    for(let i=1;i<pts.length;i++){
+      const prev=pts[i-1],curr=pts[i],cpx=(prev.x+curr.x)/2
+      d+=` C${cpx} ${prev.y} ${cpx} ${curr.y} ${curr.x} ${curr.y}`
+    }
+    d+=` L${pts[pts.length-1].x} ${bot} Z`
+    return d
+  }
 
-  // Gap analysis
-  const gaps = events.length > 0 && final ? (() => {
-    const sorted = [...PLAYERS].sort((a,b) => final[b] - final[a])
-    const gap01 = final[sorted[0]] - final[sorted[1]]
-    const gap12 = final[sorted[1]] - final[sorted[2]]
-    return { sorted, gap01, gap12 }
-  })() : null
+  const leader=final?PLAYERS.reduce((a,b)=>final[a]>=final[b]?a:b):null
+  const hovered=hovIdx!==null?allPts[hovIdx+1]:null
+  const gaps=final?[...PLAYERS].sort((a,b)=>final[b]-final[a]):[]
 
   return (
-    <div style={{ background: '#111318', border: '1px solid #ffffff0e', borderRadius: 16,
-      padding: '16px', marginBottom: 12, overflow: 'hidden' }}>
-
-      {/* Title row */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+    <div style={{background:'#111318',border:'1px solid #ffffff0e',borderRadius:16,padding:'14px 14px 10px',marginBottom:12,overflow:'hidden'}}>
+      {/* Title */}
+      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:10}}>
         <div>
-          <div style={{ fontSize: 13, fontWeight: 800, color: '#e8e9ef', letterSpacing: '-.01em' }}>
-            Εξέλιξη Διαγωνισμού
-          </div>
-          <div style={{ fontSize: 10, fontWeight: 600, color: '#ffffff45', marginTop: 2 }}>
-            {events.length} αγώνες · σωρευτικοί πόντοι
-          </div>
+          <div style={{fontSize:13,fontWeight:800,color:'#e8e9ef'}}>Εξέλιξη Διαγωνισμού <span style={{fontSize:16}}>🍔</span></div>
+          <div style={{fontSize:10,fontWeight:600,color:'#ffffff40',marginTop:1}}>{events.length} αγώνες · σωρευτικοί πόντοι</div>
         </div>
-        {leader && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 10px',
-            background: `${PC[leader].color}15`, border: `1px solid ${PC[leader].color}35`,
-            borderRadius: 20 }}>
-            <div style={{ width: 7, height: 7, borderRadius: '50%', background: PC[leader].color,
-              boxShadow: `0 0 6px ${PC[leader].color}` }} />
-            <span style={{ fontSize: 11, fontWeight: 800, color: PC[leader].color }}>
-              {PLAYER_NAMES[leader]} leads
-            </span>
-          </div>
-        )}
+        {leader&&<div style={{display:'flex',alignItems:'center',gap:6,padding:'4px 10px',background:`${PC[leader].area}`,border:`1px solid ${PC[leader].glow}`,borderRadius:20}}>
+          <div style={{width:7,height:7,borderRadius:'50%',background:PC[leader].color,boxShadow:`0 0 6px ${PC[leader].color}`}}/>
+          <span style={{fontSize:11,fontWeight:800,color:PC[leader].color}}>{PLAYER_NAMES[leader]} leads</span>
+        </div>}
       </div>
 
-      {/* Player legend */}
-      <div style={{ display: 'flex', gap: 14, marginBottom: 12 }}>
-        {PLAYERS.map(p => (
-          <div key={p} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <svg width="24" height="10">
-              <line x1="0" y1="5" x2="24" y2="5" stroke={PC[p].color} strokeWidth="2.5" strokeLinecap="round"/>
-              <circle cx="12" cy="5" r="3" fill={PC[p].color}/>
-            </svg>
-            <span style={{ fontSize: 10, fontWeight: 700, color: PC[p].color, letterSpacing: '.02em' }}>
-              {PLAYER_NAMES[p].toUpperCase().split('.')[0]}
-            </span>
-            {final && (
-              <span style={{ fontSize: 11, fontWeight: 900, color: PC[p].color, fontVariantNumeric: 'tabular-nums' }}>
-                {final[p]}p
-              </span>
-            )}
+      {/* Legend */}
+      <div style={{display:'flex',gap:14,marginBottom:10,flexWrap:'wrap'}}>
+        {PLAYERS.map(p=>(
+          <div key={p} style={{display:'flex',alignItems:'center',gap:6}}>
+            <svg width="22" height="8"><line x1="0" y1="4" x2="22" y2="4" stroke={PC[p].color} strokeWidth="2.5" strokeLinecap="round"/><circle cx="11" cy="4" r="2.5" fill={PC[p].color}/></svg>
+            <span style={{fontSize:10,fontWeight:700,color:PC[p].color}}>{PLAYER_NAMES[p].toUpperCase().split('')[0]+PLAYER_NAMES[p].split('')[0].toLowerCase()}</span>
+            {final&&<span style={{fontSize:11,fontWeight:900,color:PC[p].color}}>{final[p]}p</span>}
           </div>
         ))}
       </div>
 
       {/* SVG Chart */}
-      <div style={{ position: 'relative' }}>
-        <svg
-          ref={svgRef}
-          viewBox={`0 0 ${W} ${H}`}
-          style={{ width: '100%', height: 'auto', display: 'block', overflow: 'visible' }}
-          onMouseLeave={() => setHoveredIdx(null)}
-        >
+      <div style={{position:'relative',cursor:'crosshair'}}>
+        <svg viewBox={`0 0 ${W} ${H}`} style={{width:'100%',height:'auto',display:'block',overflow:'visible'}}
+          onMouseLeave={()=>setHovIdx(null)}>
           <defs>
-            {PLAYERS.map(p => (
-              <linearGradient key={p} id={`grad-${p}`} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={PC[p].color} stopOpacity="0.25"/>
-                <stop offset="100%" stopColor={PC[p].color} stopOpacity="0"/>
-              </linearGradient>
-            ))}
-            {PLAYERS.map(p => (
-              <filter key={`glow-${p}`} id={`glow-${p}`} x="-20%" y="-20%" width="140%" height="140%">
-                <feGaussianBlur stdDeviation="2.5" result="blur"/>
-                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-              </filter>
-            ))}
+            {PLAYERS.map(p=><linearGradient key={p} id={`ag-${p}`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={PC[p].color} stopOpacity="0.3"/>
+              <stop offset="100%" stopColor={PC[p].color} stopOpacity="0.02"/>
+            </linearGradient>)}
+            {PLAYERS.map(p=><filter key={`gl-${p}`} id={`gl-${p}`}>
+              <feGaussianBlur stdDeviation="2" result="b"/>
+              <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>)}
           </defs>
 
-          {/* Grid lines */}
-          {[0, 0.25, 0.5, 0.75, 1].map(f => {
-            const y = PAD.top + gH * (1 - f)
-            const val = Math.round(f * maxPts)
-            return (
-              <g key={f}>
-                <line x1={PAD.left} y1={y} x2={PAD.left + gW} y2={y}
-                  stroke="#ffffff08" strokeWidth="1" strokeDasharray="3,4"/>
-                <text x={PAD.left - 5} y={y + 4} textAnchor="end"
-                  fontSize="8" fill="#ffffff35" fontFamily="'Space Grotesk',sans-serif">{val}</text>
-              </g>
-            )
+          {/* Grid */}
+          {[0,0.25,0.5,0.75,1].map(f=>{
+            const y=PAD.top+gH*(1-f), val=Math.round(f*maxPts)
+            return <g key={f}>
+              <line x1={PAD.left} y1={y} x2={PAD.left+gW} y2={y} stroke="#ffffff08" strokeWidth="1" strokeDasharray="3,4"/>
+              <text x={PAD.left-5} y={y+4} textAnchor="end" fontSize="8" fill="#ffffff30" fontFamily="'Space Grotesk',sans-serif">{val}</text>
+            </g>
           })}
 
-          {/* X axis labels */}
-          {allPoints.map((ev, i) => i > 0 && (
-            <text key={i} x={xFor(i)} y={H - 4} textAnchor="middle"
-              fontSize="7.5" fill="#ffffff30" fontFamily="'Space Grotesk',sans-serif"
-              style={{ cursor: 'default' }}>
-              {i}
-            </text>
-          ))}
+          {/* 🍔 Burger watermark — grows with season progress */}
+          <BurgerBg progress={progress} W={W} H={H}/>
 
-          {/* Area fills */}
-          {PLAYERS.map(p => {
-            const pts = allPoints.map((ev, i) => ({ x: xFor(i), y: yFor(ev.pts[p] ?? 0) }))
-            const bottomY = PAD.top + gH
-            let areaD = `M ${pts[0].x} ${bottomY} L ${pts[0].x} ${pts[0].y}`
-            for (let i = 1; i < pts.length; i++) {
-              const prev = pts[i-1], curr = pts[i]
-              const cpx = (prev.x + curr.x) / 2
-              areaD += ` C ${cpx} ${prev.y} ${cpx} ${curr.y} ${curr.x} ${curr.y}`
-            }
-            areaD += ` L ${pts[pts.length-1].x} ${bottomY} Z`
-            return <path key={p} d={areaD} fill={`url(#grad-${p})`}/>
-          })}
+          {/* Areas */}
+          {PLAYERS.map(p=><path key={p} d={areaPath(p)} fill={`url(#ag-${p})`}/>)}
 
           {/* Lines */}
-          {PLAYERS.map(p => (
-            <path key={p} d={smoothPath(p)} fill="none"
-              stroke={PC[p].color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
-              filter={`url(#glow-${p})`}/>
-          ))}
+          {PLAYERS.map(p=><path key={p} d={smoothPath(p)} fill="none" stroke={PC[p].color} strokeWidth="2.5" strokeLinecap="round" filter={`url(#gl-${p})`}/>)}
 
-          {/* Hover interaction zones */}
-          {events.map((_, i) => (
-            <rect key={i}
-              x={xFor(i) + (xFor(i+1)-xFor(i))/2 - (xFor(1)-xFor(0))/2}
-              y={PAD.top} width={xFor(1)-xFor(0)} height={gH}
-              fill="transparent"
-              style={{ cursor: 'crosshair' }}
-              onMouseEnter={() => setHoveredIdx(i)}
-            />
-          ))}
-
-          {/* Hover line + dots */}
-          {hovered && hoveredIdx !== null && (() => {
-            const xi = xFor(hoveredIdx + 1)
-            return (
-              <g>
-                <line x1={xi} y1={PAD.top} x2={xi} y2={PAD.top + gH}
-                  stroke="#ffffff25" strokeWidth="1" strokeDasharray="3,3"/>
-                {PLAYERS.map(p => {
-                  const y = yFor(hovered.pts[p] ?? 0)
-                  return (
-                    <g key={p}>
-                      <circle cx={xi} cy={y} r="6" fill={PC[p].color} fillOpacity="0.2"/>
-                      <circle cx={xi} cy={y} r="3.5" fill={PC[p].color}
-                        style={{ filter: `drop-shadow(0 0 4px ${PC[p].color})` }}/>
-                    </g>
-                  )
-                })}
-              </g>
-            )
-          })()}
-
-          {/* End dots (always) */}
-          {final && PLAYERS.map(p => {
-            const x = xFor(allPoints.length - 1)
-            const y = yFor(final[p])
-            return (
-              <g key={p}>
-                <circle cx={x} cy={y} r="5" fill={PC[p].color} fillOpacity="0.2"/>
-                <circle cx={x} cy={y} r="3" fill={PC[p].color}/>
-              </g>
-            )
+          {/* Hover zones */}
+          {events.map((_,i)=>{
+            const x0=i===0?PAD.left:(xFor(i)+xFor(i-1))/2
+            const x1=i===N-1?PAD.left+gW:(xFor(i)+xFor(i+1))/2
+            return <rect key={i} x={x0} y={PAD.top} width={x1-x0} height={gH} fill="transparent"
+              onMouseEnter={()=>setHovIdx(i)}/>
           })}
+
+          {/* Hover line */}
+          {hovered&&hovIdx!==null&&<>
+            <line x1={xFor(hovIdx+1)} y1={PAD.top} x2={xFor(hovIdx+1)} y2={PAD.top+gH} stroke="#ffffff25" strokeWidth="1" strokeDasharray="3,3"/>
+            {PLAYERS.map(p=>{
+              const y=yFor(hovered.pts[p]??0)
+              return <g key={p}>
+                <circle cx={xFor(hovIdx+1)} cy={y} r="5" fill={PC[p].color} fillOpacity="0.2"/>
+                <circle cx={xFor(hovIdx+1)} cy={y} r="3" fill={PC[p].color} style={{filter:`drop-shadow(0 0 3px ${PC[p].color})`}}/>
+              </g>
+            })}
+          </>}
+
+          {/* End dots */}
+          {final&&PLAYERS.map(p=>{
+            const x=xFor(N),y=yFor(final[p])
+            return <g key={p}><circle cx={x} cy={y} r="4" fill={PC[p].color} fillOpacity="0.25"/><circle cx={x} cy={y} r="2.5" fill={PC[p].color}/></g>
+          })}
+
+          {/* X labels */}
+          {events.map((_,i)=><text key={i} x={xFor(i+1)} y={H-6} textAnchor="middle" fontSize="8" fill="#ffffff28" fontFamily="'Space Grotesk',sans-serif">{i+1}</text>)}
         </svg>
 
-        {/* Hover tooltip */}
-        {hovered && (
-          <div style={{ position: 'absolute', top: 4, left: '50%', transform: 'translateX(-50%)',
-            background: '#0d0f14', border: '1px solid #ffffff18', borderRadius: 10,
-            padding: '8px 12px', minWidth: 180, pointerEvents: 'none', zIndex: 10,
-            boxShadow: '0 8px 24px rgba(0,0,0,.5)' }}>
-            <div style={{ fontSize: 10, fontWeight: 700, color: '#ffffff60',
-              marginBottom: 7, letterSpacing: '.06em', textTransform: 'uppercase' }}>
-              {hovered.label}
-              {hovered.actual && ` · ${hovered.actual.h}–${hovered.actual.a}`}
+        {/* Tooltip */}
+        {hovered&&<div style={{position:'absolute',top:4,left:'50%',transform:'translateX(-50%)',background:'#0d0f14',border:'1px solid #ffffff18',borderRadius:10,padding:'8px 12px',minWidth:170,pointerEvents:'none',zIndex:10,boxShadow:'0 8px 24px rgba(0,0,0,.5)'}}>
+          <div style={{fontSize:10,fontWeight:700,color:'#ffffff50',marginBottom:6,letterSpacing:'.06em',textTransform:'uppercase'}}>{hovered.label} · {hovered.actual?.h}–{hovered.actual?.a}</div>
+          {PLAYERS.map(p=>{const d=hovered.scores?.[p];return(
+            <div key={p} style={{display:'flex',alignItems:'center',gap:7,marginBottom:4}}>
+              <div style={{width:7,height:7,borderRadius:'50%',background:PC[p].color,flexShrink:0}}/>
+              <span style={{fontSize:11,fontWeight:600,color:'#e8e9ef',flex:1}}>{PLAYER_NAMES[p]}</span>
+              <span style={{fontSize:10,color:'#ffffff45'}}>{d?.pred?`${d.pred.h}–${d.pred.a}`:'–'}</span>
+              <span style={{fontSize:11,fontWeight:800,color:PC[p].color}}>{hovered.pts[p]}p</span>
+              {d?.sc&&<span style={{fontSize:10,color:d.sc.points===2?'#00ff88':d.sc.points===1?'#ffdd00':'#ffffff30'}}>{d.sc.points===2?'🎯':d.sc.points===1?'✓':'✗'}</span>}
             </div>
-            {PLAYERS.map(p => {
-              const d = hovered.scores?.[p]
-              return (
-                <div key={p} style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 5 }}>
-                  <div style={{ width: 7, height: 7, borderRadius: '50%', background: PC[p].color,
-                    boxShadow: `0 0 5px ${PC[p].color}`, flexShrink: 0 }}/>
-                  <span style={{ fontSize: 11, fontWeight: 600, color: '#e8e9ef', flex: 1 }}>
-                    {PLAYER_NAMES[p].split('.')[0]}
-                  </span>
-                  <span style={{ fontSize: 11, color: '#ffffff50', fontVariantNumeric: 'tabular-nums' }}>
-                    {d?.pred ? `${d.pred.h}–${d.pred.a}` : '–'}
-                  </span>
-                  <span style={{ fontSize: 11, fontWeight: 800, color: PC[p].color,
-                    fontVariantNumeric: 'tabular-nums' }}>
-                    {hovered.pts[p]}p
-                  </span>
-                  {d?.sc && <span style={{ fontSize: 10, color: d.sc.points===2?'#00ff88':d.sc.points===1?'#ffdd00':'#ffffff30' }}>
-                    {d.sc.points===2?'🎯':d.sc.points===1?'✓':'✗'}
-                  </span>}
-                </div>
-              )
-            })}
-          </div>
-        )}
+          )})}
+        </div>}
       </div>
 
-      {/* Match index legend */}
-      <div style={{ marginTop: 10, display: 'flex', flexWrap: 'wrap', gap: '4px 10px' }}>
-        {events.map((ev, i) => (
-          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 4,
-            padding: '2px 7px', background: hoveredIdx===i?'#ffffff12':'#ffffff06',
-            borderRadius: 5, cursor: 'pointer', border: `1px solid ${hoveredIdx===i?'#ffffff25':'transparent'}`,
-            transition: 'all .15s' }}
-            onMouseEnter={() => setHoveredIdx(i)}
-            onMouseLeave={() => setHoveredIdx(null)}>
-            <span style={{ fontSize: 9, fontWeight: 800, color: '#ffffff40' }}>{i+1}</span>
-            <span style={{ fontSize: 9, fontWeight: 600, color: '#ffffff60' }}>{ev.label}</span>
+      {/* Match pills */}
+      <div style={{marginTop:8,display:'flex',flexWrap:'wrap',gap:'3px 8px'}}>
+        {events.map((ev,i)=>(
+          <div key={i} style={{display:'flex',alignItems:'center',gap:4,padding:'2px 7px',background:hovIdx===i?'#ffffff12':'#ffffff06',borderRadius:5,cursor:'pointer',border:`1px solid ${hovIdx===i?'#ffffff22':'transparent'}`,transition:'all .12s'}}
+            onMouseEnter={()=>setHovIdx(i)} onMouseLeave={()=>setHovIdx(null)}>
+            <span style={{fontSize:9,fontWeight:800,color:'#ffffff35'}}>{i+1}</span>
+            <span style={{fontSize:9,fontWeight:600,color:'#ffffff55'}}>{ev.label}</span>
           </div>
         ))}
       </div>
 
-      {/* Gap analysis bar */}
-      {gaps && (
-        <div style={{ marginTop: 14, padding: '10px 12px', background: '#0d0f14',
-          borderRadius: 10, border: '1px solid #ffffff0a' }}>
-          <div style={{ fontSize: 10, fontWeight: 700, color: '#ffffff40',
-            letterSpacing: '.07em', textTransform: 'uppercase', marginBottom: 8 }}>
-            Διαφορές · Τρέχουσα Κατάσταση
+      {/* Gap bar */}
+      {final&&<div style={{marginTop:10,padding:'10px 12px',background:'#0d0f14',borderRadius:10,border:'1px solid #ffffff08'}}>
+        <div style={{fontSize:9,fontWeight:700,color:'#ffffff35',letterSpacing:'.08em',textTransform:'uppercase',marginBottom:8}}>ΤΡΕΧΟΥΣΑ ΚΑΤΑΣΤΑΣΗ</div>
+        {gaps.map((p,rank)=>{const maxP=final[gaps[0]],pct=maxP>0?(final[p]/maxP)*100:0;return(
+          <div key={p} style={{display:'flex',alignItems:'center',gap:8,marginBottom:6}}>
+            <span style={{fontSize:11,fontWeight:700,color:['#ffdd00','#aaa','#cd7f32'][rank],width:14,textAlign:'center'}}>{rank+1}</span>
+            <span style={{fontSize:11,fontWeight:700,color:PC[p].color,width:72,flexShrink:0}}>{PLAYER_NAMES[p]}</span>
+            <div style={{flex:1,height:5,background:'#ffffff08',borderRadius:3}}>
+              <div style={{height:'100%',width:`${pct}%`,background:PC[p].color,borderRadius:3,boxShadow:`0 0 6px ${PC[p].glow}`,transition:'width 1s ease'}}/>
+            </div>
+            <span style={{fontSize:13,fontWeight:900,color:PC[p].color,width:22,textAlign:'right'}}>{final[p]}</span>
+            {rank>0&&<span style={{fontSize:10,color:'#ff4d6d',fontWeight:700,width:22,flexShrink:0}}>-{final[gaps[0]]-final[p]}</span>}
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-            {gaps.sorted.map((p, rank) => {
-              const maxP = final[gaps.sorted[0]]
-              const pct = maxP > 0 ? (final[p] / maxP) * 100 : 0
-              return (
-                <div key={p} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: ['#ffdd00','#aaaaaa','#cd7f32'][rank],
-                    width: 16, textAlign: 'center' }}>{['1','2','3'][rank]}</span>
-                  <span style={{ fontSize: 11, fontWeight: 600, color: PC[p].color, width: 70, flexShrink: 0 }}>
-                    {PLAYER_NAMES[p].split('.')[0]}
-                  </span>
-                  <div style={{ flex: 1, height: 6, background: '#ffffff08', borderRadius: 3 }}>
-                    <div style={{ height: '100%', width: `${pct}%`, background: PC[p].color,
-                      borderRadius: 3, transition: 'width 1s ease',
-                      boxShadow: `0 0 8px ${PC[p].glow}` }}/>
-                  </div>
-                  <span style={{ fontSize: 13, fontWeight: 900, color: PC[p].color,
-                    width: 28, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
-                    {final[p]}
-                  </span>
-                  {rank > 0 && (
-                    <span style={{ fontSize: 10, color: '#ff4d6d', fontWeight: 700, width: 28, flexShrink: 0 }}>
-                      -{final[gaps.sorted[0]]-final[p]}
-                    </span>
-                  )}
-                </div>
-              )
-            })}
-          </div>
-
-          {/* Dramatic tension message */}
-          {(() => {
-            const [first, second, third] = gaps.sorted
-            const d01 = final[first] - final[second]
-            const d12 = final[second] - final[third]
-            if (d01 === 0) return <div style={{ fontSize: 11, fontWeight: 700, color: '#ffdd00', marginTop: 8, textAlign: 'center' }}>🔥 ΙΣΟΒΑΘΜΟΙ ΣΤΗΝ ΚΟΡΥΦΗ!</div>
-            if (d01 === 1) return <div style={{ fontSize: 11, fontWeight: 700, color: '#ff6b35', marginTop: 8, textAlign: 'center' }}>⚡ Μόνο 1 πόντος διαφορά στην κορυφή!</div>
-            if (d12 === 0) return <div style={{ fontSize: 11, fontWeight: 700, color: '#4d9fff', marginTop: 8, textAlign: 'center' }}>⚔️ Ο {PLAYER_NAMES[second].split('.')[0]} & {PLAYER_NAMES[third].split('.')[0]} ισόβαθμοι!</div>
-            return null
-          })()}
-        </div>
-      )}
+        )})}
+        {/* Tension message */}
+        {(()=>{
+          const d01=final[gaps[0]]-final[gaps[1]]
+          if(d01===0) return <div style={{fontSize:11,fontWeight:700,color:'#ffdd00',textAlign:'center',marginTop:6}}>🔥 ΙΣΟΒΑΘΜΟΙ ΣΤΗΝ ΚΟΡΥΦΗ!</div>
+          if(d01===1) return <div style={{fontSize:11,fontWeight:700,color:'#ff6b35',textAlign:'center',marginTop:6}}>⚡ Μόνο 1 πόντος διαφορά! To burger παίζει!</div>
+          if(progress>0.5&&d01<=3) return <div style={{fontSize:11,fontWeight:700,color:'#4d9fff',textAlign:'center',marginTop:6}}>🍔 Μέση σεζόν — το burger είναι ακόμα διακύβευμα!</div>
+          return null
+        })()}
+      </div>}
     </div>
   )
 }

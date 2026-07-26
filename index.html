@@ -2,31 +2,58 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0"/>
   <meta name="theme-color" content="#08090d"/>
   <title>ΚΟΥΒΑΔΕΙΡΟΣ · 26/27</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Space+Mono:wght@700&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.2.0/tabler-icons.min.css"/>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body, #root { height: 100%; }
-    html { background: #08090d; color-scheme: dark; }
+    html { background: #08090d; color-scheme: dark; font-size: 16px; }
     body {
       font-family: 'Space Grotesk', system-ui, sans-serif;
-      background: #08090d;
-      color: #e8e9ef;
+      background: #08090d; color: #e8e9ef;
       -webkit-font-smoothing: antialiased;
+      min-height: 100dvh;
     }
-    input, button, select, textarea { font-family: inherit; }
-    ::-webkit-scrollbar { display: none; }
-    * { -webkit-tap-highlight-color: transparent; }
+    #root { min-height: 100dvh; display: flex; flex-direction: column; }
+
+    /* ── RESPONSIVE BREAKPOINTS ─────────────────────────────── */
+    :root {
+      --app-max:  1280px;
+      --col-gap:  24px;
+      --card-r:   14px;
+      --sidebar-w: 300px;
+    }
+
+    /* Mobile: single column, bottom nav */
+    @media (max-width: 767px) {
+      :root { --col-gap: 12px; --card-r: 12px; }
+    }
+
+    /* Tablet: wider, no bottom-nav cramping */
+    @media (min-width: 768px) and (max-width: 1023px) {
+      :root { --col-gap: 20px; --sidebar-w: 260px; }
+    }
+
+    /* Desktop: sidebar layout */
+    @media (min-width: 1024px) {
+      body { display: flex; justify-content: center; }
+      #root { max-width: var(--app-max); width: 100%; }
+    }
+
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #ffffff20; border-radius: 2px; }
+    * { -webkit-tap-highlight-color: transparent; scrollbar-width: thin; scrollbar-color: #ffffff20 transparent; }
     button:disabled { opacity: .35; cursor: not-allowed; }
     input::placeholder { color: #ffffff30; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    @keyframes pulse-dot { 0%,100% { opacity:1; } 50% { opacity:.3; } }
-    @keyframes slide-up { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
-    @keyframes glow-pulse { 0%,100% { box-shadow: 0 0 12px #00ff8820; } 50% { box-shadow: 0 0 24px #00ff8840; } }
+    select { appearance: none; }
+    @keyframes spin    { to { transform: rotate(360deg); } }
+    @keyframes pulse-d { 0%,100% { opacity:1; } 50% { opacity:.3; } }
+    @keyframes slide-u { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes glow-p  { 0%,100% { box-shadow:0 0 12px #ff224420; } 50% { box-shadow:0 0 28px #ff224440; } }
   </style>
 </head>
 <body>
