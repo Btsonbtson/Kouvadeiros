@@ -1,7 +1,7 @@
 // ─── FIXTURES ─────────────────────────────────────────────────────────────────
 export const PLAYERS = ['boikos','mavromichalis','chousiadas']
 export const PLAYER_NAMES = { boikos:'Boikos', mavromichalis:'Mavromichalis', chousiadas:'Chousiadas' }
-export const PCOL = { boikos:'#c49a0c', mavromichalis:'#1a3c6a', chousiadas:'#1a4a2a' }
+export const PCOL = { boikos:'#ffdd00', mavromichalis:'#4d9fff', chousiadas:'#ff6b35' }
 
 export const TEAMS = {
   PAO: {name:'Panathinaikos',abbr:'PAO',color:'#1a7c2a'},
