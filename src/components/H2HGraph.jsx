@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { ALL_FIXTURES, PLAYERS, PLAYER_NAMES, PCOL, scoreMatch } from '../lib/data'
 
 const PC = {
-  boikos:        { color: '#ffdd00', glow: '#ffdd0060' },
+  boikos:        { color: '#ff2244', glow: '#ff224460' },
   mavromichalis: { color: '#4d9fff', glow: '#4d9fff60' },
   chousiadas:    { color: '#ff6b35', glow: '#ff6b3560' },
 }

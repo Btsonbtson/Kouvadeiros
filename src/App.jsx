@@ -8,6 +8,7 @@ import {
 } from './lib/data'
 import { TeamLogo, TPill, PtsBadge, ScorePill, Card, SLbl, Spinner } from './components/UI'
 import H2HGraph from './components/H2HGraph'
+import Guide from './pages/Guide'
 
 
 
@@ -15,7 +16,7 @@ import H2HGraph from './components/H2HGraph'
 const BG='#08090d', SURF='#111318', SURF2='#0d0f14', LINE='rgba(255,255,255,.08)'
 const MUTED='rgba(255,255,255,.4)', DIM='rgba(255,255,255,.22)', TEXT='rgba(255,255,255,.92)'
 const GREEN='#00ff88', GOLD='#ffdd00', RED='#ff4d6d', BLUE='#4d9fff', ORA='#ff6b35'
-const PC={boikos:{p:'#ffdd00',bg:'rgba(255,221,0,.12)',b:'rgba(255,221,0,.3)'},
+const PC={boikos:{p:'#ff2244',bg:'rgba(255,34,68,.15)',b:'rgba(255,34,68,.35)'},
           mavromichalis:{p:'#4d9fff',bg:'rgba(77,159,255,.12)',b:'rgba(77,159,255,.3)'},
           chousiadas:{p:'#ff6b35',bg:'rgba(255,107,53,.12)',b:'rgba(255,107,53,.3)'}}
 const MEDALS=['🥇','🥈','🥉']
@@ -792,8 +793,51 @@ function BanterPage({chat,onSend,onRead}){
 // ─── APP SHELL ────────────────────────────────────────────────────────────────
 const NAV=[{id:'matchday',l:'Αγώνες',icon:'⚽'},{id:'league',l:'League',icon:'🏆'},{id:'predict',l:'Predict',icon:'✏️'},{id:'history',l:'History',icon:'📋'},{id:'banter',l:'Ιερά Εξέταση',icon:'⚖️'}]
 
+
+// ─── ADD PLAYER MODAL ────────────────────────────────────────────────────────
+function AddPlayerModal({ onClose, onAdded }) {
+  const [name,  setName]  = useState('')
+  const [email, setEmail] = useState('')
+  const [pass,  setPass]  = useState('')
+  const [phone, setPhone] = useState('+30')
+  const [saving,setSaving]= useState(false)
+  const [done,  setDone]  = useState(false)
+  const inp = { width:'100%', padding:'10px 12px', background:'#0d0f14', border:`1px solid ${LINE}`,
+    borderRadius:9, color:TEXT, fontSize:13, outline:'none', fontFamily:'inherit', marginBottom:10 }
+  async function save() {
+    if(!name||!email||!pass){return}
+    setSaving(true)
+    try {
+      await api.addPlayer({name,email,password:pass,phone})
+      setDone(true); setTimeout(()=>{onAdded?.();onClose()},1200)
+    } catch(e){ alert('Error: '+e.message) }
+    finally { setSaving(false) }
+  }
+  return (
+    <div style={{ position:'fixed',inset:0,background:'rgba(0,0,0,.8)',zIndex:100,display:'flex',alignItems:'center',justifyContent:'center',padding:20 }}>
+      <div style={{ background:SURF,border:`1px solid ${LINE}`,borderRadius:16,padding:24,width:'100%',maxWidth:380 }}>
+        <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:18 }}>
+          <div style={{ fontSize:15,fontWeight:800,color:TEXT }}>➕ Νέος Παίκτης</div>
+          <button onClick={onClose} style={{ background:'none',border:'none',cursor:'pointer',color:MUTED,fontSize:20 }}>✕</button>
+        </div>
+        <input value={name} onChange={e=>setName(e.target.value)} placeholder="Όνομα (π.χ. Papadopoulos)" style={inp}/>
+        <input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="Email" style={inp}/>
+        <input value={pass} onChange={e=>setPass(e.target.value)} placeholder="Password" style={inp}/>
+        <input value={phone} onChange={e=>setPhone(e.target.value)} placeholder="+30 694 000 0000" style={inp}/>
+        <button onClick={save} disabled={saving||done} style={{ width:'100%',padding:12,borderRadius:10,border:'none',
+          background:done?'#00ff88':saving?'#ffffff15':'#1a5c38',color:done?'#08090d':'#fff',
+          fontSize:14,fontWeight:700,cursor:'pointer',marginTop:4 }}>
+          {done?'✓ Προστέθηκε!':saving?'Αποθήκευση…':'Προσθήκη Παίκτη'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
 export default function App({user,onLogout}){
   const [screen,  setScreen]  = useState('matchday')
+  const [showGuide,setShowGuide] = useState(false)
+  const [showAddPlayer,setShowAddPlayer] = useState(false)
   const [state,   setState]   = useState({predictions:{},results:{},chat:[]})
   const [loading, setLoading] = useState(true)
   const [syncing, setSyncing] = useState(false)
