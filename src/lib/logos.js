@@ -1,48 +1,34 @@
-// Inline SVG badges — zero external dependencies, always load
-// Real club colors, shield shape, team abbreviation
+// Team logos from Wikimedia Commons — open license, no CORS restrictions for <img> tags
+// These URLs work in any browser. The build sandbox can't reach them but browsers can.
+const W = 'https://upload.wikimedia.org/wikipedia'
 
-function shield(abbr, bg, text='#fff', stroke='rgba(255,255,255,.3)', accent=null) {
-  const a = accent || bg
-  return `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 72">
-  <defs>
-    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="${a}" stop-opacity="0.9"/>
-      <stop offset="100%" stop-color="${bg}" stop-opacity="1"/>
-    </linearGradient>
-  </defs>
-  <path d="M32 2 L60 14 L60 38 Q60 58 32 70 Q4 58 4 38 L4 14 Z" fill="url(#g)" stroke="${stroke}" stroke-width="1.5"/>
-  <text x="32" y="44" text-anchor="middle" font-family="'Arial Black',Arial,sans-serif" font-size="${abbr.length>3?13:abbr.length===3?15:18}" font-weight="900" fill="${text}" letter-spacing="-0.5">${abbr}</text>
-</svg>`)}`
-}
-
-// Each team: real primary/secondary colors
 export const LOGOS = {
-  // Greek Super League
-  OLY:  shield('OLY',  '#CC0000', '#ffffff', '#ff4444', '#ff2222'),  // Olympiacos — red
-  AEK:  shield('AEK',  '#1a1a1a', '#FFD700', '#FFD70066', '#333'),   // AEK — black/gold
-  PAOK: shield('PAOK', '#1a1a1a', '#ffffff', '#ffffff44', '#2a2a2a'),// PAOK — black/white
-  PAO:  shield('PAO',  '#007B3A', '#ffffff', '#00aa5566', '#009944'),// PAO — green
-  ARI:  shield('ARI',  '#FFD700', '#1a1a1a', '#FFD70066', '#e6c200'),// Aris — yellow/black
-  ATR:  shield('ATR',  '#003399', '#ffffff', '#4466cc66', '#0044aa'),// Atromitos — blue
-  AST:  shield('AST',  '#FF8C00', '#ffffff', '#FF8C0066', '#e67e00'),// Asteras — orange
-  KIF:  shield('KIF',  '#00529B', '#ffffff', '#336ecc66', '#003d73'),// Kifisia — blue
-  LEV:  shield('LEV',  '#006633', '#ffffff', '#009944', '#004d26'),   // Levadiakos — green
-  OFI:  shield('OFI',  '#8B0000', '#ffffff', '#cc000066', '#660000'),// OFI — dark red
-  PNE:  shield('PNE',  '#660099', '#ffffff', '#9900cc66', '#4d0073'),// Panetolikos — purple
-  VOL:  shield('VOL',  '#003366', '#ffffff', '#0055aa66', '#002244'),// Volos — navy
-  IRA:  shield('IRA',  '#0000CC', '#ffffff', '#3333ff66', '#0000aa'),// Iraklis — blue
-  KAL:  shield('KAL',  '#990000', '#ffffff', '#cc222266', '#660000'),// Kalamata — red
+  // Greek Super League — confirmed Wikipedia file names
+  OLY:  `${W}/en/f/f7/Olympiacos_FC_logo.svg`,
+  AEK:  `${W}/en/1/11/AEK_Athens_FC_Badge.svg`,
+  PAOK: `${W}/en/2/2c/PAOK_FC_Badge.svg`,
+  PAO:  `${W}/commons/2/27/Panathinaikos_FC_logo.png`,
+  ARI:  `${W}/en/0/07/Aris_FC_logo.svg`,
+  ATR:  `${W}/en/e/e1/Atromitos_Athens_FC_logo.svg`,
+  AST:  `${W}/en/4/4f/Asteras_Tripolis_FC_logo.svg`,
+  KIF:  `${W}/en/6/6e/AE_Kifisia_FC_logo.svg`,
+  LEV:  `${W}/en/b/bd/Levadiakos_FC_logo.svg`,
+  OFI:  `${W}/en/5/57/OFI_Crete_FC.svg`,
+  PNE:  `${W}/en/7/78/Panetolikos_FC_logo.svg`,
+  VOL:  `${W}/en/0/04/NPS_Volos_FC_logo.svg`,
+  IRA:  `${W}/en/3/37/Iraklis_FC_logo.svg`,
+  KAL:  `${W}/en/3/32/Kalamata_FC_logo.svg`,
   // European opponents
-  DYN:  shield('DYN',  '#003F87', '#ffffff', '#3366cc66', '#002d63'),// Dynamo Kyiv — blue
-  NEC:  shield('NEC',  '#CC0000', '#000000', '#ff222266', '#990000'),// NEC Nijmegen — red/black
-  PKS:  shield('PKS',  '#006400', '#ffffff', '#009900', '#004d00'),   // Paksi — green
-  TBD:  shield('TBD',  '#333333', '#888888', '#44444466', '#222'),
+  DYN:  `${W}/en/e/e9/FC_Dynamo_Kyiv_logo.svg`,
+  NEC:  `${W}/commons/8/8c/NEC_Nijmegen.svg`,
+  PKS:  `${W}/commons/d/d6/Paksi_FC_logo.svg`,
+  TBD:  null,
 }
 
 export const TEAM_COLORS = {
-  OLY:'#CC0000', AEK:'#FFD700', PAOK:'#ffffff', PAO:'#007B3A',
-  ARI:'#FFD700', ATR:'#003399', AST:'#FF8C00', KIF:'#00529B',
-  LEV:'#006633', OFI:'#8B0000', PNE:'#660099', VOL:'#003366',
+  OLY:'#CC0000', AEK:'#1a1a1a', PAOK:'#1a1a1a', PAO:'#007B3A',
+  ARI:'#DAA520', ATR:'#003399', AST:'#FF8C00', KIF:'#00529B',
+  LEV:'#006633', OFI:'#8B0000', PNE:'#6600AA', VOL:'#003366',
   IRA:'#0000CC', KAL:'#990000', DYN:'#003F87', NEC:'#CC0000',
   PKS:'#006400', TBD:'#444',
 }
