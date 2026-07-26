@@ -1,3 +1,4 @@
+// KOUVADEIROS v7 — build 2026-07-26
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { api, clearAuth, storeUser } from './lib/api'
 import {

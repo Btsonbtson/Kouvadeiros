@@ -14,6 +14,7 @@ function Root() {
   return <App user={user} onLogout={handleLogout} />
 }
 
+console.log('KOUVADEIROS v7 2026-07-26');
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode><Root /></React.StrictMode>
 )
