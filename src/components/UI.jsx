@@ -30,7 +30,6 @@ export function TeamLogo({ k, size = 32 }) {
       alt={k}
       width={size}
       height={size}
-      crossOrigin="anonymous"
       onError={() => setFailed(true)}
       style={{
         width: size, height: size,
