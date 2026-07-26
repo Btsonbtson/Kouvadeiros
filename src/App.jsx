@@ -869,7 +869,7 @@ const NAV=[
   {id:'league',  l:'League',  icon:'🏆'},
   {id:'predict', l:'Predict', icon:'✏️'},
   {id:'history', l:'History', icon:'📋'},
-  {id:'banter',  l:'Banter',  icon:'💬'},
+  {id:'banter',  l:'ΕΞΕΤΑΣΗ', icon:'🔥'},
 ]
 
 function useBreakpoint() {
