@@ -137,6 +137,7 @@ function MatchCard({match,result,predictions,onRefresh,allResults,currentUser,re
   const isRevealed=revealed?.[match.id]||false
   const minsUntil=(new Date(match.kickoff).getTime()-Date.now())/60000
   const isPreKickoff=minsUntil>=-1&&minsUntil<=1  // within 1 min of kickoff
+  const hasRes=result!=null
   const showAllPreds=hasRes||(isRevealed||isPreKickoff)  // show all when revealed or at kickoff
   const myPred=currentUser?predictions?.[currentUser.id]:null
   const leg1Res = match.leg===2&&match.tie&&allResults ? allResults[match.tie+'-1'] : null
@@ -151,7 +152,6 @@ function MatchCard({match,result,predictions,onRefresh,allResults,currentUser,re
       situation:diff>0?'+'+diff+' προβάδισμα':diff<0?diff+' πίσω':'Ισόπαλη · Παρ/Πέν αν ισόπαλη'}
   })() : null
   const today=isToday(match.kickoff)
-  const hasRes=result!=null
   const hn=TEAMS[match.home]?.name||match.home
   const an=TEAMS[match.away]?.name||match.away
   const tC={SL:'#f0c040',UCL:BLUE,UEL:'#f5733a',UECL:GREEN}[match.t]||GOLD
