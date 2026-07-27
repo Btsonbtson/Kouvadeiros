@@ -737,7 +737,7 @@ function ChangePasswordModal({user, onClose}){
       <div style={{fontSize:16,fontWeight:700,marginBottom:16}}>🔐 Αλλαγή Κωδικού</div>
 
       {isAdmin&&<div style={{display:'flex',gap:6,marginBottom:16}}>
-        {[{id:'self',l:'Ο κωδικός μου'},{id:'admin',l:'👑 Admin'}].map(t=><button key={t.id} onClick={()=>{setTab(t.id);setMsg('');setErr('')}} style={{flex:1,padding:'7px',borderRadius:8,border:`1px solid ${tab===t.id?'rgba(255,255,255,.3)':LINE}`,background:tab===t.id?'rgba(255,255,255,.1)':'transparent',color:tab===t.id?TEXT:MUTED,fontSize:11,fontWeight:700,cursor:'pointer'}}>{t.l}</button>)}
+        {[{id:'self',l:'Ο κωδικός μου'},{id:'admin',l:'👑 Admin'}].map(tabItem=><button key={tabItem.id} onClick={()=>{setTab(tabItem.id);setMsg('');setErr('')}} style={{flex:1,padding:'7px',borderRadius:8,border:`1px solid ${tab===tabItem.id?'rgba(255,255,255,.3)':LINE}`,background:tab===tabItem.id?'rgba(255,255,255,.1)':'transparent',color:tab===tabItem.id?TEXT:MUTED,fontSize:11,fontWeight:700,cursor:'pointer'}}>{tabItem.l}</button>)}
       </div>}
 
       {tab==='self'?<form onSubmit={changeSelf}>
@@ -792,7 +792,7 @@ function MatchdayPage({predictions,results,onRefresh,currentUser,revealed}){
     </div>
     {/* Tabs */}
     <div style={{display:'flex',gap:5,padding:'10px 16px 8px',overflowX:'auto',scrollbarWidth:'none'}}>
-      {[{id:'all',l:'All'},{id:'sl',l:'SL'},{id:'ucl',l:'UCL'},{id:'uel',l:'UEL'},{id:'uecl',l:'UECL'}].map(t=><button key={t.id} onClick={()=>setTab(t.id)} style={{fontSize:11,fontWeight:700,padding:'5px 13px',borderRadius:7,border:`1px solid ${tab===t.id?'rgba(255,255,255,.3)':LINE}`,background:tab===t.id?'rgba(255,255,255,.12)':'transparent',color:tab===t.id?TEXT:MUTED,cursor:'pointer',whiteSpace:'nowrap',flexShrink:0,letterSpacing:'.03em'}}>{t.l}</button>)}
+      {[{id:'all',l:'All'},{id:'sl',l:'SL'},{id:'ucl',l:'UCL'},{id:'uel',l:'UEL'},{id:'uecl',l:'UECL'}].map(tabItem=><button key={tabItem.id} onClick={()=>setTab(tabItem.id)} style={{fontSize:11,fontWeight:700,padding:'5px 13px',borderRadius:7,border:`1px solid ${tab===tabItem.id?'rgba(255,255,255,.3)':LINE}`,background:tab===tabItem.id?'rgba(255,255,255,.12)':'transparent',color:tab===tabItem.id?TEXT:MUTED,cursor:'pointer',whiteSpace:'nowrap',flexShrink:0,letterSpacing:'.03em'}}>{tabItem.l}</button>)}
     </div>
     {/* ALL games - full scroll */}
     <div style={{padding:'0 16px 80px'}}>
@@ -807,7 +807,7 @@ function LeaguePage({predictions,results,thavmaStats}){
   const [tab,setTab]=useState('standings')
   return <div style={{padding:'16px 16px 80px'}}>
     <div style={{display:'flex',gap:6,marginBottom:16,overflowX:'auto',scrollbarWidth:'none'}}>
-      {[{id:'standings',l:'Standings'},{id:'rivalry',l:'🌶️ Rivalry'},{id:'analytics',l:'Analytics'},{id:'campaigns',l:'Campaigns'}].map(t=><button key={t.id} onClick={()=>setTab(t.id)} style={{fontSize:11,fontWeight:700,padding:'6px 13px',borderRadius:7,border:`1px solid ${tab===t.id?'rgba(255,255,255,.3)':LINE}`,background:tab===t.id?'rgba(255,255,255,.12)':'transparent',color:tab===t.id?TEXT:MUTED,cursor:'pointer',whiteSpace:'nowrap',flexShrink:0,letterSpacing:'.03em'}}>{t.l}</button>)}
+      {[{id:'standings',l:'Standings'},{id:'rivalry',l:'🌶️ Rivalry'},{id:'analytics',l:'Analytics'},{id:'campaigns',l:'Campaigns'}].map(tabItem=><button key={tabItem.id} onClick={()=>setTab(tabItem.id)} style={{fontSize:11,fontWeight:700,padding:'6px 13px',borderRadius:7,border:`1px solid ${tab===tabItem.id?'rgba(255,255,255,.3)':LINE}`,background:tab===tabItem.id?'rgba(255,255,255,.12)':'transparent',color:tab===tabItem.id?TEXT:MUTED,cursor:'pointer',whiteSpace:'nowrap',flexShrink:0,letterSpacing:'.03em'}}>{tabItem.l}</button>)}
     </div>
         {tab==='standings'&&<>
       <div style={{fontSize:10,fontWeight:700,letterSpacing:'.1em',textTransform:'uppercase',color:'rgba(255,255,255,.4)',marginBottom:10}}>Ανάλυση ανά τουρνουά</div>
@@ -1170,18 +1170,15 @@ export default function App({ user, onLogout }) {
       display:'flex', justifyContent:'space-around',
       padding:`6px 0 ${isMobile?'max(8px,env(safe-area-inset-bottom))':'8px'}`,
       position:'fixed', bottom:0, left:0, right:0, zIndex:20 }}>
-      {NAV.map(navItem=>{
-        const active=screen===navItem.id
-        return (
-          <button key={navItem.id} onClick={()=>setScreen(navItem.id)}
-            style={{display:'flex',flexDirection:'column',alignItems:'center',gap:3,
-              padding:'3px 8px',background:'none',border:'none',cursor:'pointer',minWidth:44,flex:1}}>
-            <span style={{fontSize:isTablet?22:19,filter:active?undefined:'grayscale(.6) opacity(.5)'}}>{navItem.icon}</span>
-            <span style={{fontSize:isTablet?10:9,fontWeight:700,letterSpacing:'.04em',color:active?GREEN:MUTED,textTransform:'uppercase'}}>{navItem.l}</span>
-            {active&&<div style={{width:16,height:2,background:GREEN,borderRadius:1}}/>}
-          </button>
-        )
-      })}
+      {NAV.map(navItem=>(
+        <button key={navItem.id} onClick={()=>setScreen(navItem.id)}
+          style={{display:'flex',flexDirection:'column',alignItems:'center',gap:3,
+            padding:'3px 8px',background:'none',border:'none',cursor:'pointer',minWidth:44,flex:1}}>
+          <span style={{fontSize:isTablet?22:19,filter:screen===navItem.id?undefined:'grayscale(.6) opacity(.5)'}}>{navItem.icon}</span>
+          <span style={{fontSize:isTablet?10:9,fontWeight:700,letterSpacing:'.04em',color:screen===navItem.id?GREEN:MUTED,textTransform:'uppercase'}}>{navItem.l}</span>
+          {screen===navItem.id&&<div style={{width:16,height:2,background:GREEN,borderRadius:1}}/>}
+        </button>
+      ))}
       <button onClick={handleLogout}
         style={{display:'flex',flexDirection:'column',alignItems:'center',gap:3,
           padding:'3px 8px',background:'none',border:'none',cursor:'pointer',minWidth:44,flex:1}}>
