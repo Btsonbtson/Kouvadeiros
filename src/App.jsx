@@ -132,8 +132,10 @@ function OddsRow({matchId}){
 }
 
 // ─── MATCH CARD ───────────────────────────────────────────────────────────────
-function MatchCard({match,result,predictions,onRefresh}){
+function MatchCard({match,result,predictions,onRefresh,allResults}){
   const [showPush,setShowPush]=useState(false)
+  const leg1Res = match.leg===2&&match.tie&&allResults ? allResults[match.tie+'-1'] : null
+  const leg1Fix = match.leg===2&&match.tie ? UEFA_FIXTURES.find(f=>f.id===match.tie+'-1') : null
   const today=isToday(match.kickoff)
   const hasRes=result!=null
   const hn=TEAMS[match.home]?.name||match.home
@@ -173,6 +175,29 @@ function MatchCard({match,result,predictions,onRefresh}){
           <span style={{fontSize:11,fontWeight:600,color:TEXT,lineHeight:1.2}}>{an}</span>
         </div>
       </div>
+
+      {/* Leg 1 result for Leg 2 matches */}
+      {leg1Agg&&<div style={{
+        background:'rgba(255,255,255,.04)',border:`1px solid ${LINE}`,
+        borderRadius:9,padding:'8px 12px',marginBottom:10,marginTop:2
+      }}>
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:6}}>
+          <div style={{display:'flex',alignItems:'center',gap:6}}>
+            <span style={{fontSize:10,fontWeight:700,color:MUTED,letterSpacing:'.06em',textTransform:'uppercase'}}>Leg 1</span>
+            <span style={{fontSize:14,fontWeight:900,color:TEXT,fontVariantNumeric:'tabular-nums'}}>
+              {TEAMS[leg1Agg.leg1Fix.home]?.abbr||leg1Agg.leg1Fix.home} {leg1Agg.h1}–{leg1Agg.a1} {TEAMS[leg1Agg.leg1Fix.away]?.abbr||leg1Agg.leg1Fix.away}
+            </span>
+          </div>
+          <div style={{display:'flex',alignItems:'center',gap:5}}>
+            <span style={{fontSize:10,fontWeight:700,color:MUTED}}>Αθρ:</span>
+            <span style={{fontSize:12,fontWeight:800,
+              color:leg1Agg.diff>0?GREEN:leg1Agg.diff<0?RED:GOLD}}>
+              {leg1Agg.situation}
+            </span>
+            {leg1Agg.diff===0&&<span style={{fontSize:10,color:MUTED}}>· παρ/πέν αν ισόπαλη</span>}
+          </div>
+        </div>
+      </div>}
 
       {/* Odds */}
       <OddsRow matchId={match.id}/>
@@ -340,17 +365,27 @@ function H2HChart({predictions,results}){
   )
 }
 
-// ─── RIVALRY STATS ────────────────────────────────────────────────────────────
-function RivalryStats({predictions,results}){
-  const played=ALL_FIXTURES.filter(m=>results?.[m.id]!=null)
-  if(!played.length) return <div style={{padding:32,textAlign:'center',color:MUTED,fontSize:13}}>Δεν υπάρχουν δεδομένα ακόμα</div>
 
-  let oracle={boikos:0,mavromichalis:0,chousiadas:0}
-  let contrarian={...oracle},allSame=0,allSameRight=0,allDiff=0
+// ─── RIVALRY STATS (clean rewrite) ───────────────────────────────────────────
+function RivalryStats({predictions,results,thavmaStats}){
+  const played=ALL_FIXTURES.filter(m=>results?.[m.id]!=null)
+
+  if(!played.length) return(
+    <div style={{padding:32,textAlign:'center',color:MUTED,fontSize:13,fontWeight:500}}>
+      Δεν υπάρχουν αγώνες για ανάλυση ακόμα
+    </div>
+  )
+
+  // Build stats
+  const oracle={boikos:0,mavromichalis:0,chousiadas:0}
+  const contrarian={boikos:0,mavromichalis:0,chousiadas:0}
+  let allSame=0,allSameRight=0,allDiff=0
   const allDiffWins=[0,0,0]
   const h2h={}
   for(let i=0;i<PLAYERS.length;i++) for(let j=i+1;j<PLAYERS.length;j++)
-    h2h[`${i}_${j}`]={wins:[0,0,0],diff:0,names:[PLAYER_NAMES[PLAYERS[i]],PLAYER_NAMES[PLAYERS[j]]],colors:[PC[PLAYERS[i]].p,PC[PLAYERS[j]].p]}
+    h2h[i+'_'+j]={wins:[0,0,0],diff:0,
+      names:[PLAYER_NAMES[PLAYERS[i]],PLAYER_NAMES[PLAYERS[j]]],
+      colors:[PC[PLAYERS[i]].p,PC[PLAYERS[j]].p]}
 
   played.forEach(m=>{
     const actual=results[m.id]
@@ -359,83 +394,123 @@ function RivalryStats({predictions,results}){
     const scores=PLAYERS.map((p,i)=>scoreMatch(preds[i],actual))
     const pts=scores.map(s=>s?.points??0)
     const res3=preds.map(pr=>pr.h>pr.a?'H':pr.h<pr.a?'A':'D')
-    if(new Set(res3).size===3){allDiff++;pts.forEach((p,i)=>{if(p>0)allDiffWins[i]++})}
     if(new Set(res3).size===1){allSame++;if(pts.some(p=>p>0))allSameRight++}
+    if(new Set(res3).size===3){allDiff++;pts.forEach((p,i)=>{if(p>0)allDiffWins[i]++})}
     for(let i=0;i<PLAYERS.length;i++) for(let j=i+1;j<PLAYERS.length;j++){
-      const key=`${i}_${j}`
-      if(res3[i]!==res3[j]){h2h[key].diff++;if(pts[i]>pts[j])h2h[key].wins[0]++;else if(pts[j]>pts[i])h2h[key].wins[1]++;else h2h[key].wins[2]++}
+      const key=i+'_'+j
+      if(res3[i]!==res3[j]){
+        h2h[key].diff++
+        if(pts[i]>pts[j])h2h[key].wins[0]++
+        else if(pts[j]>pts[i])h2h[key].wins[1]++
+        else h2h[key].wins[2]++
+      }
     }
     const exactPs=PLAYERS.filter((_,i)=>scores[i]?.exact)
     if(exactPs.length===1)oracle[exactPs[0]]++
     PLAYERS.forEach((p,i)=>{
-      const otherRes=PLAYERS.filter((_,j)=>j!==i).map(o=>{const op=predictions?.[m.id]?.[o];return op?(op.h>op.a?'H':op.h<op.a?'A':'D'):null})
-      if(otherRes.every(r=>r===otherRes[0])&&res3[i]!==otherRes[0]&&pts[i]>0)contrarian[p]++
+      const others=PLAYERS.filter((_,j)=>j!==i)
+      const otherRes=others.map(o=>{const op=predictions?.[m.id]?.[o];return op?(op.h>op.a?'H':op.h<op.a?'A':'D'):null})
+      if(otherRes[0]&&otherRes.every(r=>r===otherRes[0])&&res3[i]!==otherRes[0]&&pts[i]>0)contrarian[p]++
     })
   })
-
-  const SB=({title,emoji,children})=><div style={{background:SURF,border:`1px solid ${LINE}`,borderRadius:12,padding:'14px 16px',marginBottom:10}}>
-    <div style={{fontSize:13,fontWeight:700,marginBottom:12,display:'flex',alignItems:'center',gap:7}}><span style={{fontSize:18}}>{emoji}</span>{title}</div>
-    {children}
-  </div>
-  const Bar=({val,max,color,label})=><div style={{marginBottom:8}}>
-    <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline',marginBottom:4}}>
-      <span style={{fontSize:12,fontWeight:600,color:TEXT}}>{label}</span>
-      <span style={{fontSize:12,fontWeight:800,color:color,fontVariantNumeric:'tabular-nums'}}>{max>0?`${Math.round(val/max*100)}%`:'-'} ({val}/{max})</span>
-    </div>
-    <div style={{height:6,background:'rgba(255,255,255,.08)',borderRadius:3,overflow:'hidden'}}>
-      <div style={{height:'100%',width:max>0?`${Math.round(val/max*100)}%`:'0%',background:color,borderRadius:3}}/>
-    </div>
-  </div>
 
   const oLdr=PLAYERS.reduce((a,b)=>oracle[a]>=oracle[b]?a:b)
   const cLdr=PLAYERS.reduce((a,b)=>contrarian[a]>=contrarian[b]?a:b)
 
-  return <div>
-    <SB title="Head to Head — Όταν διαφωνούν" emoji="⚔️">
-      {Object.entries(h2h).map(([key,data])=><div key={key} style={{marginBottom:14}}>
-        <div style={{fontSize:10,fontWeight:700,color:MUTED,marginBottom:7,letterSpacing:'.04em',textTransform:'uppercase'}}>{data.names[0]} vs {data.names[1]} · {data.diff} battles</div>
-        <Bar val={data.wins[0]} max={data.diff} color={data.colors[0]} label={data.names[0]}/>
-        <Bar val={data.wins[1]} max={data.diff} color={data.colors[1]} label={data.names[1]}/>
-        {data.wins[2]>0&&<div style={{fontSize:10,color:DIM,marginTop:3}}>Ισόπαλα: {data.wins[2]}</div>}
-      </div>)}
-    </SB>
-    <SB title="The Consensus — Και οι 3 ίδια" emoji="🤝">
-      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:10}}>
-        <div style={{background:'rgba(255,255,255,.05)',borderRadius:10,padding:'12px',textAlign:'center'}}>
-          <div style={{fontSize:28,fontWeight:900,color:TEXT}}>{allSame}</div>
-          <div style={{fontSize:11,color:MUTED,fontWeight:600,marginTop:2}}>Φορές</div>
+  return(
+    <div>
+      <SB title="Head to Head — Όταν διαφωνούν" emoji="⚔️">
+        {Object.entries(h2h).map(([key,data])=>(
+          <div key={key} style={{marginBottom:14}}>
+            <div style={{fontSize:10,fontWeight:700,color:MUTED,marginBottom:7,letterSpacing:'.04em',textTransform:'uppercase'}}>{data.names[0]} vs {data.names[1]} · {data.diff} battles</div>
+            <Bar val={data.wins[0]} max={data.diff} color={data.colors[0]} label={data.names[0]}/>
+            <Bar val={data.wins[1]} max={data.diff} color={data.colors[1]} label={data.names[1]}/>
+            {data.wins[2]>0&&<div style={{fontSize:10,color:DIM,marginTop:3}}>Ισόπαλα: {data.wins[2]}</div>}
+          </div>
+        ))}
+      </SB>
+
+      <SB title="The Consensus — Και οι 3 ίδια" emoji="🤝">
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:10}}>
+          <div style={{background:'rgba(255,255,255,.04)',borderRadius:10,padding:'12px',textAlign:'center'}}>
+            <div style={{fontSize:28,fontWeight:900,color:TEXT}}>{allSame}</div>
+            <div style={{fontSize:11,color:MUTED,fontWeight:600,marginTop:2}}>Φορές συμφώνησαν</div>
+          </div>
+          <div style={{background:allSame>0&&allSameRight===0?'rgba(255,77,109,.12)':'rgba(0,255,136,.08)',borderRadius:10,padding:'12px',textAlign:'center'}}>
+            <div style={{fontSize:28,fontWeight:900,color:allSame>0&&allSameRight===0?RED:GREEN}}>
+              {allSame>0?Math.round(allSameRight/allSame*100):0}%
+            </div>
+            <div style={{fontSize:11,color:MUTED,fontWeight:600,marginTop:2}}>Ακρίβεια</div>
+          </div>
         </div>
-        <div style={{background:allSame>0&&allSameRight===0?`${RED}15`:`${GREEN}10`,borderRadius:10,padding:'12px',textAlign:'center',border:`1px solid ${allSame>0&&allSameRight===0?RED+'30':GREEN+'20'}`}}>
-          <div style={{fontSize:28,fontWeight:900,color:allSame>0&&allSameRight===0?RED:GREEN}}>{allSame>0?Math.round(allSameRight/allSame*100):0}%</div>
-          <div style={{fontSize:11,color:MUTED,fontWeight:600,marginTop:2}}>Ακρίβεια</div>
+        {allSame>0&&allSameRight===0&&<div style={{fontSize:12,fontWeight:700,color:RED,textAlign:'center',padding:'8px',background:'rgba(255,77,109,.08)',borderRadius:8}}>
+          💀 Όταν συμφωνούν... πάντα λάθος!
+        </div>}
+      </SB>
+
+      <SB title="Free For All — Όλοι διαφωνούν" emoji="🔀">
+        <div style={{fontSize:12,fontWeight:600,color:MUTED,marginBottom:10}}>{allDiff} αγώνες · ποιος κερδίζει;</div>
+        {PLAYERS.map((p,i)=><Bar key={p} val={allDiffWins[i]} max={allDiff} color={PC[p].p} label={PLAYER_NAMES[p]}/>)}
+      </SB>
+
+      <SB title="The Oracle — Μοναδικό exact score" emoji="🔮">
+        <div style={{display:'flex',gap:6}}>
+          {PLAYERS.map(p=>{
+            const isL=oracle[p]>0&&p===oLdr
+            const pc=PC[p]
+            return(
+              <div key={p} style={{flex:1,background:isL?pc.bg:'rgba(255,255,255,.04)',border:'1px solid '+(isL?pc.b:LINE),borderRadius:10,padding:'12px 8px',textAlign:'center'}}>
+                <div style={{fontSize:10,fontWeight:700,color:isL?pc.p:MUTED,letterSpacing:'.04em',marginBottom:4}}>{PLAYER_NAMES[p].substring(0,4).toUpperCase()}</div>
+                <div style={{fontSize:26,fontWeight:900,color:isL?pc.p:MUTED}}>{oracle[p]}</div>
+                {isL&&oracle[p]>0&&<div style={{fontSize:11,marginTop:4}}>🔮</div>}
+              </div>
+            )
+          })}
         </div>
-      </div>
-      {allSame>0&&allSameRight===0&&<div style={{fontSize:12,fontWeight:700,color:RED,textAlign:'center',padding:'8px',background:`${RED}10`,borderRadius:8}}>💀 Όταν συμφωνούν... πάντα λάθος!</div>}
-    </SB>
-    <SB title="Free For All — Όλοι διαφωνούν" emoji="🔀">
-      <div style={{fontSize:12,fontWeight:600,color:MUTED,marginBottom:10}}>{allDiff} αγώνες</div>
-      {PLAYERS.map((p,i)=><Bar key={p} val={allDiffWins[i]} max={allDiff} color={PC[p].p} label={PLAYER_NAMES[p]}/>)}
-    </SB>
-    <SB title="The Oracle — Μοναδικό exact score" emoji="🔮">
-      <div style={{display:'flex',gap:6}}>
-        {PLAYERS.map(p=>{const isL=oracle[p]>0&&p===oLdr,pc=PC[p];return <div key={p} style={{flex:1,background:isL?pc.bg:'rgba(255,255,255,.05)',border:`1px solid ${isL?pc.b:LINE}`,borderRadius:10,padding:'12px 8px',textAlign:'center'}}>
-          <div style={{fontSize:10,fontWeight:700,color:isL?pc.p:MUTED,letterSpacing:'.04em',marginBottom:4}}>{PLAYER_NAMES[p].substring(0,4).toUpperCase()}</div>
-          <div style={{fontSize:26,fontWeight:900,color:isL?pc.p:MUTED}}>{oracle[p]}</div>
-          {isL&&oracle[p]>0&&<div style={{fontSize:11,marginTop:4}}>🔮</div>}
-        </div>})}
-      </div>
-    </SB>
-    <SB title="The Maverick — Διαφώνησε & είχε δίκιο" emoji="🌶️">
-      <div style={{display:'flex',gap:6}}>
-        {PLAYERS.map(p=>{const isL=contrarian[p]>0&&p===cLdr,pc=PC[p];return <div key={p} style={{flex:1,background:isL?pc.bg:'rgba(255,255,255,.05)',border:`1px solid ${isL?pc.b:LINE}`,borderRadius:10,padding:'12px 8px',textAlign:'center'}}>
-          <div style={{fontSize:10,fontWeight:700,color:isL?pc.p:MUTED,letterSpacing:'.04em',marginBottom:4}}>{PLAYER_NAMES[p].substring(0,4).toUpperCase()}</div>
-          <div style={{fontSize:26,fontWeight:900,color:isL?pc.p:MUTED}}>{contrarian[p]}</div>
-          {isL&&contrarian[p]>0&&<div style={{fontSize:11,marginTop:4}}>🌶️</div>}
-        </div>})}
-      </div>
-    </SB>
-  </div>
+      </SB>
+
+      <SB title="The Maverick — Διαφώνησε & είχε δίκιο" emoji="🌶️">
+        <div style={{display:'flex',gap:6}}>
+          {PLAYERS.map(p=>{
+            const isL=contrarian[p]>0&&p===cLdr
+            const pc=PC[p]
+            return(
+              <div key={p} style={{flex:1,background:isL?pc.bg:'rgba(255,255,255,.04)',border:'1px solid '+(isL?pc.b:LINE),borderRadius:10,padding:'12px 8px',textAlign:'center'}}>
+                <div style={{fontSize:10,fontWeight:700,color:isL?pc.p:MUTED,letterSpacing:'.04em',marginBottom:4}}>{PLAYER_NAMES[p].substring(0,4).toUpperCase()}</div>
+                <div style={{fontSize:26,fontWeight:900,color:isL?pc.p:MUTED}}>{contrarian[p]}</div>
+                {isL&&contrarian[p]>0&&<div style={{fontSize:11,marginTop:4}}>🌶️</div>}
+              </div>
+            )
+          })}
+        </div>
+        <div style={{fontSize:11,color:MUTED,marginTop:8}}>Διαφώνησε με τους άλλους 2 και βρήκε σωστό αποτέλεσμα</div>
+      </SB>
+
+      <SB title="⚡ Θαύματα & Ωσάννα — Late Goal Drama" emoji="🙏">
+        <div style={{fontSize:11,color:MUTED,marginBottom:12,lineHeight:1.6}}>Πόντοι από γκολ μετά το 85'</div>
+        {PLAYERS.map(p=>{
+          const ts=(thavmaStats&&thavmaStats[p])||{benefited:0,pts_gained:0,pts_lost:{}}
+          const totalLost=Object.values(ts.pts_lost||{}).reduce((a,b)=>a+b,0)
+          const pc=PC[p]
+          return(
+            <div key={p} style={{marginBottom:8,background:'rgba(255,255,255,.03)',borderRadius:10,padding:'10px 12px',border:'1px solid '+LINE}}>
+              <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:6}}>
+                <div style={{width:8,height:8,borderRadius:'50%',background:pc.p}}/>
+                <span style={{fontSize:12,fontWeight:700,color:TEXT,flex:1}}>{PLAYER_NAMES[p]}</span>
+                <span style={{fontSize:10,color:GREEN,fontWeight:700}}>🍀 {ts.benefited||0}x +{ts.pts_gained||0}p</span>
+                <span style={{fontSize:10,color:RED,fontWeight:700}}>😤 -{totalLost}p</span>
+              </div>
+              <div style={{height:4,background:'rgba(255,255,255,.06)',borderRadius:2}}>
+                <div style={{height:'100%',width:Math.min(100,(ts.pts_gained||0)*25)+'%',background:pc.p,borderRadius:2}}/>
+              </div>
+            </div>
+          )
+        })}
+      </SB>
+    </div>
+  )
 }
+
 
 // ─── LEADER HERO ──────────────────────────────────────────────────────────────
 function LeaderHero({board,maxPts}){
@@ -489,13 +564,22 @@ function LeaderHero({board,maxPts}){
 }
 
 // ─── PREDICT CARD ─────────────────────────────────────────────────────────────
-function PredictCard({match,myPred,onSave}){
+function PredictCard({match,myPred,onSave,results}){
   const locked=isLocked(match.kickoff),isUEFA=isUEFATie(match.id)
   const [h,setH]=useState(myPred?.h??0),[a,setA]=useState(myPred?.a??0)
   const [qual,setQual]=useState(myPred?.qual??match.home)
-  const [predOT,setPredOT]=useState(false),[otH,setOtH]=useState(0),[otA,setOtA]=useState(0)
-  const [predPen,setPredPen]=useState(false),[penH,setPenH]=useState(0),[penA,setPenA]=useState(0)
-  const [saving,setSaving]=useState(false),[saved,setSaved]=useState(false)
+  const [predOT,setPredOT]=useState(myPred?.predOT??false),[otH,setOtH]=useState(myPred?.otH??0),[otA,setOtA]=useState(myPred?.otA??0)
+  const [predPen,setPredPen]=useState(myPred?.predPen??false),[penH,setPenH]=useState(myPred?.penH??0),[penA,setPenA]=useState(myPred?.penA??0)
+  const [saving,setSaving]=useState(false),[saved,setSaved]=useState(false),[error,setError]=useState('')
+  // Sync when server predictions load
+  useEffect(()=>{
+    if(myPred){
+      setH(myPred.h??0);setA(myPred.a??0)
+      setQual(myPred.qual??match.home)
+      setPredOT(myPred.predOT??false)
+      setOtH(myPred.otH??0);setOtA(myPred.otA??0)
+    }
+  },[myPred?.h,myPred?.a,myPred?.qual])
   const adj=(v,set,d)=>{if(!locked){set(Math.max(0,Math.min(9,v+d)));setSaved(false)}}
   const hn=TEAMS[match.home]?.name||match.home,an=TEAMS[match.away]?.name||match.away
   const tC={SL:'#f0c040',UCL:BLUE,UEL:'#f5733a',UECL:GREEN}[match.t]||GOLD
@@ -514,7 +598,17 @@ function PredictCard({match,myPred,onSave}){
       </>)}
     </div>
   </div>
-  async function save(){if(locked)return;setSaving(true);try{await onSave(match.id,h,a,qual,predOT,otH,otA,predPen,penH,penA);setSaved(true);setTimeout(()=>setSaved(false),2500)}catch{}finally{setSaving(false)}}
+  async function save(){
+    if(locked)return;setSaving(true);setError('')
+    try{
+      await onSave(match.id,h,a,qual,predOT,otH,otA,predPen,penH,penA)
+      setSaved(true);setTimeout(()=>setSaved(false),2500)
+    }catch(e){
+      const msg=e?.message||'Σφάλμα'
+      setError('❌ '+msg+' — έλεγξε σύνδεση & ξανά')
+      console.error('Save failed:',e)
+    }finally{setSaving(false)}
+  }
 
   return <div style={{background:SURF,border:`1px solid ${locked?LINE:tC+'33'}`,borderRadius:14,marginBottom:12,overflow:'hidden'}}>
     <div style={{height:2,background:`linear-gradient(90deg,${tC}cc,transparent)`}}/>
@@ -557,7 +651,8 @@ function PredictCard({match,myPred,onSave}){
         </select>
       </div>}
 
-      <button onClick={save} disabled={locked||saving||saved} style={{width:'100%',padding:'12px',borderRadius:10,border:'none',fontWeight:700,fontSize:14,cursor:locked?'not-allowed':'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:8,letterSpacing:'.03em',transition:'all .2s',background:locked?'rgba(255,255,255,.06)':saved?GREEN:`${tC}ee`,color:locked?DIM:SURF}}>
+      {error&&<div style={{fontSize:11,color:'#ff4d6d',background:'rgba(255,77,109,.1)',border:'1px solid rgba(255,77,109,.25)',borderRadius:8,padding:'7px 10px',marginBottom:8,textAlign:'center',fontWeight:600}}>{error}</div>}
+        <button onClick={save} disabled={locked||saving||saved} style={{width:'100%',padding:'12px',borderRadius:10,border:'none',fontWeight:700,fontSize:14,cursor:locked?'not-allowed':'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:8,letterSpacing:'.03em',transition:'all .2s',background:locked?'rgba(255,255,255,.06)':saved?GREEN:`${tC}ee`,color:locked?DIM:SURF}}>
         <i className={`ti ${saved?'ti-check':locked?'ti-lock':saving?'ti-loader-2':'ti-device-floppy'}`} style={{fontSize:16,animation:saving?'spin .7s linear infinite':undefined}}/>
         {saved?'Αποθηκεύτηκε!':locked?'Κλειδωμένο':saving?'Αποθήκευση…':'Αποθήκευσε'}
       </button>
@@ -633,7 +728,13 @@ function ChangePasswordModal({user, onClose}){
 function MatchdayPage({predictions,results,onRefresh}){
   const [tab,setTab]=useState('all')
   const board=computeLeaderboard(ALL_FIXTURES,predictions,results)
-  const sorted=[...ALL_FIXTURES].sort((a,b)=>new Date(a.kickoff)-new Date(b.kickoff))
+  const now=Date.now()
+  const sorted=[...ALL_FIXTURES].sort((a,b)=>{
+    const aLocked=now>=new Date(a.kickoff).getTime()-60000
+    const bLocked=now>=new Date(b.kickoff).getTime()-60000
+    if(aLocked!==bLocked) return aLocked?1:-1  // unlocked first
+    return new Date(a.kickoff)-new Date(b.kickoff)
+  })
   const fx={all:sorted,sl:[...SUPER_LEAGUE].sort((a,b)=>new Date(a.kickoff)-new Date(b.kickoff)),
     ucl:UEFA_FIXTURES.filter(f=>f.t==='UCL'),uel:UEFA_FIXTURES.filter(f=>f.t==='UEL'),
     uecl:UEFA_FIXTURES.filter(f=>f.t==='UECL')}[tab]||[]
@@ -655,12 +756,12 @@ function MatchdayPage({predictions,results,onRefresh}){
     </div>
     {/* ALL games - full scroll */}
     <div style={{padding:'0 16px 80px'}}>
-      {fx.map(m=><MatchCard key={m.id} match={m} result={results?.[m.id]} predictions={predictions?.[m.id]} onRefresh={onRefresh}/>)}
+      {fx.map(m=><MatchCard key={m.id} match={m} result={results?.[m.id]} predictions={predictions?.[m.id]} onRefresh={onRefresh} allResults={results}/>)}
     </div>
   </div>
 }
 
-function LeaguePage({predictions,results}){
+function LeaguePage({predictions,results,thavmaStats}){
   const board=computeLeaderboard(ALL_FIXTURES,predictions,results)
   const maxPts=ALL_FIXTURES.filter(m=>results?.[m.id]!=null).length*2
   const [tab,setTab]=useState('standings')
@@ -691,7 +792,7 @@ function LeaguePage({predictions,results}){
     </>}
     {tab==='graph'&&<H2HChart predictions={predictions} results={results}/>}
     {tab==='graph'&&<H2HGraph predictions={predictions} results={results}/>}
-    {tab==='rivalry'&&<RivalryStats predictions={predictions} results={results}/>}
+    {tab==='rivalry'&&<RivalryStats predictions={predictions} results={results} thavmaStats={thavmaStats}/>}
     {tab==='analytics'&&board.map(row=>{
       const n=row.played,ea=n>0?Math.round(row.exact/n*100):0,ca=n>0?Math.round(row.correct/n*100):0,pc=PC[row.player]
       return <div key={row.player} style={{background:SURF,border:`1px solid ${LINE}`,borderRadius:12,padding:'16px',marginBottom:10}}>
@@ -729,11 +830,17 @@ function LeaguePage({predictions,results}){
   </div>
 }
 
-function PredictPage({predictions,currentUser,onSave}){
-  const sorted=[...ALL_FIXTURES].sort((a,b)=>new Date(a.kickoff)-new Date(b.kickoff))
+function PredictPage({predictions,currentUser,onSave,results}){
+  const now=Date.now()
+  const sorted=[...ALL_FIXTURES].sort((a,b)=>{
+    const aLocked=now>=new Date(a.kickoff).getTime()-60000
+    const bLocked=now>=new Date(b.kickoff).getTime()-60000
+    if(aLocked!==bLocked) return aLocked?1:-1  // unlocked first
+    return new Date(a.kickoff)-new Date(b.kickoff)
+  })
   return <div style={{padding:'12px 16px 80px'}}>
     <div style={{fontSize:10,fontWeight:700,letterSpacing:'.08em',textTransform:'uppercase',color:MUTED,marginBottom:14}}>Χρονολογική σειρά · Παλιότερα πρώτα</div>
-    {sorted.map(m=><PredictCard key={m.id} match={m} myPred={predictions?.[m.id]?.[currentUser.id]} onSave={onSave}/>)}
+    {sorted.map(m=><PredictCard key={m.id} match={m} myPred={predictions?.[m.id]?.[currentUser.id]} onSave={onSave} results={results}/>)}
   </div>
 }
 
@@ -945,8 +1052,8 @@ export default function App({ user, onLogout }) {
   const pc = PC[user.id] || PC.boikos
   const pages={
     matchday:<MatchdayPage predictions={state.predictions} results={state.results} onRefresh={load}/>,
-    league:  <LeaguePage   predictions={state.predictions} results={state.results}/>,
-    predict: <PredictPage  predictions={state.predictions} currentUser={user} onSave={savePrediction}/>,
+    league:  <LeaguePage   predictions={state.predictions} results={state.results} thavmaStats={state.thavmaStats}/>,
+    predict: <PredictPage  predictions={state.predictions} currentUser={user} onSave={savePrediction} results={state.results}/>,
     history: <HistoryPage  predictions={state.predictions} results={state.results}/>,
     banter:  <BanterPage   chat={state.chat} onSend={sendChat}/>,
   }
@@ -987,13 +1094,13 @@ export default function App({ user, onLogout }) {
         <div style={{width:7,height:7,borderRadius:'50%',background:syncOk?GREEN:RED,animation:syncing?'pulse-d .7s infinite':undefined}}/>
         {user?.role==='admin' && (
           <button onClick={()=>setShowAddPlayer(true)} title="Προσθήκη παίκτη"
-            style={{background:'none',border:'none',cursor:'pointer',color:MUTED,display:'flex',alignItems:'center',padding:4}}>
-            <i className="ti ti-user-plus" style={{fontSize:isDesktop?17:15}}/>
-          </button>
+            style={{background:'none',border:'none',cursor:'pointer',color:MUTED,display:'flex',alignItems:'center',padding:'4px 6px',borderRadius:8,fontSize:isDesktop?16:14}}>
+          ➕
+        </button>
         )}
-        <button onClick={()=>setShowGuide(true)} title="Οδηγός"
-          style={{background:'none',border:'none',cursor:'pointer',color:MUTED,display:'flex',alignItems:'center',padding:4}}>
-          <i className="ti ti-info-circle" style={{fontSize:isDesktop?17:15}}/>
+        <button onClick={()=>setShowGuide(true)} title="Οδηγός & Κανόνες"
+          style={{background:'none',border:'none',cursor:'pointer',color:MUTED,display:'flex',alignItems:'center',padding:'4px 6px',borderRadius:8,fontSize:isDesktop?17:15}}>
+          ℹ️
         </button>
         <div style={{display:'flex',alignItems:'center',gap:7}}>
           <div style={{width:isDesktop?32:26,height:isDesktop?32:26,borderRadius:'50%',background:pc.p,
@@ -1002,8 +1109,8 @@ export default function App({ user, onLogout }) {
           </div>
           {isDesktop && <span style={{fontSize:12,fontWeight:700,color:pc.p}}>{user.name}</span>}
         </div>
-        <button onClick={handleLogout} style={{background:'none',border:'none',cursor:'pointer',color:MUTED,display:'flex',alignItems:'center',padding:4}}>
-          <i className="ti ti-logout" style={{fontSize:isDesktop?17:15}}/>
+        <button onClick={handleLogout} style={{background:'none',border:'none',cursor:'pointer',color:MUTED,display:'flex',alignItems:'center',padding:'4px 6px',borderRadius:8,fontSize:isDesktop?15:13}}>
+          🚪
         </button>
       </div>
     </div>
