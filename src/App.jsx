@@ -240,14 +240,14 @@ function MatchCard({match,result,predictions,onRefresh,allResults,currentUser,re
         </div>
       </div>}
 
-      {/* Actions */}
-      <div style={{display:'flex',gap:8,marginTop:12}}>
+      {/* Actions - admin only */}
+      {currentUser?.role==='admin'&&<div style={{display:'flex',gap:8,marginTop:12}}>
         <FetchBtn matchId={match.id} onFetched={onRefresh}/>
         <button onClick={()=>setShowPush(v=>!v)} style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',gap:5,padding:'8px 10px',borderRadius:8,border:`1px solid ${showPush?GOLD+'55':GOLD+'25'}`,background:showPush?`${GOLD}20`:`${GOLD}08`,color:GOLD,fontSize:11,fontWeight:700,cursor:'pointer'}}>
           <i className="ti ti-cloud-upload" style={{fontSize:13}}/>Push
         </button>
-      </div>
-      {showPush&&<PushPanel match={match} result={result} onSaved={()=>{setShowPush(false);onRefresh()}}/>}
+      </div>}
+      {showPush&&currentUser?.role==='admin'&&<PushPanel match={match} result={result} onSaved={()=>{setShowPush(false);onRefresh()}}/>}
     </div>
   </div>
 }
@@ -807,7 +807,7 @@ function LeaguePage({predictions,results,thavmaStats}){
   const [tab,setTab]=useState('standings')
   return <div style={{padding:'16px 16px 80px'}}>
     <div style={{display:'flex',gap:6,marginBottom:16,overflowX:'auto',scrollbarWidth:'none'}}>
-      {[{id:'standings',l:'Standings'},{id:'rivalry',l:'🌶️ Rivalry'},{id:'analytics',l:'Analytics'},{id:'campaigns',l:'Campaigns'}].map(tabItem=><button key={tabItem.id} onClick={()=>setTab(tabItem.id)} style={{fontSize:11,fontWeight:700,padding:'6px 13px',borderRadius:7,border:`1px solid ${tab===tabItem.id?'rgba(255,255,255,.3)':LINE}`,background:tab===tabItem.id?'rgba(255,255,255,.12)':'transparent',color:tab===tabItem.id?TEXT:MUTED,cursor:'pointer',whiteSpace:'nowrap',flexShrink:0,letterSpacing:'.03em'}}>{tabItem.l}</button>)}
+      {[{id:'standings',l:'Συγκομιδή'},{id:'rivalry',l:'🌶️ Διαγκωνισμοί'},{id:'analytics',l:'Αναλυτικά'},{id:'campaigns',l:'Ενεργές Διοργανώσεις'}].map(tabItem=><button key={tabItem.id} onClick={()=>setTab(tabItem.id)} style={{fontSize:11,fontWeight:700,padding:'6px 13px',borderRadius:7,border:`1px solid ${tab===tabItem.id?'rgba(255,255,255,.3)':LINE}`,background:tab===tabItem.id?'rgba(255,255,255,.12)':'transparent',color:tab===tabItem.id?TEXT:MUTED,cursor:'pointer',whiteSpace:'nowrap',flexShrink:0,letterSpacing:'.03em'}}>{tabItem.l}</button>)}
     </div>
         {tab==='standings'&&<>
       <div style={{fontSize:10,fontWeight:700,letterSpacing:'.1em',textTransform:'uppercase',color:'rgba(255,255,255,.4)',marginBottom:10}}>Ανάλυση ανά τουρνουά</div>
@@ -1022,9 +1022,9 @@ function LeaderSidebar({ predictions, results }) {
 // ─── APP SHELL (RESPONSIVE) ─────────────────────────────────────────────────
 const NAV=[
   {id:'matchday',l:'Αγώνες',  icon:'⚽'},
-  {id:'league',  l:'League',  icon:'🏆'},
-  {id:'predict', l:'Predict', icon:'✏️'},
-  {id:'history', l:'History', icon:'📋'},
+  {id:'league',  l:'Διαγωνισμός',icon:'🏆'},
+  {id:'predict', l:'ΠΡΟΒΛΕΨΗ',     icon:'✏️'},
+  {id:'history', l:'Ιστορικό',  icon:'📋'},
   {id:'banter',  l:'ΙΕΡΑ ΕΞΕΤΑΣΗ', icon:'🔥'},
 ]
 
@@ -1092,7 +1092,7 @@ export default function App({ user, onLogout }) {
 
   if(loading) return(
     <div style={{minHeight:'100dvh',background:BG,display:'flex',alignItems:'center',justifyContent:'center',flexDirection:'column',gap:16}}>
-      <div style={{fontSize:24,fontWeight:800,letterSpacing:'.06em',color:GREEN}}>ΚΟΥΒΑΔΕΙΡΟΣ</div>
+      <div style={{fontSize:24,fontWeight:800,letterSpacing:'.06em',color:GREEN}}>ΚΟΥΒΑΔΕΪΡΟΣ</div>
       <Spinner size={28}/>
     </div>
   )
@@ -1115,7 +1115,7 @@ export default function App({ user, onLogout }) {
       position:'sticky', top:0, zIndex:20, flexShrink:0 }}>
       {/* Brand */}
       <div style={{display:'flex',alignItems:'center',gap:10}}>
-        <div style={{fontSize:isDesktop?18:15,fontWeight:800,letterSpacing:'-.01em',color:TEXT}}>ΚΟΥΒΑΔΕΙΡΟΣ</div>
+        <div style={{fontSize:isDesktop?18:15,fontWeight:800,letterSpacing:'-.01em',color:TEXT}}>ΚΟΥΒΑΔΕΪΡΟΣ</div>
         <div style={{fontSize:9,fontWeight:700,letterSpacing:'.08em',color:GREEN,background:`${GREEN}18`,border:`1px solid ${GREEN}35`,borderRadius:4,padding:'2px 6px'}}>26/27</div>
       </div>
 

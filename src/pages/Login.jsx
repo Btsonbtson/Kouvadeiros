@@ -45,7 +45,7 @@ export default function Login({ onLogin }) {
       <div style={{ width:'100%', maxWidth:380, position:'relative', zIndex:1 }}>
         <div style={{ textAlign:'center', marginBottom:36 }}>
           <div style={{ fontSize:10, fontWeight:700, letterSpacing:'.2em', color:'rgba(255,255,255,.3)', marginBottom:8 }}>CAREDIRECT FC</div>
-          <div style={{ fontSize:38, fontWeight:800, color:'#fff', letterSpacing:'-.02em', lineHeight:1, marginBottom:10 }}>ΚΟΥΒΑΔΕΙΡΟΣ</div>
+          <div style={{ fontSize:38, fontWeight:800, color:'#fff', letterSpacing:'-.02em', lineHeight:1, marginBottom:10 }}>ΚΟΥΒΑΔΕΪΡΟΣ</div>
           <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
             <div style={{ height:1, width:40, background:'linear-gradient(90deg,transparent,#00ff8866)' }}/>
             <span style={{ fontSize:11, fontWeight:700, color:GREEN, letterSpacing:'.1em' }}>2026/27 SEASON</span>
