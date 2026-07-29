@@ -1023,7 +1023,7 @@ function LeaderSidebar({ predictions, results }) {
 const NAV=[
   {id:'matchday',l:'Αγώνες',  icon:'⚽'},
   {id:'league',  l:'Διαγωνισμός',icon:'🏆'},
-  {id:'predict', l:'ΠΡΟΒΛΕΨΗ',     icon:'✏️'},
+  {id:'predict', l:'ΕΔΩ! ΠΡΟΒΛΕΨΗ',     icon:'✏️'},
   {id:'history', l:'Ιστορικό',  icon:'📋'},
   {id:'banter',  l:'ΙΕΡΑ ΕΞΕΤΑΣΗ', icon:'🔥'},
 ]
