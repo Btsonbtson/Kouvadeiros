@@ -690,10 +690,11 @@ function LeaderSidebar({ predictions, results }) {
 
 // ─── APP SHELL (RESPONSIVE) ─────────────────────────────────────────────────
 const NAV=[
-  {id:'matchday',l:'ΑΓΩΝΕΣ/ΠΡΟΒΛΕΨΗ',icon:'⚽'},
-  {id:'league',  l:'Διαγωνισμός',icon:'🏆'},
-  {id:'history', l:'Ιστορικό',  icon:'📋'},
-  {id:'banter',  l:'ΙΕΡΑ ΕΞΕΤΑΣΗ', icon:'🔥'},
+  {id:'matchday', l:'ΠΡΟΒΛΕΨΕΙΣ',      icon:'⚽'},
+  {id:'schedule', l:'ΠΡΟΓΡΑΜΜΑ',       icon:'📅'},
+  {id:'league',   l:'Διαγωνισμός',    icon:'🏆'},
+  {id:'history',  l:'Ιστορικό',       icon:'📋'},
+  {id:'banter',   l:'ΙΕΡΑ ΕΞΕΤΑΣΗ',   icon:'🔥'},
 ]
 
 function useBreakpoint() {
@@ -711,7 +712,7 @@ function useBreakpoint() {
 
 export default function App({ user, onLogout }) {
   const [screen,  setScreen]  = useState('matchday')
-  const [state,   setState]   = useState({ predictions:{...SEEDED_PREDS}, results:{...SEEDED_RES}, chat:[] })
+  const [state,   setState]   = useState({ predictions:{...SEEDED_PREDS}, results:{...SEEDED_RES}, chat:[], slStandings:[] })
   const [liveScores, setLiveScores] = useState({})
   const [loading, setLoading] = useState(true)
   const [syncing, setSyncing] = useState(false)
@@ -740,6 +741,10 @@ export default function App({ user, onLogout }) {
         results:{ ...SEEDED_RES, ...s.results },
       })
       setSyncOk(true)
+      // Also fetch SL standings (non-blocking)
+      api.getSlStandings().then(d=>{
+        if(d?.teams?.length) setState(prev=>({...prev,slStandings:d.teams}))
+      }).catch(()=>{})
     } catch { setSyncOk(false) }
     finally { setLoading(false) }
   },[])
@@ -786,8 +791,9 @@ export default function App({ user, onLogout }) {
 
   const pc = PC[user.id] || PC.boikos
   const pages={
-    matchday:<MatchdayPage predictions={state.predictions} results={state.results} onRefresh={load} currentUser={user} revealed={state.revealed} onSave={savePrediction} liveScores={liveScores}/>,
+    matchday:<MatchdayPage predictions={state.predictions} results={state.results} onRefresh={load} currentUser={user} revealed={state.revealed} onSave={savePrediction} liveScores={liveScores} slStandings={state.slStandings}/>,
     league:  <LeaguePage   predictions={state.predictions} results={state.results} thavmaStats={state.thavmaStats}/>,
+    schedule: <SchedulePage slStandings={state.slStandings}/>,
     history: <HistoryPage  predictions={state.predictions} results={state.results}/>,
     banter:  <BanterPage   chat={state.chat} onSend={sendChat}/>,
   }
@@ -1066,7 +1072,7 @@ function LeaguePage({predictions,results,thavmaStats}){
 }
 
 // ─── MATCHDAY PAGE ────────────────────────────────────────────────────────────
-function MatchdayPage({predictions,results,onRefresh,currentUser,revealed,onSave,liveScores}){
+function MatchdayPage({predictions,results,onRefresh,currentUser,revealed,onSave,liveScores,slStandings}){
   const now=Date.now()
   const ONE_HOUR=3600000
   const sorted=[...ALL_FIXTURES]
@@ -1102,13 +1108,14 @@ function MatchdayPage({predictions,results,onRefresh,currentUser,revealed,onSave
         revealed={revealed}
         onSave={onSave}
         liveScore={liveScores?.[m.id]}
+        slStandings={slStandings}
       />
     ))}
   </div>
 }
 
 // ─── UNIFIED MATCH+PREDICT CARD ───────────────────────────────────────────────
-function MatchPredictCard({match,result,predictions,onRefresh,allResults,currentUser,revealed,onSave,liveScore}){
+function MatchPredictCard({match,result,predictions,onRefresh,allResults,currentUser,revealed,onSave,liveScore,slStandings}){
   // ── State ──────────────────────────────────────────────────────────────────
   const [showPush,setShowPush]=useState(false)
   const myPred=currentUser?predictions?.[currentUser.id]:null
@@ -1139,6 +1146,10 @@ function MatchPredictCard({match,result,predictions,onRefresh,allResults,current
   const isPreKickoff=minsUntil>=-1&&minsUntil<=1
   const showAllPreds=hasRes||(isRevealed||isPreKickoff)
   const today=isToday(match.kickoff)
+  // SL standings lookup
+  const isSL=match.t==='SL'
+  const slHome=isSL?(slStandings||[]).find(t=>t.team===match.home||t.name===TEAMS[match.home]?.name):null
+  const slAway=isSL?(slStandings||[]).find(t=>t.team===match.away||t.name===TEAMS[match.away]?.name):null
   const hn=TEAMS[match.home]?.name||match.home
   const an=TEAMS[match.away]?.name||match.away
   const tC={SL:'#f0c040',UCL:BLUE,UEL:'#f5733a',UECL:GREEN}[match.t]||GOLD
@@ -1219,9 +1230,11 @@ function MatchPredictCard({match,result,predictions,onRefresh,allResults,current
 
         {/* Teams row */}
         <div style={{display:'grid',gridTemplateColumns:'1fr auto 1fr',alignItems:'center',gap:10,marginBottom:8}}>
-          <div style={{display:'flex',flexDirection:'column',alignItems:'flex-end',gap:6}}>
+          <div style={{display:'flex',flexDirection:'column',alignItems:'flex-end',gap:4}}>
             <TeamLogo k={match.home} size={36}/>
             <span style={{fontSize:11,fontWeight:600,textAlign:'right',color:TEXT,lineHeight:1.2}}>{hn}</span>
+            {slHome&&<span style={{fontSize:9,fontWeight:700,color:GOLD,background:GOLD+'18',borderRadius:4,padding:'1px 5px'}}>#{slHome.rank}</span>}
+            {slHome?.form?.length>0&&<div style={{display:'flex',justifyContent:'flex-end'}}><FormStrip form={slHome.form.slice(-5)}/></div>}
           </div>
           <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:5}}>
             <ScorePill h={liveScore?liveScore.h:result?.h} a={liveScore?liveScore.a:result?.a} pending={today&&!hasRes&&!liveScore}/>
@@ -1234,9 +1247,11 @@ function MatchPredictCard({match,result,predictions,onRefresh,allResults,current
             </div>}
             {!hasRes&&!today&&<div style={{fontSize:10,color:DIM,fontWeight:600}}>vs</div>}
           </div>
-          <div style={{display:'flex',flexDirection:'column',alignItems:'flex-start',gap:6}}>
+          <div style={{display:'flex',flexDirection:'column',alignItems:'flex-start',gap:4}}>
             <TeamLogo k={match.away} size={36}/>
             <span style={{fontSize:11,fontWeight:600,color:TEXT,lineHeight:1.2}}>{an}</span>
+            {slAway&&<span style={{fontSize:9,fontWeight:700,color:GOLD,background:GOLD+'18',borderRadius:4,padding:'1px 5px'}}>#{slAway.rank}</span>}
+            {slAway?.form?.length>0&&<FormStrip form={slAway.form.slice(-5)}/>}
           </div>
         </div>
 
@@ -1384,3 +1399,242 @@ function MatchPredictCard({match,result,predictions,onRefresh,allResults,current
 
 
 
+
+// ─── FORM STRIP ───────────────────────────────────────────────────────────────
+function FormStrip({form}){
+  if(!form||!form.length) return null
+  const col={W:GREEN,L:RED,D:GOLD}
+  return <div style={{display:'flex',gap:3,alignItems:'center'}}>
+    {form.map((r,i)=>(
+      <div key={i} style={{
+        width:18,height:18,borderRadius:'50%',
+        background:col[r]||MUTED,
+        display:'flex',alignItems:'center',justifyContent:'center',
+        fontSize:9,fontWeight:800,color:'#08090d'
+      }}>{r}</div>
+    ))}
+  </div>
+}
+
+// ─── SCHEDULE PAGE ────────────────────────────────────────────────────────────
+function SchedulePage({slStandings}){
+  const [filter,  setFilter]  = React.useState('all')    // 'all' | team key
+  const [view,    setView]    = React.useState('list')   // 'list' | 'h2h'
+  const [h2hMatch,setH2hMatch]= React.useState(null)     // selected match id
+  const [nFilter, setNFilter] = React.useState('all')    // 'all'|'next5'|'last5'|'next3'
+
+  const now = Date.now()
+
+  // Build form map from SL standings
+  const formMap = {}
+  ;(slStandings||[]).forEach(t=>{
+    formMap[t.team] = t.form || []
+    formMap[t.name] = t.form || []
+  })
+
+  const rankMap = {}
+  ;(slStandings||[]).forEach(t=>{
+    rankMap[t.team] = t.rank
+    rankMap[t.name] = t.rank
+  })
+
+  // Filter fixtures
+  let fixtures = [...ALL_FIXTURES]
+
+  if(filter!=='all'){
+    fixtures = fixtures.filter(m=>m.home===filter||m.away===filter)
+  }
+
+  if(nFilter==='next5'){
+    fixtures = fixtures.filter(m=>new Date(m.kickoff).getTime()>now).slice(0,5)
+  } else if(nFilter==='next3'){
+    fixtures = fixtures.filter(m=>new Date(m.kickoff).getTime()>now).slice(0,3)
+  } else if(nFilter==='last5'){
+    fixtures = fixtures.filter(m=>new Date(m.kickoff).getTime()<now).slice(-5)
+  }
+
+  fixtures.sort((a,b)=>new Date(a.kickoff)-new Date(b.kickoff))
+
+  // H2H selected match
+  const h2hData = h2hMatch ? ALL_FIXTURES.find(m=>m.id===h2hMatch) : null
+
+  const allTeams = [...new Set(ALL_FIXTURES.flatMap(m=>[m.home,m.away]))].sort()
+
+  return <div style={{padding:'12px 16px 80px'}}>
+
+    {/* Controls */}
+    <div style={{display:'flex',gap:8,marginBottom:14,flexWrap:'wrap',alignItems:'center'}}>
+      {/* Team filter */}
+      <select value={filter} onChange={e=>setFilter(e.target.value)}
+        style={{flex:1,minWidth:120,padding:'8px 10px',borderRadius:9,
+          background:SURF,border:'1px solid '+LINE,color:TEXT,fontSize:12,fontWeight:600}}>
+        <option value="all">Όλες οι ομάδες</option>
+        {allTeams.map(t=>(
+          <option key={t} value={t}>{TEAMS[t]?.name||t}</option>
+        ))}
+      </select>
+
+      {/* N filter */}
+      <select value={nFilter} onChange={e=>setNFilter(e.target.value)}
+        style={{flex:1,minWidth:110,padding:'8px 10px',borderRadius:9,
+          background:SURF,border:'1px solid '+LINE,color:TEXT,fontSize:12,fontWeight:600}}>
+        <option value="all">Όλοι</option>
+        <option value="next3">Επόμενοι 3</option>
+        <option value="next5">Επόμενοι 5</option>
+        <option value="last5">Τελευταίοι 5</option>
+      </select>
+
+      {/* View toggle */}
+      <div style={{display:'flex',gap:4}}>
+        {[{id:'list',l:'📋'},{id:'h2h',l:'⚔️ H2H'}].map(v=>(
+          <button key={v.id} onClick={()=>setView(v.id)}
+            style={{padding:'7px 12px',borderRadius:8,border:'1px solid '+(view===v.id?GREEN+'66':LINE),
+              background:view===v.id?GREEN+'18':'transparent',color:view===v.id?GREEN:MUTED,
+              fontSize:12,fontWeight:700,cursor:'pointer'}}>
+            {v.l}
+          </button>
+        ))}
+      </div>
+    </div>
+
+    {/* LIST VIEW */}
+    {view==='list'&&<div>
+      {fixtures.map(m=>{
+        const ko=new Date(m.kickoff).getTime()
+        const isPast=ko<now
+        const isSL=m.t==='SL'
+        const homeRank=rankMap[m.home]
+        const awayRank=rankMap[m.away]
+        const homeForm=formMap[m.home]||[]
+        const awayForm=formMap[m.away]||[]
+        return <div key={m.id} style={{background:SURF,border:'1px solid '+LINE,borderRadius:12,
+          padding:'12px 14px',marginBottom:8,opacity:isPast?0.7:1}}>
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:8}}>
+            <TPill id={m.t}/>
+            <div style={{fontSize:10,color:MUTED,fontWeight:600}}>{grDate(m.kickoff)} · {grTime(m.kickoff)}</div>
+            {isPast&&<span style={{fontSize:9,color:MUTED,background:'rgba(255,255,255,.06)',borderRadius:4,padding:'2px 5px'}}>✓ Παρελθόν</span>}
+          </div>
+          {/* Teams row */}
+          <div style={{display:'grid',gridTemplateColumns:'1fr auto 1fr',alignItems:'center',gap:8}}>
+            {/* Home */}
+            <div style={{display:'flex',flexDirection:'column',alignItems:'flex-end',gap:4}}>
+              <div style={{display:'flex',alignItems:'center',gap:6}}>
+                {homeRank&&<span style={{fontSize:9,fontWeight:700,color:GOLD,background:GOLD+'18',borderRadius:4,padding:'1px 4px'}}>#{homeRank}</span>}
+                <span style={{fontSize:12,fontWeight:700,color:TEXT}}>{TEAMS[m.home]?.name||m.home}</span>
+                <TeamLogo k={m.home} size={24}/>
+              </div>
+              {isSL&&homeForm.length>0&&<div style={{display:'flex',justifyContent:'flex-end'}}><FormStrip form={homeForm}/></div>}
+            </div>
+            {/* Score/vs */}
+            <div style={{textAlign:'center'}}>
+              <div style={{fontSize:13,fontWeight:700,color:isPast?TEXT:DIM}}>vs</div>
+            </div>
+            {/* Away */}
+            <div style={{display:'flex',flexDirection:'column',alignItems:'flex-start',gap:4}}>
+              <div style={{display:'flex',alignItems:'center',gap:6}}>
+                <TeamLogo k={m.away} size={24}/>
+                <span style={{fontSize:12,fontWeight:700,color:TEXT}}>{TEAMS[m.away]?.name||m.away}</span>
+                {awayRank&&<span style={{fontSize:9,fontWeight:700,color:GOLD,background:GOLD+'18',borderRadius:4,padding:'1px 4px'}}>#{awayRank}</span>}
+              </div>
+              {isSL&&awayForm.length>0&&<FormStrip form={awayForm}/>}
+            </div>
+          </div>
+          {/* H2H button */}
+          <button onClick={()=>{setView('h2h');setH2hMatch(m.id)}}
+            style={{marginTop:8,width:'100%',padding:'6px',borderRadius:8,
+              border:'1px solid '+LINE,background:'rgba(255,255,255,.04)',
+              color:MUTED,fontSize:11,fontWeight:600,cursor:'pointer'}}>
+            ⚔️ Δες H2H
+          </button>
+        </div>
+      })}
+      {fixtures.length===0&&<div style={{padding:32,textAlign:'center',color:MUTED,fontSize:13}}>Δεν βρέθηκαν αγώνες</div>}
+    </div>}
+
+    {/* H2H VIEW */}
+    {view==='h2h'&&<div>
+      {/* Match selector */}
+      <select value={h2hMatch||''} onChange={e=>setH2hMatch(e.target.value)}
+        style={{width:'100%',padding:'10px 12px',borderRadius:10,
+          background:SURF,border:'1px solid '+LINE,color:TEXT,fontSize:12,fontWeight:600,marginBottom:14}}>
+        <option value="">Επίλεξε αγώνα...</option>
+        {ALL_FIXTURES.map(m=>(
+          <option key={m.id} value={m.id}>
+            {TEAMS[m.home]?.abbr||m.home} vs {TEAMS[m.away]?.abbr||m.away} · {grDate(m.kickoff)}
+          </option>
+        ))}
+      </select>
+
+      {h2hData&&(()=>{
+        const homeTeam=h2hData.home, awayTeam=h2hData.away
+        const homeLast=ALL_FIXTURES.filter(m=>
+          (m.home===homeTeam||m.away===homeTeam)&&new Date(m.kickoff).getTime()<now
+        ).slice(-3)
+        const awayLast=ALL_FIXTURES.filter(m=>
+          (m.home===awayTeam||m.away===awayTeam)&&new Date(m.kickoff).getTime()<now
+        ).slice(-3)
+        const homeNext=ALL_FIXTURES.filter(m=>
+          (m.home===homeTeam||m.away===homeTeam)&&new Date(m.kickoff).getTime()>now
+        ).slice(0,3)
+        const awayNext=ALL_FIXTURES.filter(m=>
+          (m.home===awayTeam||m.away===awayTeam)&&new Date(m.kickoff).getTime()>now
+        ).slice(0,3)
+
+        const TeamCol=({team,last,next,rank,form})=>(
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:10}}>
+              <TeamLogo k={team} size={28}/>
+              <div>
+                <div style={{fontSize:12,fontWeight:700,color:TEXT}}>{TEAMS[team]?.name||team}</div>
+                {rank&&<div style={{fontSize:10,color:GOLD,fontWeight:700}}>#{rank} SL</div>}
+              </div>
+            </div>
+            {form?.length>0&&<div style={{marginBottom:10}}><FormStrip form={form}/></div>}
+            <div style={{fontSize:10,fontWeight:700,color:MUTED,letterSpacing:'.06em',textTransform:'uppercase',marginBottom:6}}>Τελευταίοι 3</div>
+            {last.map(m=>{
+              const isHome=m.home===team
+              const opp=isHome?m.away:m.home
+              return <div key={m.id} style={{background:'rgba(255,255,255,.04)',borderRadius:8,padding:'6px 8px',marginBottom:4,fontSize:11}}>
+                <span style={{color:MUTED}}>{isHome?'Εντός':'Εκτός'} vs </span>
+                <span style={{color:TEXT,fontWeight:600}}>{TEAMS[opp]?.abbr||opp}</span>
+                <span style={{color:MUTED}}> · {grDate(m.kickoff)}</span>
+              </div>
+            })}
+            {last.length===0&&<div style={{fontSize:11,color:MUTED,padding:'8px 0'}}>Δεν υπάρχουν</div>}
+            <div style={{fontSize:10,fontWeight:700,color:MUTED,letterSpacing:'.06em',textTransform:'uppercase',marginBottom:6,marginTop:10}}>Επόμενοι 3</div>
+            {next.map(m=>{
+              const isHome=m.home===team
+              const opp=isHome?m.away:m.home
+              return <div key={m.id} style={{background:'rgba(255,255,255,.04)',borderRadius:8,padding:'6px 8px',marginBottom:4,fontSize:11}}>
+                <span style={{color:MUTED}}>{isHome?'Εντός':'Εκτός'} vs </span>
+                <span style={{color:TEXT,fontWeight:600}}>{TEAMS[opp]?.abbr||opp}</span>
+                <span style={{color:MUTED}}> · {grDate(m.kickoff)}</span>
+              </div>
+            })}
+            {next.length===0&&<div style={{fontSize:11,color:MUTED,padding:'8px 0'}}>Δεν υπάρχουν</div>}
+          </div>
+        )
+
+        return <div>
+          <div style={{background:SURF,border:'1px solid '+LINE,borderRadius:12,padding:'14px',marginBottom:10}}>
+            <div style={{textAlign:'center',marginBottom:14}}>
+              <TPill id={h2hData.t}/>
+              <div style={{fontSize:13,fontWeight:700,color:TEXT,marginTop:8}}>
+                {TEAMS[homeTeam]?.name||homeTeam} vs {TEAMS[awayTeam]?.name||awayTeam}
+              </div>
+              <div style={{fontSize:11,color:MUTED,marginTop:2}}>{grDate(h2hData.kickoff)} · {grTime(h2hData.kickoff)}</div>
+            </div>
+            <div style={{display:'flex',gap:12}}>
+              <TeamCol team={homeTeam} last={homeLast} next={homeNext}
+                rank={rankMap[homeTeam]} form={formMap[homeTeam]}/>
+              <div style={{width:1,background:LINE,flexShrink:0}}/>
+              <TeamCol team={awayTeam} last={awayLast} next={awayNext}
+                rank={rankMap[awayTeam]} form={formMap[awayTeam]}/>
+            </div>
+          </div>
+        </div>
+      })()}
+      {!h2hData&&<div style={{padding:32,textAlign:'center',color:MUTED,fontSize:13}}>Επίλεξε αγώνα για να δεις το H2H</div>}
+    </div>}
+  </div>
+}
