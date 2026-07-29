@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"/>
-  <meta name="theme-color" content="#08090d"/>
   <title>ΚΟΥΒΑΔΕΪΡΟΣ · 26/27</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Space+Mono:wght@700&display=swap" rel="stylesheet"/>
@@ -15,9 +14,9 @@
       font-family: 'Space Grotesk', system-ui, sans-serif;
       background: #08090d; color: #e8e9ef;
       -webkit-font-smoothing: antialiased;
-      min-height: 100dvh;
+      min-height: 100vh;
     }
-    #root { min-height: 100dvh; display: flex; flex-direction: column; }
+    #root { min-height: 100vh; display: flex; flex-direction: column; }
 
     /* ── RESPONSIVE BREAKPOINTS ─────────────────────────────── */
     :root {
@@ -56,7 +55,7 @@
     @keyframes slide-u { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
     @keyframes glow-p  { 0%,100% { box-shadow:0 0 12px #ff224420; } 50% { box-shadow:0 0 28px #ff224440; } }
   </style>
-  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
   <meta name="apple-mobile-web-app-title" content="ΚΟΥΒΑΔΕΪΡΟΣ"/>
   <meta name="theme-color" content="#08090d"/>
@@ -73,7 +72,7 @@
     .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
   </style>
   <link rel="manifest" href="/manifest.json"/>
-  <script type="module" crossorigin src="/assets/index-CzeJnOQi.js"></script>
+  <script type="module" src="/assets/index-CzeJnOQi.js"></script>
 </head>
 <body>
   <div id="root"></div>
