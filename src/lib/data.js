@@ -29,14 +29,19 @@ export const TEAMS = {
 // AST = Αστέρας ΑΚΤΩΡ, IRA = ΠΑΕ Ηρακλής, KIF = Κηφισιά, LEV = Λεβαδειακός
 // PNE = Παναιτωλικός
 
+// Super League 2026/27 — Official Schedule (from slgr.gr)
+// Team keys: PAO, KAL, OLY, PAOK, PNE, AEK, OFI, ATR, LEV, ARI, VOL, AST, KIF, IRA
+// AST = Αστέρας ΑΚΤΩΡ, IRA = ΠΑΕ Ηρακλής, KIF = Κηφισιά, LEV = Λεβαδειακός
+// PNE = Παναιτωλικός
+
 export const SUPER_LEAGUE = [
   // ── MD1: 22-23 Αυγούστου 2026 ──
   {id:'sl-1-1',t:'SL',md:1,home:'AEK', away:'IRA', kickoff:'2026-08-22T13:00:00Z',round:'Αγωνιστική 1'},
   {id:'sl-1-2',t:'SL',md:1,home:'KAL', away:'ARI', kickoff:'2026-08-22T13:00:00Z',round:'Αγωνιστική 1'},
   {id:'sl-1-3',t:'SL',md:1,home:'OLY', away:'ATR', kickoff:'2026-08-22T13:00:00Z',round:'Αγωνιστική 1'},
   {id:'sl-1-4',t:'SL',md:1,home:'OFI', away:'VOL', kickoff:'2026-08-22T13:00:00Z',round:'Αγωνιστική 1'},
-  {id:'sl-1-5',t:'SL',md:1,home:'PNE', away:'AST', kickoff:'2026-08-22T13:00:00Z',round:'Αγωνιστική 1'},
-  {id:'sl-1-6',t:'SL',md:1,home:'PAO', away:'KIF', kickoff:'2026-08-22T13:00:00Z',round:'Αγωνιστική 1'},
+  {id:'sl-1-5',t:'SL',md:1,home:'PAO', away:'KIF', kickoff:'2026-08-22T13:00:00Z',round:'Αγωνιστική 1'},
+  {id:'sl-1-6',t:'SL',md:1,home:'PNE', away:'AST', kickoff:'2026-08-22T13:00:00Z',round:'Αγωνιστική 1'},
   {id:'sl-1-7',t:'SL',md:1,home:'PAOK',away:'LEV', kickoff:'2026-08-22T13:00:00Z',round:'Αγωνιστική 1'},
 
   // ── MD2: 29-30 Αυγούστου 2026 ──
