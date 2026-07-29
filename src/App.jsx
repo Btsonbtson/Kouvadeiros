@@ -880,7 +880,7 @@ export default function App({ user, onLogout }) {
       <div style={{display:'flex',flexDirection:'column',minHeight:'100vh',minHeight:'100dvh',background:BG,fontFamily:"'Space Grotesk',system-ui,sans-serif",color:TEXT}}>
         {showAddPlayer && user?.role==='admin' && <AddPlayerModal onClose={()=>setShowAddPlayer(false)} onAdded={load}/>}
         <Header/>
-        <div style={{flex:1,display:'grid',gridTemplateColumns:'var(--sidebar-w,300px) 1fr',maxWidth:1280,width:'100%',margin:'0 auto',padding:'24px 32px',gap:24,alignItems:'start'}}>
+        <div style={{flex:1,display:'grid',gridTemplateColumns:'300px 1fr',maxWidth:1280,width:'100%',margin:'0 auto',padding:'24px 32px',gap:24,alignItems:'start'}}>
           {/* Left sidebar: leaderboard + graph */}
           <div style={{position:'sticky',top:80}}>
             <LeaderSidebar predictions={state.predictions} results={state.results}/>
