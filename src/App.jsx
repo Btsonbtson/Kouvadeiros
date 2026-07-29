@@ -823,7 +823,64 @@ export default function App({ user, onLogout }) {
       <BottomNav/>
     </div>
   )
-}// ─── MATCHDAY PAGE ────────────────────────────────────────────────────────────
+}// ─── LEAGUE PAGE ─────────────────────────────────────────────────────────────
+function LeaguePage({predictions,results,thavmaStats}){
+  const board=computeLeaderboard(ALL_FIXTURES,predictions,results)
+  const [tab,setTab]=useState('standings')
+  return <div style={{padding:'16px 16px 80px'}}>
+    <div style={{display:'flex',gap:6,marginBottom:16,overflowX:'auto',scrollbarWidth:'none'}}>
+      {[{id:'standings',l:'Συγκομιδή'},{id:'rivalry',l:'🌶️ Διαγκωνισμοί'},{id:'analytics',l:'Αναλυτικά'},{id:'campaigns',l:'Ενεργές Διοργανώσεις'}].map(tabItem=>(
+        <button key={tabItem.id} onClick={()=>setTab(tabItem.id)}
+          style={{fontSize:11,fontWeight:700,padding:'6px 13px',borderRadius:7,whiteSpace:'nowrap',
+            border:'1px solid '+(tab===tabItem.id?'rgba(255,255,255,.3)':LINE),
+            background:tab===tabItem.id?'rgba(255,255,255,.12)':'transparent',
+            color:tab===tabItem.id?TEXT:MUTED,cursor:'pointer'}}>
+          {tabItem.l}
+        </button>
+      ))}
+    </div>
+    {tab==='standings'&&<>
+      <div style={{fontSize:10,fontWeight:700,letterSpacing:'.1em',textTransform:'uppercase',color:'rgba(255,255,255,.4)',marginBottom:10}}>Ανάλυση ανά τουρνουά</div>
+      {board.map(row=>{
+        const bd={};
+        ['SL','UCL','UEL','UECL'].forEach(t=>{
+          let pts=0,played=0;
+          ALL_FIXTURES.filter(m=>m.t===t).forEach(m=>{
+            const ac=results?.[m.id];if(!ac)return;
+            const sc=scoreMatch(predictions?.[m.id]?.[row.player],ac);
+            if(!sc)return;pts+=sc.points;played++;
+          });
+          bd[t]={pts,played};
+        });
+        const pcr=PC[row.player];
+        return <div key={row.player} style={{background:SURF,border:'1px solid '+LINE,borderRadius:12,padding:'14px 16px',marginBottom:8}}>
+          <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:12}}>
+            <div style={{width:36,height:36,borderRadius:'50%',background:pcr.p,display:'flex',alignItems:'center',justifyContent:'center',fontSize:15,fontWeight:900,color:SURF}}>{PLAYER_NAMES[row.player].substring(0,1)}</div>
+            <div style={{flex:1}}>
+              <div style={{fontSize:14,fontWeight:700,color:TEXT}}>{PLAYER_NAMES[row.player]}</div>
+              <div style={{fontSize:10,color:MUTED,marginTop:1}}>{row.exact} exact · {row.correct} correct · {row.played} games</div>
+            </div>
+            <div style={{fontSize:22,fontWeight:900,color:pcr.p}}>{row.pts}<span style={{fontSize:12,color:MUTED,fontWeight:500}}>p</span></div>
+          </div>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:5}}>
+            {Object.entries(bd).map(([t,d])=>(
+              <div key={t} style={{background:'rgba(255,255,255,.05)',borderRadius:8,padding:'8px 5px',textAlign:'center'}}>
+                <TPill id={t}/>
+                <div style={{fontSize:15,fontWeight:800,marginTop:5,color:d.pts>0?pcr.p:MUTED}}>{d.pts}</div>
+                <div style={{fontSize:9,color:MUTED,marginTop:1}}>{d.played}αγ</div>
+              </div>
+            ))}
+          </div>
+        </div>;
+      })}
+    </>}
+    {tab==='rivalry'&&<RivalryStats predictions={predictions} results={results} thavmaStats={thavmaStats}/>}
+    {tab==='analytics'&&<div style={{padding:24,textAlign:'center',color:MUTED,fontSize:13}}>Αναλυτικά σύντομα...</div>}
+    {tab==='campaigns'&&<div style={{padding:24,textAlign:'center',color:MUTED,fontSize:13}}>Ενεργές Διοργανώσεις σύντομα...</div>}
+  </div>
+}
+
+// ─── MATCHDAY PAGE ────────────────────────────────────────────────────────────
 function MatchdayPage({predictions,results,onRefresh,currentUser,revealed,onSave,liveScores}){
   const now=Date.now()
   const sorted=[...ALL_FIXTURES].sort((a,b)=>{
