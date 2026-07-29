@@ -1275,7 +1275,7 @@ function MatchPredictCard({match,result,predictions,onRefresh,allResults,current
                       style={{flex:1,padding:'7px 5px',borderRadius:8,border:`1px solid ${qual===tm?tC+'88':LINE}`,
                         background:qual===tm?`${tC}18`:'transparent',color:qual===tm?tC:MUTED,
                         fontSize:11,fontWeight:700,cursor:locked?'not-allowed':'pointer'}}>
-                      {TEAMS[tm]?.abbr||tm}
+                      {TEAMS[tm]?.name||tm}
                     </button>
                   ))}
                 </div>
