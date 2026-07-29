@@ -976,14 +976,14 @@ function MatchPredictCard({match,result,predictions,onRefresh,allResults,current
       {lbl&&<div style={{fontSize:10,fontWeight:700,color:tC,letterSpacing:'.05em',marginBottom:5,textTransform:'uppercase',textAlign:'center'}}>{lbl}</div>}
       <div style={{display:'grid',gridTemplateColumns:'1fr auto 1fr',alignItems:'center',gap:8}}>
         {[['h',hv,setHv],['a',av,setAv]].map(([side,v,set],i)=>(
-          <React.Fragment key={side}>
+          <>
             {i===1&&<span style={{fontSize:sm?16:20,color:DIM,textAlign:'center'}}>–</span>}
             <div style={{display:'flex',alignItems:'center',gap:sm?4:7,justifyContent:'center'}}>
               <button style={sm?{...ab,width:26,height:26,fontSize:14}:ab} onClick={()=>adj(v,set,-1)}>–</button>
               <div style={sm?{...nb,width:38,height:38,fontSize:18}:nb}>{v}</div>
               <button style={sm?{...ab,width:26,height:26,fontSize:14}:ab} onClick={()=>adj(v,set,+1)}>+</button>
             </div>
-          </React.Fragment>
+          </>
         ))}
       </div>
     </div>
