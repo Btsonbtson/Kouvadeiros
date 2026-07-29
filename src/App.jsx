@@ -783,7 +783,7 @@ export default function App({ user, onLogout }) {
   if(showGuide) return <Guide onBack={()=>setShowGuide(false)}/>
 
   if(loading) return(
-    <div style={{minHeight:'100vh',minHeight:'100dvh',background:BG,display:'flex',alignItems:'center',justifyContent:'center',flexDirection:'column',gap:16}}>
+    <div style={{minHeight:'100vh',background:BG,display:'flex',alignItems:'center',justifyContent:'center',flexDirection:'column',gap:16}}>
       <div style={{fontSize:24,fontWeight:800,letterSpacing:'.06em',color:GREEN}}>ΚΟΥΒΑΔΕΪΡΟΣ</div>
       <Spinner size={28}/>
     </div>
@@ -883,7 +883,7 @@ export default function App({ user, onLogout }) {
   // ── DESKTOP SIDEBAR LAYOUT ──────────────────────────────────────────────────
   if (isDesktop) {
     return (
-      <div style={{display:'flex',flexDirection:'column',minHeight:'100vh',minHeight:'100dvh',background:BG,fontFamily:"'Space Grotesk',system-ui,sans-serif",color:TEXT}}>
+      <div style={{display:'flex',flexDirection:'column',minHeight:'100vh',background:BG,fontFamily:"'Space Grotesk',system-ui,sans-serif",color:TEXT}}>
         {showAddPlayer && user?.role==='admin' && <AddPlayerModal onClose={()=>setShowAddPlayer(false)} onAdded={load}/>}
         <Header/>
         <div style={{flex:1,display:'grid',gridTemplateColumns:'300px 1fr',maxWidth:1280,width:'100%',margin:'0 auto',padding:'24px 32px',gap:24,alignItems:'start'}}>
@@ -902,7 +902,7 @@ export default function App({ user, onLogout }) {
 
   // ── MOBILE / TABLET ─────────────────────────────────────────────────────────
   return (
-    <div style={{background:BG,minHeight:'100vh',minHeight:'100dvh',display:'flex',flexDirection:'column',
+    <div style={{background:BG,minHeight:'100vh',display:'flex',flexDirection:'column',
       maxWidth:isTablet?768:'100%',margin:'0 auto',fontFamily:"'Space Grotesk',system-ui,sans-serif",color:TEXT}}>
       {showAddPlayer && user?.role==='admin' && <AddPlayerModal onClose={()=>setShowAddPlayer(false)} onAdded={load}/>}
       <Header/>
@@ -1355,7 +1355,7 @@ function MatchPredictCard({match,result,predictions,onRefresh,allResults,current
 
             {/* Save button */}
             <button onClick={save} disabled={locked||saving||saved}
-              style={{width:'100%',marginTop:10,padding:'11px',borderRadius:10,border:'none',
+              style={{width:'100%',marginTop:10,padding:'11px',borderRadius:10,
                 background:saved?`${GREEN}22`:locked?'rgba(255,255,255,.06)':`${tC}22`,
                 color:saved?GREEN:locked?MUTED:tC,fontSize:13,fontWeight:800,cursor:locked?'not-allowed':'pointer',
                 border:`1px solid ${saved?GREEN+'44':locked?LINE:tC+'44'}`}}>
@@ -1428,6 +1428,72 @@ function MatchPredictCard({match,result,predictions,onRefresh,allResults,current
 
 
 
+// ─── FIXTURE LIST ────────────────────────────────────────────────────────────
+function FixtureList({fixtures,rankMap,formMap,setView,setH2hMatch}){
+  if(!fixtures.length) return <div style={{padding:32,textAlign:'center',color:MUTED,fontSize:13}}>Δεν βρέθηκαν αγώνες</div>
+  const now=Date.now()
+  // Group by round
+  const groups={};
+  fixtures.forEach(m=>{
+    const key=m.round||m.t||'Αγώνες'
+    if(!groups[key]) groups[key]=[]
+    groups[key].push(m)
+  })
+  return <div>
+    {Object.entries(groups).map(([round,gMatches])=>(
+      <div key={round}>
+        <div style={{fontSize:10,fontWeight:700,letterSpacing:'.08em',textTransform:'uppercase',
+          color:MUTED,marginBottom:8,marginTop:16,display:'flex',alignItems:'center',gap:8}}>
+          <div style={{flex:1,height:1,background:LINE}}/>
+          {round}
+          <div style={{flex:1,height:1,background:LINE}}/>
+        </div>
+        {gMatches.map(m=>{
+          const ko=new Date(m.kickoff).getTime()
+          const isPast=ko<now
+          const isSL=m.t==='SL'
+          const homeRank=rankMap?.[m.home]||rankMap?.[TEAMS[m.home]?.name]
+          const awayRank=rankMap?.[m.away]||rankMap?.[TEAMS[m.away]?.name]
+          const homeForm=formMap?.[m.home]||formMap?.[TEAMS[m.home]?.name]||[]
+          const awayForm=formMap?.[m.away]||formMap?.[TEAMS[m.away]?.name]||[]
+          return <div key={m.id} style={{background:SURF,border:'1px solid '+LINE,borderRadius:12,
+            padding:'10px 14px',marginBottom:6,opacity:isPast?0.65:1}}>
+            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:6}}>
+              <TPill id={m.t}/>
+              <div style={{fontSize:10,color:MUTED,fontWeight:600}}>{grDate(m.kickoff)} · {grTime(m.kickoff)}</div>
+            </div>
+            <div style={{display:'grid',gridTemplateColumns:'1fr auto 1fr',alignItems:'center',gap:8}}>
+              <div style={{display:'flex',flexDirection:'column',alignItems:'flex-end',gap:3}}>
+                <div style={{display:'flex',alignItems:'center',gap:5}}>
+                  {homeRank&&<span style={{fontSize:9,fontWeight:700,color:GOLD,background:GOLD+'18',borderRadius:4,padding:'1px 4px'}}>#{homeRank}</span>}
+                  <span style={{fontSize:12,fontWeight:700,color:TEXT}}>{TEAMS[m.home]?.name||m.home}</span>
+                  <TeamLogo k={m.home} size={22}/>
+                </div>
+                {isSL&&homeForm.length>0&&<div style={{display:'flex',justifyContent:'flex-end'}}><FormStrip form={homeForm.slice(-5)}/></div>}
+              </div>
+              <span style={{fontSize:12,color:DIM,fontWeight:700}}>vs</span>
+              <div style={{display:'flex',flexDirection:'column',alignItems:'flex-start',gap:3}}>
+                <div style={{display:'flex',alignItems:'center',gap:5}}>
+                  <TeamLogo k={m.away} size={22}/>
+                  <span style={{fontSize:12,fontWeight:700,color:TEXT}}>{TEAMS[m.away]?.name||m.away}</span>
+                  {awayRank&&<span style={{fontSize:9,fontWeight:700,color:GOLD,background:GOLD+'18',borderRadius:4,padding:'1px 4px'}}>#{awayRank}</span>}
+                </div>
+                {isSL&&awayForm.length>0&&<FormStrip form={awayForm.slice(-5)}/>}
+              </div>
+            </div>
+            <button onClick={()=>{setView('h2h');setH2hMatch(m.id)}}
+              style={{marginTop:8,width:'100%',padding:'5px',borderRadius:7,
+                border:'1px solid '+LINE,background:'rgba(255,255,255,.04)',
+                color:MUTED,fontSize:11,fontWeight:600,cursor:'pointer'}}>
+              ⚔️ H2H
+            </button>
+          </div>
+        })}
+      </div>
+    ))}
+  </div>
+}
+
 // ─── SCHEDULE PAGE ────────────────────────────────────────────────────────────
 function SchedulePage({slStandings}){
   const [filter,  setFilter]  = useState('all')
@@ -1458,21 +1524,14 @@ function SchedulePage({slStandings}){
     rankMap[t.name] = t.rank
   })
 
-  // Use ESPN live fixtures when available, fall back to hardcoded
-  const useEspn = espnFixtures.length > 0
-  let fixtures = useEspn
-    ? espnFixtures.map(e=>({
-        id:e.id, t:'SL', home:e.home?.abbr||e.home?.name||'',
-        away:e.away?.abbr||e.away?.name||'',
-        kickoff:e.date,
-        homeScore:e.home?.score, awayScore:e.away?.score,
-        status:e.status, round:e.round,
-        round_label:e.round?'Αγωνιστική '+e.round:'SL',
-      }))
-    : [...ALL_FIXTURES]
+  let fixtures = [...ALL_FIXTURES]
 
   if(filter!=='all'){
-    fixtures = fixtures.filter(m=>m.home===filter||m.away===filter)
+    if(['SL','UCL','UEL','UECL'].includes(filter)){
+      fixtures = fixtures.filter(m=>m.t===filter)
+    } else {
+      fixtures = fixtures.filter(m=>m.home===filter||m.away===filter)
+    }
   }
 
   if(nFilter==='next5'){
@@ -1498,10 +1557,18 @@ function SchedulePage({slStandings}){
       <select value={filter} onChange={e=>setFilter(e.target.value)}
         style={{flex:1,minWidth:120,padding:'8px 10px',borderRadius:9,
           background:SURF,border:'1px solid '+LINE,color:TEXT,fontSize:12,fontWeight:600}}>
-        <option value="all">Όλες οι ομάδες</option>
-        {allTeams.map(t=>(
-          <option key={t} value={t}>{TEAMS[t]?.name||t}</option>
-        ))}
+        <option value="all">🌍 Όλες οι διοργανώσεις</option>
+        <optgroup label="Διοργανώσεις">
+          <option value="SL">🟡 Super League</option>
+          <option value="UCL">🔵 Champions League</option>
+          <option value="UEL">🟠 Europa League</option>
+          <option value="UECL">🟢 Conference League</option>
+        </optgroup>
+        <optgroup label="Ομάδες">
+          {allTeams.map(t=>(
+            <option key={t} value={t}>{TEAMS[t]?.name||t}</option>
+          ))}
+        </optgroup>
       </select>
 
       {/* N filter */}
@@ -1528,58 +1595,7 @@ function SchedulePage({slStandings}){
     </div>
 
     {/* LIST VIEW */}
-    {view==='list'&&<div>
-      {fixtures.map(m=>{
-        const ko=new Date(m.kickoff).getTime()
-        const isPast=ko<now
-        const isSL=m.t==='SL'
-        const homeRank=rankMap[m.home]||rankMap[TEAMS[m.home]?.name]||rankMap[TEAMS[m.home]?.abbr]
-        const awayRank=rankMap[m.away]||rankMap[TEAMS[m.away]?.name]||rankMap[TEAMS[m.away]?.abbr]
-        const homeForm=formMap[m.home]||[]
-        const awayForm=formMap[m.away]||[]
-        return <div key={m.id} style={{background:SURF,border:'1px solid '+LINE,borderRadius:12,
-          padding:'12px 14px',marginBottom:8,opacity:isPast?0.7:1}}>
-          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:8}}>
-            <TPill id={m.t}/>
-            <div style={{fontSize:10,color:MUTED,fontWeight:600}}>{grDate(m.kickoff)} · {grTime(m.kickoff)}</div>
-            {isPast&&<span style={{fontSize:9,color:MUTED,background:'rgba(255,255,255,.06)',borderRadius:4,padding:'2px 5px'}}>✓ Παρελθόν</span>}
-          </div>
-          {/* Teams row */}
-          <div style={{display:'grid',gridTemplateColumns:'1fr auto 1fr',alignItems:'center',gap:8}}>
-            {/* Home */}
-            <div style={{display:'flex',flexDirection:'column',alignItems:'flex-end',gap:4}}>
-              <div style={{display:'flex',alignItems:'center',gap:6}}>
-                {homeRank&&<span style={{fontSize:9,fontWeight:700,color:GOLD,background:GOLD+'18',borderRadius:4,padding:'1px 4px'}}>#{homeRank}</span>}
-                <span style={{fontSize:12,fontWeight:700,color:TEXT}}>{TEAMS[m.home]?.name||m.home}</span>
-                <TeamLogo k={m.home} size={24}/>
-              </div>
-              {isSL&&homeForm.length>0&&<div style={{display:'flex',justifyContent:'flex-end'}}><FormStrip form={homeForm}/></div>}
-            </div>
-            {/* Score/vs */}
-            <div style={{textAlign:'center'}}>
-              <div style={{fontSize:13,fontWeight:700,color:isPast?TEXT:DIM}}>vs</div>
-            </div>
-            {/* Away */}
-            <div style={{display:'flex',flexDirection:'column',alignItems:'flex-start',gap:4}}>
-              <div style={{display:'flex',alignItems:'center',gap:6}}>
-                <TeamLogo k={m.away} size={24}/>
-                <span style={{fontSize:12,fontWeight:700,color:TEXT}}>{TEAMS[m.away]?.name||m.away}</span>
-                {awayRank&&<span style={{fontSize:9,fontWeight:700,color:GOLD,background:GOLD+'18',borderRadius:4,padding:'1px 4px'}}>#{awayRank}</span>}
-              </div>
-              {isSL&&awayForm.length>0&&<FormStrip form={awayForm}/>}
-            </div>
-          </div>
-          {/* H2H button */}
-          <button onClick={()=>{setView('h2h');setH2hMatch(m.id)}}
-            style={{marginTop:8,width:'100%',padding:'6px',borderRadius:8,
-              border:'1px solid '+LINE,background:'rgba(255,255,255,.04)',
-              color:MUTED,fontSize:11,fontWeight:600,cursor:'pointer'}}>
-            ⚔️ Δες H2H
-          </button>
-        </div>
-      })}
-      {fixtures.length===0&&<div style={{padding:32,textAlign:'center',color:MUTED,fontSize:13}}>Δεν βρέθηκαν αγώνες</div>}
-    </div>}
+    {view==='list'&&<FixtureList fixtures={fixtures} rankMap={rankMap} formMap={formMap} setView={setView} setH2hMatch={setH2hMatch}/>}
 
     {/* H2H VIEW */}
     {view==='h2h'&&<div>
