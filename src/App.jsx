@@ -629,6 +629,7 @@ function useBreakpoint() {
 export default function App({ user, onLogout }) {
   const [screen,  setScreen]  = useState('matchday')
   const [state,   setState]   = useState({ predictions:{...SEEDED_PREDS}, results:{...SEEDED_RES}, chat:[] })
+  const [liveScores, setLiveScores] = useState({})
   const [loading, setLoading] = useState(true)
   const [syncing, setSyncing] = useState(false)
   const [syncOk,  setSyncOk]  = useState(true)
