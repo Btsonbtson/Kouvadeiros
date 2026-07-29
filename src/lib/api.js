@@ -12,6 +12,7 @@ async function call(method, path, body) {
 }
 export const api = {
   getSlStandings: () => call('GET', '/sl-standings'),
+  getSlFixtures:  () => call('GET', '/sl-fixtures'),
   login:      (email,password) => call('POST','/login',{email,password}),
   logout:     ()               => call('POST','/logout'),
   getState:   ()               => call('GET', '/state'),

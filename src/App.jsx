@@ -1114,6 +1114,23 @@ function MatchdayPage({predictions,results,onRefresh,currentUser,revealed,onSave
   </div>
 }
 
+
+// ─── FORM STRIP ───────────────────────────────────────────────────────────────
+function FormStrip({form}){
+  if(!form||!form.length) return null
+  const col={W:GREEN,L:RED,D:GOLD}
+  return <div style={{display:'flex',gap:3,alignItems:'center'}}>
+    {form.map((r,i)=>(
+      <div key={i} style={{
+        width:18,height:18,borderRadius:'50%',
+        background:col[r]||MUTED,
+        display:'flex',alignItems:'center',justifyContent:'center',
+        fontSize:9,fontWeight:800,color:'#08090d'
+      }}>{r}</div>
+    ))}
+  </div>
+}
+
 // ─── UNIFIED MATCH+PREDICT CARD ───────────────────────────────────────────────
 function MatchPredictCard({match,result,predictions,onRefresh,allResults,currentUser,revealed,onSave,liveScore,slStandings}){
   // ── State ──────────────────────────────────────────────────────────────────
@@ -1146,10 +1163,21 @@ function MatchPredictCard({match,result,predictions,onRefresh,allResults,current
   const isPreKickoff=minsUntil>=-1&&minsUntil<=1
   const showAllPreds=hasRes||(isRevealed||isPreKickoff)
   const today=isToday(match.kickoff)
-  // SL standings lookup
+  // SL standings lookup - robust matching
   const isSL=match.t==='SL'
-  const slHome=isSL?(slStandings||[]).find(t=>t.team===match.home||t.name===TEAMS[match.home]?.name):null
-  const slAway=isSL?(slStandings||[]).find(t=>t.team===match.away||t.name===TEAMS[match.away]?.name):null
+  const findSLTeam=(key)=>{
+    if(!key||(slStandings||[]).length===0) return null
+    const name=(TEAMS[key]?.name||key).toLowerCase()
+    const abbr=(TEAMS[key]?.abbr||key).toLowerCase()
+    return (slStandings||[]).find(t=>
+      t.team?.toLowerCase()===abbr||
+      t.team?.toLowerCase()===key.toLowerCase()||
+      t.name?.toLowerCase().includes(name)||
+      name.includes(t.name?.toLowerCase()||'__')
+    )||null
+  }
+  const slHome=isSL?findSLTeam(match.home):null
+  const slAway=isSL?findSLTeam(match.away):null
   const hn=TEAMS[match.home]?.name||match.home
   const an=TEAMS[match.away]?.name||match.away
   const tC={SL:'#f0c040',UCL:BLUE,UEL:'#f5733a',UECL:GREEN}[match.t]||GOLD
@@ -1400,28 +1428,20 @@ function MatchPredictCard({match,result,predictions,onRefresh,allResults,current
 
 
 
-// ─── FORM STRIP ───────────────────────────────────────────────────────────────
-function FormStrip({form}){
-  if(!form||!form.length) return null
-  const col={W:GREEN,L:RED,D:GOLD}
-  return <div style={{display:'flex',gap:3,alignItems:'center'}}>
-    {form.map((r,i)=>(
-      <div key={i} style={{
-        width:18,height:18,borderRadius:'50%',
-        background:col[r]||MUTED,
-        display:'flex',alignItems:'center',justifyContent:'center',
-        fontSize:9,fontWeight:800,color:'#08090d'
-      }}>{r}</div>
-    ))}
-  </div>
-}
-
 // ─── SCHEDULE PAGE ────────────────────────────────────────────────────────────
 function SchedulePage({slStandings}){
-  const [filter,  setFilter]  = React.useState('all')    // 'all' | team key
-  const [view,    setView]    = React.useState('list')   // 'list' | 'h2h'
-  const [h2hMatch,setH2hMatch]= React.useState(null)     // selected match id
-  const [nFilter, setNFilter] = React.useState('all')    // 'all'|'next5'|'last5'|'next3'
+  const [filter,  setFilter]  = useState('all')
+  const [view,    setView]    = useState('list')
+  const [h2hMatch,setH2hMatch]= useState(null)
+  const [nFilter, setNFilter] = useState('all')
+  const [espnFixtures, setEspnFixtures] = useState([])
+  const [loadingFix, setLoadingFix] = useState(true)
+
+  useEffect(()=>{
+    api.getSlFixtures().then(d=>{
+      if(d?.events?.length) setEspnFixtures(d.events)
+    }).catch(()=>{}).finally(()=>setLoadingFix(false))
+  },[])
 
   const now = Date.now()
 
@@ -1438,8 +1458,18 @@ function SchedulePage({slStandings}){
     rankMap[t.name] = t.rank
   })
 
-  // Filter fixtures
-  let fixtures = [...ALL_FIXTURES]
+  // Use ESPN live fixtures when available, fall back to hardcoded
+  const useEspn = espnFixtures.length > 0
+  let fixtures = useEspn
+    ? espnFixtures.map(e=>({
+        id:e.id, t:'SL', home:e.home?.abbr||e.home?.name||'',
+        away:e.away?.abbr||e.away?.name||'',
+        kickoff:e.date,
+        homeScore:e.home?.score, awayScore:e.away?.score,
+        status:e.status, round:e.round,
+        round_label:e.round?'Αγωνιστική '+e.round:'SL',
+      }))
+    : [...ALL_FIXTURES]
 
   if(filter!=='all'){
     fixtures = fixtures.filter(m=>m.home===filter||m.away===filter)
@@ -1503,8 +1533,8 @@ function SchedulePage({slStandings}){
         const ko=new Date(m.kickoff).getTime()
         const isPast=ko<now
         const isSL=m.t==='SL'
-        const homeRank=rankMap[m.home]
-        const awayRank=rankMap[m.away]
+        const homeRank=rankMap[m.home]||rankMap[TEAMS[m.home]?.name]||rankMap[TEAMS[m.home]?.abbr]
+        const awayRank=rankMap[m.away]||rankMap[TEAMS[m.away]?.name]||rankMap[TEAMS[m.away]?.abbr]
         const homeForm=formMap[m.home]||[]
         const awayForm=formMap[m.away]||[]
         return <div key={m.id} style={{background:SURF,border:'1px solid '+LINE,borderRadius:12,
