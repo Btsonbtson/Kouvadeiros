@@ -254,7 +254,7 @@ function H2HChart({predictions,results}){
       </div>
 
       {/* Gap drama row */}
-      {n>=2&&<div style={{borderTop:`1px solid ${LINE}`,padding:'10px 16px',display:'flex',gap:8,overflowX:'auto',scrollbarWidth:'none'}}>
+      {n>=2&&<div style={{borderTop:`1px solid ${LINE}`,padding:'10px 16px',display:'flex',gap:8,overflowX:'auto',scrollbarWidth:'none',msOverflowStyle:'none'}}>
         {sorted.slice(1).map(p=>{
           const gap=running[sorted[0]]-running[p]
           return <div key={p} style={{fontSize:11,fontWeight:600,color:MUTED,display:'flex',alignItems:'center',gap:5,whiteSpace:'nowrap'}}>
@@ -778,7 +778,7 @@ export default function App({ user, onLogout }) {
   if(showGuide) return <Guide onBack={()=>setShowGuide(false)}/>
 
   if(loading) return(
-    <div style={{minHeight:'100dvh',background:BG,display:'flex',alignItems:'center',justifyContent:'center',flexDirection:'column',gap:16}}>
+    <div style={{minHeight:'100vh',minHeight:'100dvh',background:BG,display:'flex',alignItems:'center',justifyContent:'center',flexDirection:'column',gap:16}}>
       <div style={{fontSize:24,fontWeight:800,letterSpacing:'.06em',color:GREEN}}>ΚΟΥΒΑΔΕΪΡΟΣ</div>
       <Spinner size={28}/>
     </div>
@@ -877,7 +877,7 @@ export default function App({ user, onLogout }) {
   // ── DESKTOP SIDEBAR LAYOUT ──────────────────────────────────────────────────
   if (isDesktop) {
     return (
-      <div style={{display:'flex',flexDirection:'column',minHeight:'100dvh',background:BG,fontFamily:"'Space Grotesk',system-ui,sans-serif",color:TEXT}}>
+      <div style={{display:'flex',flexDirection:'column',minHeight:'100vh',minHeight:'100dvh',background:BG,fontFamily:"'Space Grotesk',system-ui,sans-serif",color:TEXT}}>
         {showAddPlayer && user?.role==='admin' && <AddPlayerModal onClose={()=>setShowAddPlayer(false)} onAdded={load}/>}
         <Header/>
         <div style={{flex:1,display:'grid',gridTemplateColumns:'var(--sidebar-w,300px) 1fr',maxWidth:1280,width:'100%',margin:'0 auto',padding:'24px 32px',gap:24,alignItems:'start'}}>
@@ -896,7 +896,7 @@ export default function App({ user, onLogout }) {
 
   // ── MOBILE / TABLET ─────────────────────────────────────────────────────────
   return (
-    <div style={{background:BG,minHeight:'100dvh',display:'flex',flexDirection:'column',
+    <div style={{background:BG,minHeight:'100vh',minHeight:'100dvh',display:'flex',flexDirection:'column',
       maxWidth:isTablet?768:'100%',margin:'0 auto',fontFamily:"'Space Grotesk',system-ui,sans-serif",color:TEXT}}>
       {showAddPlayer && user?.role==='admin' && <AddPlayerModal onClose={()=>setShowAddPlayer(false)} onAdded={load}/>}
       <Header/>
@@ -911,7 +911,7 @@ function LeaguePage({predictions,results,thavmaStats}){
   const board=computeLeaderboard(ALL_FIXTURES,predictions,results)
   const [tab,setTab]=useState('standings')
   return <div style={{padding:'16px 16px 80px'}}>
-    <div style={{display:'flex',gap:6,marginBottom:16,overflowX:'auto',scrollbarWidth:'none'}}>
+    <div style={{display:'flex',gap:6,marginBottom:16,overflowX:'auto',scrollbarWidth:'none',msOverflowStyle:'none'}}>
       {[{id:'standings',l:'Συγκομιδή'},{id:'rivalry',l:'🌶️ Διαγκωνισμοί'},{id:'analytics',l:'Αναλυτικά'},{id:'campaigns',l:'Ενεργές Διοργανώσεις'}].map(tabItem=>(
         <button key={tabItem.id} onClick={()=>setTab(tabItem.id)}
           style={{fontSize:11,fontWeight:700,padding:'6px 13px',borderRadius:7,whiteSpace:'nowrap',

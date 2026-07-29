@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"/>
   <meta name="theme-color" content="#08090d"/>
   <title>ΚΟΥΒΑΔΕΪΡΟΣ · 26/27</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
@@ -55,9 +55,26 @@
     @keyframes slide-u { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
     @keyframes glow-p  { 0%,100% { box-shadow:0 0 12px #ff224420; } 50% { box-shadow:0 0 28px #ff224440; } }
   </style>
-  <script type="module" crossorigin src="/assets/index-C91q2uFY.js"></script>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="ΚΟΥΒΑΔΕΪΡΟΣ"/>
+  <meta name="theme-color" content="#08090d"/>
+  <style>
+    /* iOS Safari fixes */
+    * { -webkit-tap-highlight-color: transparent; }
+    ::-webkit-scrollbar { display: none; }
+    body { 
+      overscroll-behavior: none;
+      -webkit-overflow-scrolling: touch;
+      background: #08090d;
+    }
+    /* Fix for iOS safe areas */
+    .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+  </style>
+  <link rel="manifest" href="/manifest.json"/>
 </head>
 <body>
   <div id="root"></div>
+  <script type="module" src="/src/main.jsx"></script>
 </body>
 </html>

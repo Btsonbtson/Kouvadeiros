@@ -1,0 +1,18 @@
+{
+  "name": "ΚΟΥΒΑΔΕΪΡΟΣ 26/27",
+  "short_name": "ΚΟΥΒΑΔΕΪΡΟΣ",
+  "description": "CareDirect FC Prediction Championship",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#08090d",
+  "theme_color": "#08090d",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/logos/OLY.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
