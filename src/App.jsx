@@ -822,7 +822,40 @@ export default function App({ user, onLogout }) {
       <BottomNav/>
     </div>
   )
-}// ─── UNIFIED MATCH+PREDICT CARD ───────────────────────────────────────────────
+}// ─── MATCHDAY PAGE ────────────────────────────────────────────────────────────
+function MatchdayPage({predictions,results,onRefresh,currentUser,revealed,onSave,liveScores}){
+  const now=Date.now()
+  const sorted=[...ALL_FIXTURES].sort((a,b)=>{
+    const aRes=results?.[a.id], bRes=results?.[b.id]
+    const aKo=new Date(a.kickoff).getTime(), bKo=new Date(b.kickoff).getTime()
+    const aLive=now>=aKo&&now<aKo+7200000&&!aRes
+    const bLive=now>=bKo&&now<bKo+7200000&&!bRes
+    const aLocked=now>=aKo-60000, bLocked=now>=bKo-60000
+    if(aLive&&!bLive) return -1
+    if(bLive&&!aLive) return 1
+    if(aLocked!==bLocked) return aLocked?1:-1
+    return aKo-bKo
+  })
+  return <div style={{padding:'12px 16px 80px'}}>
+    <div style={{fontSize:10,fontWeight:700,letterSpacing:'.08em',textTransform:'uppercase',color:MUTED,marginBottom:14}}>
+      Ανοιχτές πρώτα · Ζωντανοί αγώνες επάνω
+    </div>
+    {sorted.map(m=>(
+      <MatchPredictCard key={m.id} match={m}
+        result={results?.[m.id]}
+        predictions={predictions?.[m.id]}
+        onRefresh={onRefresh}
+        allResults={results}
+        currentUser={currentUser}
+        revealed={revealed}
+        onSave={onSave}
+        liveScore={liveScores?.[m.id]}
+      />
+    ))}
+  </div>
+}
+
+// ─── UNIFIED MATCH+PREDICT CARD ───────────────────────────────────────────────
 function MatchPredictCard({match,result,predictions,onRefresh,allResults,currentUser,revealed,onSave,liveScore}){
   // ── State ──────────────────────────────────────────────────────────────────
   const [showPush,setShowPush]=useState(false)
