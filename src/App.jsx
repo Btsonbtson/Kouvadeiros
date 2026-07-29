@@ -132,127 +132,7 @@ function OddsRow({matchId}){
 }
 
 // ─── MATCH CARD ───────────────────────────────────────────────────────────────
-function MatchCard({match,result,predictions,onRefresh,allResults,currentUser,revealed}){
-  const [showPush,setShowPush]=useState(false)
-  const isRevealed=revealed?.[match.id]||false
-  const minsUntil=(new Date(match.kickoff).getTime()-Date.now())/60000
-  const isPreKickoff=minsUntil>=-1&&minsUntil<=1  // within 1 min of kickoff
-  const hasRes=result!=null
-  const showAllPreds=hasRes||(isRevealed||isPreKickoff)  // show all when revealed or at kickoff
-  const myPred=currentUser?predictions?.[currentUser.id]:null
-  const leg1Res = match.leg===2&&match.tie&&allResults ? allResults[match.tie+'-1'] : null
-  const leg1Fix = match.leg===2&&match.tie ? UEFA_FIXTURES.find(f=>f.id===match.tie+'-1') : null
-  const leg1Agg = leg1Res&&leg1Fix ? (()=>{
-    const greek=match.greek
-    const wasHome=leg1Fix.home===greek
-    const gG=wasHome?leg1Res.h:leg1Res.a
-    const oG=wasHome?leg1Res.a:leg1Res.h
-    const diff=gG-oG
-    return {h1:leg1Res.h,a1:leg1Res.a,diff,leg1Fix,
-      situation:diff>0?'+'+diff+' προβάδισμα':diff<0?diff+' πίσω':'Ισόπαλη · Παρ/Πέν αν ισόπαλη'}
-  })() : null
-  const today=isToday(match.kickoff)
-  const hn=TEAMS[match.home]?.name||match.home
-  const an=TEAMS[match.away]?.name||match.away
-  const tC={SL:'#f0c040',UCL:BLUE,UEL:'#f5733a',UECL:GREEN}[match.t]||GOLD
 
-  return <div style={{background:SURF,border:`1px solid ${today?GREEN+'55':LINE}`,borderRadius:14,marginBottom:10,overflow:'hidden',boxShadow:today?`0 0 20px ${GREEN}12`:undefined}}>
-    <div style={{height:2,background:`linear-gradient(90deg,${tC}cc,transparent)`}}/>
-    <div style={{padding:'9px 14px',display:'flex',alignItems:'center',justifyContent:'space-between',borderBottom:`1px solid ${LINE}`}}>
-      <div style={{display:'flex',alignItems:'center',gap:7}}>
-        <TPill id={match.t}/>
-        <span style={{fontSize:10,fontWeight:600,color:MUTED}}>{match.round||''}</span>
-        {today&&<span style={{display:'flex',alignItems:'center',gap:4,fontSize:10,fontWeight:700,color:GREEN}}>
-          <span style={{width:6,height:6,borderRadius:'50%',background:GREEN,animation:'pulse-dot 1.2s infinite',display:'inline-block'}}/>ΣΗΜΕΡΑ
-        </span>}
-      </div>
-      <div style={{textAlign:'right'}}>
-        <div style={{fontSize:11,fontWeight:600,color:today?GREEN:MUTED}}>{grDate(match.kickoff)}</div>
-        <div style={{fontSize:11,fontWeight:700,color:today?GREEN:GOLD}}>{grTime(match.kickoff)}</div>
-      </div>
-    </div>
-
-    <div style={{padding:'14px 14px 12px'}}>
-      {/* Teams + score */}
-      <div style={{display:'grid',gridTemplateColumns:'1fr auto 1fr',alignItems:'center',gap:10,marginBottom:8}}>
-        <div style={{display:'flex',flexDirection:'column',alignItems:'flex-end',gap:6}}>
-          <TeamLogo k={match.home} size={36}/>
-          <span style={{fontSize:11,fontWeight:600,textAlign:'right',color:TEXT,lineHeight:1.2}}>{hn}</span>
-        </div>
-        <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:5}}>
-          <ScorePill h={result?.h} a={result?.a} pending={today&&!hasRes}/>
-          {result?.overtime&&<div style={{fontSize:9,fontWeight:700,color:GOLD,letterSpacing:'.03em',textAlign:'center'}}>{result.penalties?`PEN ${result.penH}–${result.penA}`:`AET ${result.otH}–${result.otA}`}</div>}
-          {!hasRes&&!today&&<div style={{fontSize:10,color:DIM,fontWeight:600}}>vs</div>}
-        </div>
-        <div style={{display:'flex',flexDirection:'column',alignItems:'flex-start',gap:6}}>
-          <TeamLogo k={match.away} size={36}/>
-          <span style={{fontSize:11,fontWeight:600,color:TEXT,lineHeight:1.2}}>{an}</span>
-        </div>
-      </div>
-
-      {/* Leg 1 result for Leg 2 matches */}
-      {leg1Agg&&<div style={{
-        background:'rgba(255,255,255,.04)',border:`1px solid ${LINE}`,
-        borderRadius:9,padding:'8px 12px',marginBottom:10,marginTop:2
-      }}>
-        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:6}}>
-          <div style={{display:'flex',alignItems:'center',gap:6}}>
-            <span style={{fontSize:10,fontWeight:700,color:MUTED,letterSpacing:'.06em',textTransform:'uppercase'}}>Leg 1</span>
-            <span style={{fontSize:14,fontWeight:900,color:TEXT,fontVariantNumeric:'tabular-nums'}}>
-              {TEAMS[leg1Agg.leg1Fix.home]?.abbr||leg1Agg.leg1Fix.home} {leg1Agg.h1}–{leg1Agg.a1} {TEAMS[leg1Agg.leg1Fix.away]?.abbr||leg1Agg.leg1Fix.away}
-            </span>
-          </div>
-          <div style={{display:'flex',alignItems:'center',gap:5}}>
-            <span style={{fontSize:10,fontWeight:700,color:MUTED}}>Αθρ:</span>
-            <span style={{fontSize:12,fontWeight:800,
-              color:leg1Agg.diff>0?GREEN:leg1Agg.diff<0?RED:GOLD}}>
-              {leg1Agg.situation}
-            </span>
-            {leg1Agg.diff===0&&<span style={{fontSize:10,color:MUTED}}>· παρ/πέν αν ισόπαλη</span>}
-          </div>
-        </div>
-      </div>}
-
-      {/* Odds */}
-      <OddsRow matchId={match.id}/>
-
-      {/* My prediction - always visible if I have one */}
-      {!showAllPreds&&myPred&&currentUser&&<div style={{marginTop:10,background:'rgba(255,255,255,.04)',border:`1px solid ${PC[currentUser.id]?.b||LINE}`,borderRadius:9,padding:'8px 10px',display:'flex',alignItems:'center',gap:8}}>
-        <div style={{width:7,height:7,borderRadius:'50%',background:PC[currentUser.id]?.p||MUTED,flexShrink:0}}/>
-        <span style={{fontSize:11,fontWeight:600,color:MUTED}}>Η πρόβλεψή μου:</span>
-        <span style={{fontSize:14,fontWeight:900,color:PC[currentUser.id]?.p||TEXT,fontVariantNumeric:'tabular-nums'}}>{myPred.h}–{myPred.a}</span>
-        {myPred.qual&&<span style={{fontSize:10,color:MUTED}}>→ {myPred.qual}</span>}
-        {isPreKickoff&&<span style={{fontSize:10,color:GOLD,fontWeight:700,marginLeft:'auto'}}>🔒 Σε {Math.abs(Math.round(minsUntil))} λεπτά!</span>}
-      </div>}
-
-      {/* All predictions - at kickoff or after result */}
-      {showAllPreds&&predictions&&<div style={{marginTop:10}}>
-        {(isPreKickoff||isRevealed)&&!hasRes&&<div style={{fontSize:10,fontWeight:700,color:GOLD,textAlign:'center',marginBottom:6,letterSpacing:'.06em'}}>🔒 ΑΠΟΚΑΛΥΨΗ ΠΡΟΒΛΕΨΕΩΝ</div>}
-        <div style={{display:'flex',gap:5}}>
-        {PLAYERS.map(p=>{
-          const pred=predictions[p],sc=pred?scoreMatch(pred,result):null,pc=PC[p]
-          return <div key={p} style={{flex:1,background:sc?.exact?`${GREEN}15`:sc?.correct?`${GOLD}0a`:'rgba(255,255,255,.04)',border:`1px solid ${sc?.exact?GREEN+'44':sc?.correct?GOLD+'22':LINE}`,borderRadius:9,padding:'7px 6px',textAlign:'center'}}>
-            <div style={{fontSize:9,fontWeight:700,color:pc.p,marginBottom:3,letterSpacing:'.04em'}}>{PLAYER_NAMES[p].substring(0,4).toUpperCase()}</div>
-            <div style={{fontSize:13,fontWeight:800,color:TEXT,fontVariantNumeric:'tabular-nums'}}>{pred?`${pred.h}–${pred.a}`:'–'}</div>
-            {sc&&<div style={{fontSize:10,fontWeight:700,color:sc.points===2?GREEN:sc.points===1?GOLD:DIM,marginTop:2}}>{sc.points===2?'🎯':sc.points===1?'✓':'✗'}{sc.points}p</div>}
-          </div>
-        })}
-        </div>
-      </div>}
-
-      {/* Actions - admin only */}
-      {currentUser?.role==='admin'&&<div style={{display:'flex',gap:8,marginTop:12}}>
-        <FetchBtn matchId={match.id} onFetched={onRefresh}/>
-        <button onClick={()=>setShowPush(v=>!v)} style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',gap:5,padding:'8px 10px',borderRadius:8,border:`1px solid ${showPush?GOLD+'55':GOLD+'25'}`,background:showPush?`${GOLD}20`:`${GOLD}08`,color:GOLD,fontSize:11,fontWeight:700,cursor:'pointer'}}>
-          <i className="ti ti-cloud-upload" style={{fontSize:13}}/>Push
-        </button>
-      </div>}
-      {showPush&&currentUser?.role==='admin'&&<PushPanel match={match} result={result} onSaved={()=>{setShowPush(false);onRefresh()}}/>}
-    </div>
-  </div>
-}
-
-// ─── H2H EVOLUTION CHART ─────────────────────────────────────────────────────
 function H2HChart({predictions,results}){
   const played=[...ALL_FIXTURES].filter(m=>results?.[m.id]!=null)
     .sort((a,b)=>new Date(a.kickoff)-new Date(b.kickoff))
@@ -597,300 +477,6 @@ function LeaderHero({board,maxPts}){
 }
 
 // ─── PREDICT CARD ─────────────────────────────────────────────────────────────
-function PredictCard({match,myPred,onSave,results}){
-  const locked=isLocked(match.kickoff),isUEFA=isUEFATie(match.id)
-  const leg1Res=match.leg===2&&match.tie&&results?results[match.tie+'-1']:null
-  const leg1Fix=match.leg===2&&match.tie?UEFA_FIXTURES.find(f=>f.id===match.tie+'-1'):null
-  const [h,setH]=useState(myPred?.h??0),[a,setA]=useState(myPred?.a??0)
-  const [qual,setQual]=useState(myPred?.qual??match.home)
-  const [predOT,setPredOT]=useState(myPred?.predOT??false),[otH,setOtH]=useState(myPred?.otH??0),[otA,setOtA]=useState(myPred?.otA??0)
-  const [predPen,setPredPen]=useState(myPred?.predPen??false),[penH,setPenH]=useState(myPred?.penH??0),[penA,setPenA]=useState(myPred?.penA??0)
-  const [saving,setSaving]=useState(false),[saved,setSaved]=useState(false),[error,setError]=useState('')
-  // Sync when server predictions load
-  useEffect(()=>{
-    if(myPred){
-      setH(myPred.h??0);setA(myPred.a??0)
-      setQual(myPred.qual??match.home)
-      setPredOT(myPred.predOT??false)
-      setOtH(myPred.otH??0);setOtA(myPred.otA??0)
-    }
-  },[myPred?.h,myPred?.a,myPred?.qual])
-  const adj=(v,set,d)=>{if(!locked){set(Math.max(0,Math.min(9,v+d)));setSaved(false)}}
-  const hn=TEAMS[match.home]?.name||match.home,an=TEAMS[match.away]?.name||match.away
-  const tC={SL:'#f0c040',UCL:BLUE,UEL:'#f5733a',UECL:GREEN}[match.t]||GOLD
-  const nb={width:50,height:50,background:SURF2,border:`1px solid ${locked?LINE:tC+'55'}`,borderRadius:10,display:'flex',alignItems:'center',justifyContent:'center',fontSize:24,fontWeight:800,color:locked?MUTED:TEXT,fontVariantNumeric:'tabular-nums'}
-  const ab={width:34,height:34,borderRadius:8,border:`1px solid ${LINE}`,background:'rgba(255,255,255,.06)',color:TEXT,cursor:locked?'not-allowed':'pointer',fontSize:17,display:'flex',alignItems:'center',justifyContent:'center'}
-  const ARow=({lbl,hv,setHv,av,setAv,sm})=><div style={{marginBottom:sm?8:0}}>
-    {lbl&&<div style={{fontSize:10,fontWeight:700,color:tC,letterSpacing:'.05em',marginBottom:6,textTransform:'uppercase'}}>{lbl}</div>}
-    <div style={{display:'grid',gridTemplateColumns:'1fr auto 1fr',alignItems:'center',gap:8}}>
-      {[['h',hv,setHv],['a',av,setAv]].map(([s,v,set],i)=><>
-        {i===1&&<span key="sep" style={{fontSize:sm?16:20,color:DIM,textAlign:'center'}}>–</span>}
-        <div key={s} style={{display:'flex',alignItems:'center',gap:sm?5:7,justifyContent:'center'}}>
-          <button style={sm?{...ab,width:26,height:26,fontSize:14}:ab} onClick={()=>adj(v,set,-1)}>–</button>
-          <div style={sm?{...nb,width:38,height:38,fontSize:18}:nb}>{v}</div>
-          <button style={sm?{...ab,width:26,height:26,fontSize:14}:ab} onClick={()=>adj(v,set,+1)}>+</button>
-        </div>
-      </>)}
-    </div>
-  </div>
-  async function save(){
-    if(locked)return;setSaving(true);setError('')
-    try{
-      await onSave(match.id,h,a,qual,predOT,otH,otA,predPen,penH,penA)
-      setSaved(true);setTimeout(()=>setSaved(false),2500)
-    }catch(e){
-      const msg=e?.message||'Σφάλμα'
-      setError('❌ '+msg+' — έλεγξε σύνδεση & ξανά')
-      console.error('Save failed:',e)
-    }finally{setSaving(false)}
-  }
-
-  return <div style={{background:SURF,border:`1px solid ${locked?LINE:tC+'33'}`,borderRadius:14,marginBottom:12,overflow:'hidden'}}>
-    <div style={{height:2,background:`linear-gradient(90deg,${tC}cc,transparent)`}}/>
-    <div style={{padding:'10px 14px',display:'flex',alignItems:'center',justifyContent:'space-between',borderBottom:`1px solid ${LINE}`}}>
-      <div style={{display:'flex',alignItems:'center',gap:7}}><TPill id={match.t}/><span style={{fontSize:10,fontWeight:600,color:MUTED}}>{match.round}</span></div>
-      <div style={{textAlign:'right'}}>
-        <div style={{fontSize:11,fontWeight:700,color:locked?RED:GREEN}}>{locked?'🔒 Κλειδωμένο':`Κλείνει ${grTime(match.kickoff)}`}</div>
-        <div style={{fontSize:10,color:MUTED}}>{grDate(match.kickoff)}</div>
-      </div>
-    </div>
-    <div style={{padding:'16px 14px'}}>
-      <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:14,marginBottom:16,paddingBottom:14,borderBottom:`1px solid ${LINE}`}}>
-        <div style={{display:'flex',alignItems:'center',gap:8}}><TeamLogo k={match.home} size={30}/><span style={{fontSize:13,fontWeight:700}}>{hn}</span></div>
-        <span style={{color:DIM,fontSize:14,fontWeight:700}}>vs</span>
-        <div style={{display:'flex',alignItems:'center',gap:8}}><span style={{fontSize:13,fontWeight:700}}>{an}</span><TeamLogo k={match.away} size={30}/></div>
-      </div>
-
-      {/* Odds */}
-      <OddsRow matchId={match.id}/>
-
-      {leg1Res&&leg1Fix&&<div style={{background:'rgba(255,255,255,.04)',border:`1px solid ${LINE}`,borderRadius:8,padding:'7px 12px',margin:'8px 0',display:'flex',alignItems:'center',justifyContent:'space-between',gap:6}}>
-        <div style={{display:'flex',alignItems:'center',gap:6}}>
-          <span style={{fontSize:9,fontWeight:700,color:MUTED,letterSpacing:'.06em',textTransform:'uppercase'}}>Leg 1</span>
-          <span style={{fontSize:13,fontWeight:900,color:TEXT,fontVariantNumeric:'tabular-nums'}}>{TEAMS[leg1Fix.home]?.abbr} {leg1Res.h}–{leg1Res.a} {TEAMS[leg1Fix.away]?.abbr}</span>
-        </div>
-        {(()=>{const g=match.greek,wH=leg1Fix.home===g,gG=wH?leg1Res.h:leg1Res.a,oG=wH?leg1Res.a:leg1Res.h,d=gG-oG;return<span style={{fontSize:11,fontWeight:800,color:d>0?GREEN:d<0?RED:GOLD}}>{d>0?`+${d} προβ.`:d<0?`${d} πίσω`:'Ισόπαλη·Παρ/Πέν'}</span>})()}
-      </div>}
-      {myPred&&<div style={{fontSize:11,fontWeight:600,color:MUTED,textAlign:'center',marginBottom:12,marginTop:10}}>Αποθ: {myPred.h}–{myPred.a}</div>}
-      <div style={{marginTop:12,marginBottom:16}}><ARow hv={h} setHv={setH} av={a} setAv={setA}/></div>
-
-      {isUEFA&&match.leg===2&&!locked&&<div style={{background:`${GOLD}0a`,border:`1px solid ${GOLD}25`,borderRadius:10,padding:'12px',marginBottom:12}}>
-        <label style={{display:'flex',alignItems:'center',gap:8,fontSize:12,fontWeight:700,cursor:'pointer',color:GOLD,marginBottom:predOT?12:0}}>
-          <input type="checkbox" checked={predOT} onChange={e=>{setPredOT(e.target.checked);setSaved(false)}} style={{width:15,height:15,accentColor:GOLD}}/>⏱ Παρατάσεις +1pt αποτ. +1pt σκορ
-        </label>
-        {predOT&&<ARow lbl="Σκορ AET" hv={otH} setHv={setOtH} av={otA} setAv={setOtA} sm/>}
-        {predOT&&<label style={{display:'flex',alignItems:'center',gap:8,fontSize:12,fontWeight:700,cursor:'pointer',color:GREEN,marginTop:8,marginBottom:predPen?12:0}}>
-          <input type="checkbox" checked={predPen} onChange={e=>{setPredPen(e.target.checked);setSaved(false)}} style={{width:15,height:15,accentColor:GREEN}}/>⚽ Πέναλτι +1pt αποτ. +1pt σκορ
-        </label>}
-        {predOT&&predPen&&<ARow lbl="Σκορ Pen" hv={penH} setHv={setPenH} av={penA} setAv={setPenA} sm/>}
-      </div>}
-
-      {isUEFA&&!locked&&<div style={{background:`${BLUE}0a`,border:`1px solid ${BLUE}25`,borderRadius:10,padding:'10px 12px',marginBottom:14}}>
-        <div style={{fontSize:10,fontWeight:700,color:BLUE,letterSpacing:'.06em',textTransform:'uppercase',marginBottom:7}}>🔑 Ποιος προκρίνεται; +1pt</div>
-        <select value={qual} onChange={e=>{setQual(e.target.value);setSaved(false)}} style={{width:'100%',fontSize:13,fontWeight:600,padding:'8px 11px',borderRadius:8,border:`1px solid ${BLUE}35`,background:SURF2,color:TEXT,outline:'none'}}>
-          <option value={match.home}>{hn}</option>
-          <option value={match.away}>{an}</option>
-        </select>
-      </div>}
-
-      {error&&<div style={{fontSize:11,color:'#ff4d6d',background:'rgba(255,77,109,.1)',border:'1px solid rgba(255,77,109,.25)',borderRadius:8,padding:'7px 10px',marginBottom:8,textAlign:'center',fontWeight:600}}>{error}</div>}
-        <button onClick={save} disabled={locked||saving||saved} style={{width:'100%',padding:'12px',borderRadius:10,border:'none',fontWeight:700,fontSize:14,cursor:locked?'not-allowed':'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:8,letterSpacing:'.03em',transition:'all .2s',background:locked?'rgba(255,255,255,.06)':saved?GREEN:`${tC}ee`,color:locked?DIM:SURF}}>
-        <span style={{fontSize:16}}>{saved?'✓':locked?'🔒':saving?'⏳':'💾'}</span>
-        {saved?'✓ Αποθηκεύτηκε!':locked?'🔒 Κλειδωμένο':saving?'Αποθήκευση…':myPred?'Άλλαξε Πρόβλεψη ✏️':'Κάνε την πρόβλεψή σου ⚽'}
-      </button>
-    </div>
-  </div>
-}
-
-// ─── CHANGE PASSWORD MODAL ────────────────────────────────────────────────────
-function ChangePasswordModal({user, onClose}){
-  const isAdmin=user.id==='boikos'
-  const [tab,setTab]=useState(isAdmin?'admin':'self')
-  const [cur,setCur]=useState(''),[nw,setNw]=useState(''),[conf,setConf]=useState('')
-  const [selUser,setSelUser]=useState(PLAYERS[1])
-  const [adminPw,setAdminPw]=useState(''),[adminConf,setAdminConf]=useState('')
-  const [msg,setMsg]=useState(''),[err,setErr]=useState(''),[loading,setLoading]=useState(false)
-
-  async function changeSelf(e){
-    e.preventDefault();setMsg('');setErr('')
-    if(nw!==conf){setErr('Οι κωδικοί δεν ταιριάζουν');return}
-    if(nw.length<4){setErr('Τουλάχιστον 4 χαρακτήρες');return}
-    setLoading(true)
-    try{await api.changePassword(cur,nw);setMsg('✓ Αλλάχθηκε επιτυχώς!');setCur('');setNw('');setConf('')}
-    catch{setErr('Λάθος τρέχων κωδικός')}finally{setLoading(false)}
-  }
-  async function adminSet(e){
-    e.preventDefault();setMsg('');setErr('')
-    if(adminPw!==adminConf){setErr('Οι κωδικοί δεν ταιριάζουν');return}
-    if(adminPw.length<4){setErr('Τουλάχιστον 4 χαρακτήρες');return}
-    setLoading(true)
-    const emails={boikos:'boikos.y@caredirect.com',mavromichalis:'mavromichalis.y@caredirect.com',chousiadas:'chousiadas.th@caredirect.com'}
-    try{await api.adminSetPassword(emails[selUser],adminPw);setMsg(`✓ Ο κωδικός του ${PLAYER_NAMES[selUser]} άλλαξε!`);setAdminPw('');setAdminConf('')}
-    catch{setErr('Σφάλμα — ελέγξτε συνδεσιμότητα')}finally{setLoading(false)}
-  }
-
-  const inp={width:'100%',padding:'11px 14px',background:SURF2,border:`1px solid ${LINE}`,borderRadius:9,color:TEXT,fontSize:14,outline:'none',marginBottom:12,fontFamily:'inherit'}
-
-  return <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.75)',zIndex:100,display:'flex',alignItems:'center',justifyContent:'center',padding:16}}>
-    <div style={{background:SURF,border:`1px solid ${LINE}`,borderRadius:16,padding:24,width:'100%',maxWidth:420,position:'relative'}}>
-      <button onClick={onClose} style={{position:'absolute',top:14,right:14,background:'none',border:'none',color:MUTED,fontSize:20,cursor:'pointer'}}>×</button>
-      <div style={{fontSize:16,fontWeight:700,marginBottom:16}}>🔐 Αλλαγή Κωδικού</div>
-
-      {isAdmin&&<div style={{display:'flex',gap:6,marginBottom:16}}>
-        {[{id:'self',l:'Ο κωδικός μου'},{id:'admin',l:'👑 Admin'}].map(tabItem=><button key={tabItem.id} onClick={()=>{setTab(tabItem.id);setMsg('');setErr('')}} style={{flex:1,padding:'7px',borderRadius:8,border:`1px solid ${tab===tabItem.id?'rgba(255,255,255,.3)':LINE}`,background:tab===tabItem.id?'rgba(255,255,255,.1)':'transparent',color:tab===tabItem.id?TEXT:MUTED,fontSize:11,fontWeight:700,cursor:'pointer'}}>{tabItem.l}</button>)}
-      </div>}
-
-      {tab==='self'?<form onSubmit={changeSelf}>
-        <input type="password" value={cur} onChange={e=>setCur(e.target.value)} placeholder="Τρέχων κωδικός" required style={inp}/>
-        <input type="password" value={nw} onChange={e=>setNw(e.target.value)} placeholder="Νέος κωδικός" required style={inp}/>
-        <input type="password" value={conf} onChange={e=>setConf(e.target.value)} placeholder="Επαλήθευση νέου" required style={{...inp,marginBottom:0}}/>
-        {err&&<div style={{color:RED,fontSize:12,fontWeight:600,marginTop:8}}>{err}</div>}
-        {msg&&<div style={{color:GREEN,fontSize:12,fontWeight:600,marginTop:8}}>{msg}</div>}
-        <button type="submit" disabled={loading} style={{width:'100%',marginTop:14,padding:'11px',borderRadius:10,border:'none',background:GREEN,color:SURF,fontWeight:700,fontSize:14,cursor:'pointer'}}>
-          {loading?'…':'Αλλαγή'}
-        </button>
-      </form>:<form onSubmit={adminSet}>
-        <div style={{fontSize:11,color:MUTED,marginBottom:10}}>Αλλαγή κωδικού για άλλον χρήστη (admin only)</div>
-        <select value={selUser} onChange={e=>setSelUser(e.target.value)} style={{...inp}}>
-          {PLAYERS.filter(p=>p!==user.id).map(p=><option key={p} value={p}>{PLAYER_NAMES[p]}</option>)}
-        </select>
-        <input type="password" value={adminPw} onChange={e=>setAdminPw(e.target.value)} placeholder="Νέος κωδικός" required style={inp}/>
-        <input type="password" value={adminConf} onChange={e=>setAdminConf(e.target.value)} placeholder="Επαλήθευση" required style={{...inp,marginBottom:0}}/>
-        {err&&<div style={{color:RED,fontSize:12,fontWeight:600,marginTop:8}}>{err}</div>}
-        {msg&&<div style={{color:GREEN,fontSize:12,fontWeight:600,marginTop:8}}>{msg}</div>}
-        <button type="submit" disabled={loading} style={{width:'100%',marginTop:14,padding:'11px',borderRadius:10,border:'none',background:GOLD,color:SURF,fontWeight:700,fontSize:14,cursor:'pointer'}}>
-          {loading?'…':'Αλλαγή για '+PLAYER_NAMES[selUser]}
-        </button>
-      </form>}
-    </div>
-  </div>
-}
-
-// ─── PAGES ────────────────────────────────────────────────────────────────────
-function MatchdayPage({predictions,results,onRefresh,currentUser,revealed}){
-  const [tab,setTab]=useState('all')
-  const board=computeLeaderboard(ALL_FIXTURES,predictions,results)
-  const now=Date.now()
-  const sorted=[...ALL_FIXTURES].sort((a,b)=>{
-    const aLocked=now>=new Date(a.kickoff).getTime()-60000
-    const bLocked=now>=new Date(b.kickoff).getTime()-60000
-    if(aLocked!==bLocked) return aLocked?1:-1  // unlocked first
-    return new Date(a.kickoff)-new Date(b.kickoff)
-  })
-  const fx={all:sorted,sl:[...SUPER_LEAGUE].sort((a,b)=>new Date(a.kickoff)-new Date(b.kickoff)),
-    ucl:UEFA_FIXTURES.filter(f=>f.t==='UCL'),uel:UEFA_FIXTURES.filter(f=>f.t==='UEL'),
-    uecl:UEFA_FIXTURES.filter(f=>f.t==='UECL')}[tab]||[]
-
-  return <div>
-    {/* Scoreboard strip */}
-    <div style={{background:'#0a0b0f',borderBottom:`1px solid ${LINE}`,padding:'10px 16px',display:'flex',gap:8,overflowX:'auto',scrollbarWidth:'none'}}>
-      {board.map((row,i)=>{const pc=PC[row.player];return <div key={row.player} style={{display:'flex',alignItems:'center',gap:8,padding:'6px 12px',background:i===0?pc.bg:'rgba(255,255,255,.04)',borderRadius:20,border:`1px solid ${i===0?pc.b:LINE}`,flexShrink:0}}>
-        <span style={{fontSize:14}}>{MEDALS[i]}</span>
-        <span style={{fontSize:12,fontWeight:700,color:i===0?pc.p:TEXT}}>{PLAYER_NAMES[row.player]}</span>
-        <span style={{fontSize:14,fontWeight:900,color:i===0?pc.p:MUTED,fontVariantNumeric:'tabular-nums'}}>{row.pts}<span style={{fontSize:10,fontWeight:600,color:MUTED}}>p</span></span>
-      </div>})}
-    </div>
-    {/* Tabs */}
-    <div style={{display:'flex',gap:5,padding:'10px 16px 8px',overflowX:'auto',scrollbarWidth:'none'}}>
-      {[{id:'all',l:'All'},{id:'sl',l:'SL'},{id:'ucl',l:'UCL'},{id:'uel',l:'UEL'},{id:'uecl',l:'UECL'}].map(tabItem=><button key={tabItem.id} onClick={()=>setTab(tabItem.id)} style={{fontSize:11,fontWeight:700,padding:'5px 13px',borderRadius:7,border:`1px solid ${tab===tabItem.id?'rgba(255,255,255,.3)':LINE}`,background:tab===tabItem.id?'rgba(255,255,255,.12)':'transparent',color:tab===tabItem.id?TEXT:MUTED,cursor:'pointer',whiteSpace:'nowrap',flexShrink:0,letterSpacing:'.03em'}}>{tabItem.l}</button>)}
-    </div>
-    {/* ALL games - full scroll */}
-    <div style={{padding:'0 16px 80px'}}>
-      {fx.map(m=><MatchCard key={m.id} match={m} result={results?.[m.id]} predictions={predictions?.[m.id]} onRefresh={onRefresh} allResults={results} currentUser={currentUser} revealed={revealed}/>)}
-    </div>
-  </div>
-}
-
-function LeaguePage({predictions,results,thavmaStats}){
-  const board=computeLeaderboard(ALL_FIXTURES,predictions,results)
-  const maxPts=ALL_FIXTURES.filter(m=>results?.[m.id]!=null).length*2
-  const [tab,setTab]=useState('standings')
-  return <div style={{padding:'16px 16px 80px'}}>
-    <div style={{display:'flex',gap:6,marginBottom:16,overflowX:'auto',scrollbarWidth:'none'}}>
-      {[{id:'standings',l:'Συγκομιδή'},{id:'rivalry',l:'🌶️ Διαγκωνισμοί'},{id:'analytics',l:'Αναλυτικά'},{id:'campaigns',l:'Ενεργές Διοργανώσεις'}].map(tabItem=><button key={tabItem.id} onClick={()=>setTab(tabItem.id)} style={{fontSize:11,fontWeight:700,padding:'6px 13px',borderRadius:7,border:`1px solid ${tab===tabItem.id?'rgba(255,255,255,.3)':LINE}`,background:tab===tabItem.id?'rgba(255,255,255,.12)':'transparent',color:tab===tabItem.id?TEXT:MUTED,cursor:'pointer',whiteSpace:'nowrap',flexShrink:0,letterSpacing:'.03em'}}>{tabItem.l}</button>)}
-    </div>
-        {tab==='standings'&&<>
-      <div style={{fontSize:10,fontWeight:700,letterSpacing:'.1em',textTransform:'uppercase',color:'rgba(255,255,255,.4)',marginBottom:10}}>Ανάλυση ανά τουρνουά</div>
-      {board.map(row=>{
-        const bd={};['SL','UCL','UEL','UECL'].forEach(t=>{
-          let pts=0,played=0
-          ALL_FIXTURES.filter(m=>m.t===t).forEach(m=>{
-            const ac=results?.[m.id];if(!ac)return
-            const sc=scoreMatch(predictions?.[m.id]?.[row.player],ac)
-            if(!sc)return;pts+=sc.points;played++
-          })
-          bd[t]={pts,played}
-        })
-        const pc=PC[row.player]
-        return <div key={row.player} style={{background:SURF,border:`1px solid ${LINE}`,borderRadius:12,padding:'14px 16px',marginBottom:8}}>
-          <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:12}}>
-            <div style={{width:36,height:36,borderRadius:'50%',background:pc.p,display:'flex',alignItems:'center',justifyContent:'center',fontSize:15,fontWeight:900,color:SURF}}>{PLAYER_NAMES[row.player].substring(0,1)}</div>
-            <div style={{flex:1}}>
-              <div style={{fontSize:14,fontWeight:700,color:TEXT}}>{PLAYER_NAMES[row.player]}</div>
-              <div style={{fontSize:10,color:MUTED,marginTop:1}}>{row.exact} exact · {row.correct} correct · {row.played} games</div>
-            </div>
-            <div style={{fontSize:22,fontWeight:900,color:pc.p,fontVariantNumeric:'tabular-nums'}}>{row.pts}<span style={{fontSize:12,color:MUTED,fontWeight:500}}>p</span></div>
-          </div>
-          <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:5}}>
-            {Object.entries(bd).map(([t,d])=><div key={t} style={{background:'rgba(255,255,255,.05)',borderRadius:8,padding:'8px 5px',textAlign:'center'}}>
-              <TPill id={t}/><div style={{fontSize:15,fontWeight:800,marginTop:5,color:d.pts>0?pc.p:MUTED,fontVariantNumeric:'tabular-nums'}}>{d.pts}</div>
-              <div style={{fontSize:9,color:MUTED,marginTop:1}}>{d.played}αγ</div>
-            </div>)}
-          </div>
-        </div>
-      })}
-    </>}
-    {tab==='rivalry'&&<RivalryStats predictions={predictions} results={results} thavmaStats={thavmaStats}/>}
-    {tab==='analytics'&&board.map(row=>{
-      const n=row.played,ea=n>0?Math.round(row.exact/n*100):0,ca=n>0?Math.round(row.correct/n*100):0,pc=PC[row.player]
-      return <div key={row.player} style={{background:SURF,border:`1px solid ${LINE}`,borderRadius:12,padding:'16px',marginBottom:10}}>
-        <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:14}}>
-          <div style={{width:40,height:40,borderRadius:'50%',background:pc.p,display:'flex',alignItems:'center',justifyContent:'center',fontSize:17,fontWeight:900,color:SURF}}>{PLAYER_NAMES[row.player].substring(0,1)}</div>
-          <div style={{flex:1}}><div style={{fontSize:15,fontWeight:700}}>{PLAYER_NAMES[row.player]}</div><div style={{fontSize:11,color:MUTED,fontWeight:600}}>Rank #{row.rank}</div></div>
-          <div style={{fontSize:28,fontWeight:900,color:pc.p,fontVariantNumeric:'tabular-nums'}}>{row.pts}</div>
-        </div>
-        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:8,marginBottom:14}}>
-          {[{l:'Exact',v:row.exact,c:GREEN},{l:'Correct',v:row.correct,c:GOLD},{l:'Pts/αγ',v:n>0?(row.pts/n).toFixed(1):'–',c:BLUE}].map(s=><div key={s.l} style={{background:SURF2,borderRadius:9,padding:'10px 8px',textAlign:'center'}}>
-            <div style={{fontSize:20,fontWeight:900,color:s.c,fontVariantNumeric:'tabular-nums'}}>{s.v}</div>
-            <div style={{fontSize:10,color:MUTED,marginTop:2,fontWeight:600,letterSpacing:'.04em'}}>{s.l}</div>
-          </div>)}
-        </div>
-        {[{l:'Exact accuracy',pct:ea,c:GREEN},{l:'Result accuracy',pct:ca,c:GOLD}].map(bar=><div key={bar.l} style={{marginBottom:10}}>
-          <div style={{display:'flex',justifyContent:'space-between',fontSize:11,fontWeight:600,marginBottom:4}}><span style={{color:MUTED}}>{bar.l}</span><span style={{color:bar.c}}>{bar.pct}%</span></div>
-          <div style={{height:6,background:'rgba(255,255,255,.08)',borderRadius:3}}><div style={{height:'100%',width:`${bar.pct}%`,background:bar.c,borderRadius:3}}/></div>
-        </div>)}
-      </div>
-    })}
-    {tab==='campaigns'&&<div>
-      <SLbl>Ελληνικοί Σύλλογοι · 2026/27</SLbl>
-      {[{t:'AEK',c:'UCL',s:'Play-offs · 18/19 Αυγ',n:'Κλήρωση 3 Αυγ',live:false},{t:'OLY',c:'UCL',s:'Q3 · 4 Αυγ vs NEC',n:'Karaiskakis',live:false},{t:'PAOK',c:'UEL',s:'Q2 L1 ✅ 2–3 · L2: 30 Ιουλ',n:'Toumba · 21:30',live:true},{t:'PAO',c:'UECL',s:'Q2 L1 ✅ 1–2 · L2: 30 Ιουλ',n:'ΟΑΚΑ · 21:30',live:true}].map(c=><div key={c.t} style={{background:SURF,border:`1px solid ${c.live?GREEN+'44':LINE}`,borderRadius:12,padding:'14px 16px',marginBottom:8,boxShadow:c.live?`0 0 16px ${GREEN}10`:undefined}}>
-        <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:8}}>
-          <TeamLogo k={c.t} size={38}/>
-          <div style={{flex:1}}><div style={{fontSize:14,fontWeight:700}}>{TEAMS[c.t]?.name}</div><TPill id={c.c} size="lg"/></div>
-          {c.live&&<div style={{display:'flex',alignItems:'center',gap:5,fontSize:11,fontWeight:700,color:GREEN}}><span style={{width:7,height:7,borderRadius:'50%',background:GREEN,animation:'pulse-dot 1.2s infinite',display:'inline-block'}}/>ACTIVE</div>}
-        </div>
-        <div style={{borderTop:`1px solid ${LINE}`,paddingTop:8}}>
-          <div style={{fontSize:12,fontWeight:700,color:c.live?TEXT:MUTED}}>{c.s}</div>
-          <div style={{fontSize:11,color:MUTED,marginTop:2}}>{c.n}</div>
-        </div>
-      </div>)}
-    </div>}
-  </div>
-}
-
-function PredictPage({predictions,currentUser,onSave,results}){
-  const now=Date.now()
-  const sorted=[...ALL_FIXTURES].sort((a,b)=>{
-    const aLocked=now>=new Date(a.kickoff).getTime()-60000
-    const bLocked=now>=new Date(b.kickoff).getTime()-60000
-    if(aLocked!==bLocked) return aLocked?1:-1  // unlocked first
-    return new Date(a.kickoff)-new Date(b.kickoff)
-  })
-  return <div style={{padding:'12px 16px 80px'}}>
-    <div style={{fontSize:10,fontWeight:700,letterSpacing:'.08em',textTransform:'uppercase',color:MUTED,marginBottom:14}}>Χρονολογική σειρά · Παλιότερα πρώτα</div>
-    {sorted.map(m=><PredictCard key={m.id} match={m} myPred={predictions?.[m.id]?.[currentUser.id]} onSave={onSave} results={results}/>)}
-  </div>
-}
 
 function HistoryPage({predictions,results}){
   const played=[...ALL_FIXTURES].filter(m=>results?.[m.id]!=null).sort((a,b)=>new Date(b.kickoff)-new Date(a.kickoff))
@@ -1021,9 +607,8 @@ function LeaderSidebar({ predictions, results }) {
 
 // ─── APP SHELL (RESPONSIVE) ─────────────────────────────────────────────────
 const NAV=[
-  {id:'matchday',l:'Αγώνες',  icon:'⚽'},
+  {id:'matchday',l:'ΑΓΩΝΕΣ/ΠΡΟΒΛΕΨΗ',icon:'⚽'},
   {id:'league',  l:'Διαγωνισμός',icon:'🏆'},
-  {id:'predict', l:'ΕΔΩ! ΠΡΟΒΛΕΨΗ',     icon:'✏️'},
   {id:'history', l:'Ιστορικό',  icon:'📋'},
   {id:'banter',  l:'ΙΕΡΑ ΕΞΕΤΑΣΗ', icon:'🔥'},
 ]
@@ -1058,6 +643,12 @@ export default function App({ user, onLogout }) {
   const load = useCallback(async () => {
     try {
       const s = await api.getState()
+      // Extract liveScores from state (Worker stores live_{matchId})
+      const live={}
+      Object.entries(s).forEach(([k,v])=>{
+        if(k.startsWith('live_')&&v) live[k.replace('live_','')]=v
+      })
+      if(Object.keys(live).length>0) setLiveScores(live)
       setState({
         ...s,
         predictions:{ ...SEEDED_PREDS,...s.predictions,
@@ -1069,7 +660,19 @@ export default function App({ user, onLogout }) {
     finally { setLoading(false) }
   },[])
 
-  useEffect(()=>{ load(); poll.current=setInterval(load,15000); return()=>clearInterval(poll.current) },[load])
+  useEffect(()=>{ load(); poll.current=setInterval(()=>{
+      // Check if any match is live right now
+      const now=Date.now()
+      const anyLive=ALL_FIXTURES.some(m=>{
+        const ko=new Date(m.kickoff).getTime()
+        const minsAfter=(now-ko)/60000
+        return minsAfter>=0&&minsAfter<=120
+      })
+      load()
+      // Reschedule with appropriate interval
+      clearInterval(poll.current)
+      poll.current=setInterval(load,anyLive?5000:15000)
+    },15000); return()=>clearInterval(poll.current) },[load])
 
   async function savePrediction(matchId,h,a,qual,predOT,otH,otA,predPen,penH,penA){
     setSyncing(true)
@@ -1099,9 +702,8 @@ export default function App({ user, onLogout }) {
 
   const pc = PC[user.id] || PC.boikos
   const pages={
-    matchday:<MatchdayPage predictions={state.predictions} results={state.results} onRefresh={load} currentUser={user} revealed={state.revealed}/>,
+    matchday:<MatchdayPage predictions={state.predictions} results={state.results} onRefresh={load} currentUser={user} revealed={state.revealed} onSave={savePrediction} liveScores={liveScores}/>,
     league:  <LeaguePage   predictions={state.predictions} results={state.results} thavmaStats={state.thavmaStats}/>,
-    predict: <PredictPage  predictions={state.predictions} currentUser={user} onSave={savePrediction} results={state.results}/>,
     history: <HistoryPage  predictions={state.predictions} results={state.results}/>,
     banter:  <BanterPage   chat={state.chat} onSend={sendChat}/>,
   }
@@ -1220,4 +822,280 @@ export default function App({ user, onLogout }) {
       <BottomNav/>
     </div>
   )
+}// ─── UNIFIED MATCH+PREDICT CARD ───────────────────────────────────────────────
+function MatchPredictCard({match,result,predictions,onRefresh,allResults,currentUser,revealed,onSave,liveScore}){
+  // ── State ──────────────────────────────────────────────────────────────────
+  const [showPush,setShowPush]=useState(false)
+  const myPred=currentUser?predictions?.[currentUser.id]:null
+  const [h,setH]=useState(myPred?.h??0),[a,setA]=useState(myPred?.a??0)
+  const [qual,setQual]=useState(myPred?.qual??match.home)
+  const [predOT,setPredOT]=useState(myPred?.predOT??false)
+  const [otH,setOtH]=useState(myPred?.otH??0),[otA,setOtA]=useState(myPred?.otA??0)
+  const [predPen,setPredPen]=useState(myPred?.predPen??false)
+  const [penH,setPenH]=useState(myPred?.penH??0),[penA,setPenA]=useState(myPred?.penA??0)
+  const [saving,setSaving]=useState(false),[saved,setSaved]=useState(false),[error,setError]=useState('')
+
+  // Sync prediction inputs when server data arrives
+  useEffect(()=>{
+    if(myPred){
+      setH(myPred.h??0);setA(myPred.a??0)
+      setQual(myPred.qual??match.home)
+      setPredOT(myPred.predOT??false)
+      setOtH(myPred.otH??0);setOtA(myPred.otA??0)
+    }
+  },[myPred?.h,myPred?.a,myPred?.qual])
+
+  // ── Derived state ──────────────────────────────────────────────────────────
+  const hasRes=result!=null
+  const locked=isLocked(match.kickoff)
+  const isUEFA=isUEFATie(match.id)
+  const isRevealed=revealed?.[match.id]||false
+  const minsUntil=(new Date(match.kickoff).getTime()-Date.now())/60000
+  const isPreKickoff=minsUntil>=-1&&minsUntil<=1
+  const showAllPreds=hasRes||(isRevealed||isPreKickoff)
+  const today=isToday(match.kickoff)
+  const hn=TEAMS[match.home]?.name||match.home
+  const an=TEAMS[match.away]?.name||match.away
+  const tC={SL:'#f0c040',UCL:BLUE,UEL:'#f5733a',UECL:GREEN}[match.t]||GOLD
+
+  // Leg 1 aggregate
+  const leg1Res=match.leg===2&&match.tie&&allResults?allResults[match.tie+'-1']:null
+  const leg1Fix=match.leg===2&&match.tie?UEFA_FIXTURES.find(f=>f.id===match.tie+'-1'):null
+  const leg1Agg=leg1Res&&leg1Fix?(()=>{
+    const greek=match.greek
+    const wasHome=leg1Fix.home===greek
+    const gG=wasHome?leg1Res.h:leg1Res.a
+    const oG=wasHome?leg1Res.a:leg1Res.h
+    const diff=gG-oG
+    return {h1:leg1Res.h,a1:leg1Res.a,diff,leg1Fix,
+      situation:diff>0?'+'+diff+' προβάδισμα':diff<0?diff+' πίσω':'Ισόπαλη · Παρ/Πέν αν ισόπαλη'}
+  })():null
+
+  // Score input helpers
+  const adj=(v,set,d)=>{if(!locked){set(Math.max(0,Math.min(9,v+d)));setSaved(false)}}
+  const nb={width:50,height:50,background:SURF2,border:`1px solid ${locked?LINE:tC+'55'}`,borderRadius:10,
+    display:'flex',alignItems:'center',justifyContent:'center',fontSize:24,fontWeight:800,
+    color:locked?MUTED:TEXT,fontVariantNumeric:'tabular-nums'}
+  const ab={width:34,height:34,borderRadius:8,border:`1px solid ${LINE}`,
+    background:'rgba(255,255,255,.06)',color:TEXT,cursor:locked?'not-allowed':'pointer',
+    fontSize:17,display:'flex',alignItems:'center',justifyContent:'center'}
+
+  const ScoreRow=({lbl,hv,setHv,av,setAv,sm})=>(
+    <div style={{marginBottom:sm?6:0}}>
+      {lbl&&<div style={{fontSize:10,fontWeight:700,color:tC,letterSpacing:'.05em',marginBottom:5,textTransform:'uppercase',textAlign:'center'}}>{lbl}</div>}
+      <div style={{display:'grid',gridTemplateColumns:'1fr auto 1fr',alignItems:'center',gap:8}}>
+        {[['h',hv,setHv],['a',av,setAv]].map(([side,v,set],i)=>(
+          <React.Fragment key={side}>
+            {i===1&&<span style={{fontSize:sm?16:20,color:DIM,textAlign:'center'}}>–</span>}
+            <div style={{display:'flex',alignItems:'center',gap:sm?4:7,justifyContent:'center'}}>
+              <button style={sm?{...ab,width:26,height:26,fontSize:14}:ab} onClick={()=>adj(v,set,-1)}>–</button>
+              <div style={sm?{...nb,width:38,height:38,fontSize:18}:nb}>{v}</div>
+              <button style={sm?{...ab,width:26,height:26,fontSize:14}:ab} onClick={()=>adj(v,set,+1)}>+</button>
+            </div>
+          </React.Fragment>
+        ))}
+      </div>
+    </div>
+  )
+
+  async function save(){
+    if(locked)return;setSaving(true);setError('')
+    try{
+      await onSave(match.id,h,a,qual,predOT,otH,otA,predPen,penH,penA)
+      setSaved(true);setTimeout(()=>setSaved(false),2500)
+    }catch(e){
+      setError('❌ '+(e?.message||'Σφάλμα')+' — έλεγξε σύνδεση & ξανά')
+    }finally{setSaving(false)}
+  }
+
+  return (
+    <div style={{background:SURF,border:`1px solid ${today?GREEN+'55':LINE}`,borderRadius:14,
+      marginBottom:10,overflow:'hidden',boxShadow:today?`0 0 20px ${GREEN}12`:undefined}}>
+      <div style={{height:2,background:`linear-gradient(90deg,${tC}cc,transparent)`}}/>
+
+      {/* Header */}
+      <div style={{padding:'9px 14px',display:'flex',alignItems:'center',justifyContent:'space-between',borderBottom:`1px solid ${LINE}`}}>
+        <div style={{display:'flex',alignItems:'center',gap:7}}>
+          <TPill id={match.t}/>
+          <span style={{fontSize:10,fontWeight:600,color:MUTED}}>{match.round||''}</span>
+          {today&&<span style={{display:'flex',alignItems:'center',gap:4,fontSize:10,fontWeight:700,color:GREEN}}>
+            <span style={{width:6,height:6,borderRadius:'50%',background:GREEN,animation:'pulse-dot 1.2s infinite',display:'inline-block'}}/>ΣΗΜΕΡΑ
+          </span>}
+        </div>
+        <div style={{textAlign:'right'}}>
+          <div style={{fontSize:11,fontWeight:700,color:locked?RED:GREEN}}>
+            {locked?'🔒 Κλειδωμένο':`Κλείνει ${grTime(match.kickoff)}`}
+          </div>
+          <div style={{fontSize:10,color:MUTED}}>{grDate(match.kickoff)}</div>
+        </div>
+      </div>
+
+      <div style={{padding:'14px 14px 12px'}}>
+
+        {/* Teams row */}
+        <div style={{display:'grid',gridTemplateColumns:'1fr auto 1fr',alignItems:'center',gap:10,marginBottom:8}}>
+          <div style={{display:'flex',flexDirection:'column',alignItems:'flex-end',gap:6}}>
+            <TeamLogo k={match.home} size={36}/>
+            <span style={{fontSize:11,fontWeight:600,textAlign:'right',color:TEXT,lineHeight:1.2}}>{hn}</span>
+          </div>
+          <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:5}}>
+            <ScorePill h={liveScore?liveScore.h:result?.h} a={liveScore?liveScore.a:result?.a} pending={today&&!hasRes&&!liveScore}/>
+            {liveScore&&<div style={{fontSize:9,fontWeight:700,color:GREEN,letterSpacing:'.06em',display:'flex',alignItems:'center',gap:3}}>
+              <span style={{width:5,height:5,borderRadius:'50%',background:GREEN,animation:'pulse-dot 1s infinite',display:'inline-block'}}/>
+              {liveScore.min}'
+            </div>}
+            {result?.overtime&&<div style={{fontSize:9,fontWeight:700,color:GOLD,letterSpacing:'.03em',textAlign:'center'}}>
+              {result.penalties?`ΜΠΕΝΑΛΝΤΙΖ ${result.penH}–${result.penA}`:`ΠΑΡΑΤΑΣΗ ${result.otH}–${result.otA}`}
+            </div>}
+            {!hasRes&&!today&&<div style={{fontSize:10,color:DIM,fontWeight:600}}>vs</div>}
+          </div>
+          <div style={{display:'flex',flexDirection:'column',alignItems:'flex-start',gap:6}}>
+            <TeamLogo k={match.away} size={36}/>
+            <span style={{fontSize:11,fontWeight:600,color:TEXT,lineHeight:1.2}}>{an}</span>
+          </div>
+        </div>
+
+        {/* Leg 1 aggregate */}
+        {leg1Agg&&<div style={{background:'rgba(255,255,255,.04)',border:`1px solid ${LINE}`,
+          borderRadius:9,padding:'8px 12px',marginBottom:10,display:'flex',
+          alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:6}}>
+          <div style={{display:'flex',alignItems:'center',gap:6}}>
+            <span style={{fontSize:9,fontWeight:700,color:MUTED,letterSpacing:'.06em',textTransform:'uppercase'}}>Leg 1</span>
+            <span style={{fontSize:13,fontWeight:900,color:TEXT,fontVariantNumeric:'tabular-nums'}}>
+              {TEAMS[leg1Agg.leg1Fix.home]?.abbr} {leg1Agg.h1}–{leg1Agg.a1} {TEAMS[leg1Agg.leg1Fix.away]?.abbr}
+            </span>
+          </div>
+          <span style={{fontSize:11,fontWeight:800,color:leg1Agg.diff>0?GREEN:leg1Agg.diff<0?RED:GOLD}}>
+            {leg1Agg.situation}
+          </span>
+        </div>}
+
+        {/* Odds */}
+        <OddsRow matchId={match.id}/>
+
+        {/* ── PREDICTION SECTION (only when not locked / no result) ── */}
+        {!hasRes&&(
+          <div style={{marginTop:12,borderTop:`1px solid ${LINE}`,paddingTop:12}}>
+
+            {/* Score input */}
+            <ScoreRow hv={h} setHv={setH} av={a} setAv={setA}/>
+
+            {/* UEFA qual selector */}
+            {isUEFA&&!locked&&(
+              <div style={{marginTop:10}}>
+                <div style={{fontSize:10,fontWeight:700,color:tC,letterSpacing:'.05em',marginBottom:6,textTransform:'uppercase'}}>Πρόκριση</div>
+                <div style={{display:'flex',gap:6}}>
+                  {[match.home,match.away].map(tm=>(
+                    <button key={tm} onClick={()=>{if(!locked){setQual(tm);setSaved(false)}}}
+                      style={{flex:1,padding:'7px 5px',borderRadius:8,border:`1px solid ${qual===tm?tC+'88':LINE}`,
+                        background:qual===tm?`${tC}18`:'transparent',color:qual===tm?tC:MUTED,
+                        fontSize:11,fontWeight:700,cursor:locked?'not-allowed':'pointer'}}>
+                      {TEAMS[tm]?.abbr||tm}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Overtime toggle (UEFA only) */}
+            {isUEFA&&!locked&&(
+              <div style={{marginTop:8,display:'flex',gap:6}}>
+                <button onClick={()=>{if(!locked){setPredOT(v=>!v);setSaved(false)}}}
+                  style={{flex:1,padding:'6px',borderRadius:8,border:`1px solid ${predOT?GOLD+'66':LINE}`,
+                    background:predOT?`${GOLD}15`:'transparent',color:predOT?GOLD:MUTED,
+                    fontSize:10,fontWeight:700,cursor:locked?'not-allowed':'pointer'}}>
+                  {predOT?'✓ ':''} ΠΑΡΑΤΑΣΗ
+                </button>
+                {predOT&&<button onClick={()=>{if(!locked){setPredPen(v=>!v);setSaved(false)}}}
+                  style={{flex:1,padding:'6px',borderRadius:8,border:`1px solid ${predPen?RED+'66':LINE}`,
+                    background:predPen?`${RED}15`:'transparent',color:predPen?RED:MUTED,
+                    fontSize:10,fontWeight:700,cursor:locked?'not-allowed':'pointer'}}>
+                  {predPen?'✓ ':''} ΜΠΕΝΑΛΝΤΙΖ
+                </button>}
+              </div>
+            )}
+
+            {/* OT score row */}
+            {predOT&&!locked&&<div style={{marginTop:8}}>
+              <ScoreRow lbl={predPen?'ΜΠΕΝΑΛΝΤΙΖ':'ΠΑΡΑΤΑΣΗ'} hv={otH} setHv={setOtH} av={otA} setAv={setOtA} sm/>
+            </div>}
+
+            {/* Error */}
+            {error&&<div style={{fontSize:11,color:RED,background:'rgba(255,77,109,.08)',
+              border:'1px solid rgba(255,77,109,.2)',borderRadius:8,padding:'7px 10px',
+              marginTop:8,textAlign:'center',fontWeight:600}}>{error}</div>}
+
+            {/* Save button */}
+            <button onClick={save} disabled={locked||saving||saved}
+              style={{width:'100%',marginTop:10,padding:'11px',borderRadius:10,border:'none',
+                background:saved?`${GREEN}22`:locked?'rgba(255,255,255,.06)':`${tC}22`,
+                color:saved?GREEN:locked?MUTED:tC,fontSize:13,fontWeight:800,cursor:locked?'not-allowed':'pointer',
+                border:`1px solid ${saved?GREEN+'44':locked?LINE:tC+'44'}`}}>
+              {saved?'✓ Αποθηκεύτηκε!':locked?'🔒 Κλειδωμένο':saving?'Αποθήκευση…':myPred?'Άλλαξε Πρόβλεψη ✏️':'Κάνε την πρόβλεψή σου ⚽'}
+            </button>
+          </div>
+        )}
+
+        {/* ── MY PREDICTION (before reveal, after locking) ── */}
+        {!showAllPreds&&locked&&!hasRes&&myPred&&currentUser&&(
+          <div style={{marginTop:10,background:'rgba(255,255,255,.04)',
+            border:`1px solid ${PC[currentUser.id]?.b||LINE}`,
+            borderRadius:9,padding:'8px 10px',display:'flex',alignItems:'center',gap:8}}>
+            <div style={{width:7,height:7,borderRadius:'50%',background:PC[currentUser.id]?.p||MUTED,flexShrink:0}}/>
+            <span style={{fontSize:11,fontWeight:600,color:MUTED}}>Η πρόβλεψή μου:</span>
+            <span style={{fontSize:14,fontWeight:900,color:PC[currentUser.id]?.p||TEXT,fontVariantNumeric:'tabular-nums'}}>{myPred.h}–{myPred.a}</span>
+            {myPred.qual&&<span style={{fontSize:10,color:MUTED}}>→ {myPred.qual}</span>}
+          </div>
+        )}
+
+        {/* ── ALL PREDICTIONS (reveal or result) ── */}
+        {showAllPreds&&predictions&&(
+          <div style={{marginTop:10}}>
+            {(isPreKickoff||isRevealed)&&!hasRes&&(
+              <div style={{fontSize:10,fontWeight:700,color:GOLD,textAlign:'center',marginBottom:6,letterSpacing:'.06em'}}>🔒 ΑΠΟΚΑΛΥΨΗ ΠΡΟΒΛΕΨΕΩΝ</div>
+            )}
+            <div style={{display:'flex',gap:5}}>
+              {PLAYERS.map(playerKey=>{
+                const pred=predictions[playerKey]
+                const sc=pred?scoreMatch(pred,result):null
+                const pc=PC[playerKey]
+                return (
+                  <div key={playerKey} style={{flex:1,
+                    background:sc?.exact?`${GREEN}15`:sc?.correct?`${GOLD}0a`:'rgba(255,255,255,.04)',
+                    border:`1px solid ${sc?.exact?GREEN+'44':sc?.correct?GOLD+'22':LINE}`,
+                    borderRadius:9,padding:'7px 6px',textAlign:'center'}}>
+                    <div style={{fontSize:9,fontWeight:700,color:pc.p,marginBottom:3,letterSpacing:'.04em'}}>{PLAYER_NAMES[playerKey].substring(0,4).toUpperCase()}</div>
+                    <div style={{fontSize:13,fontWeight:800,color:TEXT,fontVariantNumeric:'tabular-nums'}}>{pred?`${pred.h}–${pred.a}`:'–'}</div>
+                    {pred?.qual&&<div style={{fontSize:9,color:MUTED,marginTop:1}}>→{pred.qual}</div>}
+                    {sc&&<div style={{fontSize:10,fontWeight:700,color:sc.points===2?GREEN:sc.points===1?GOLD:DIM,marginTop:2}}>{sc.points===2?'🎯':sc.points===1?'✓':'✗'}{sc.points}p</div>}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* ── ADMIN ACTIONS ── */}
+        {currentUser?.role==='admin'&&(
+          <div style={{display:'flex',gap:8,marginTop:12}}>
+            <FetchBtn matchId={match.id} onFetched={onRefresh}/>
+            <button onClick={()=>setShowPush(v=>!v)}
+              style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',gap:5,
+                padding:'8px 10px',borderRadius:8,
+                border:`1px solid ${showPush?GOLD+'55':GOLD+'25'}`,
+                background:showPush?`${GOLD}20`:`${GOLD}08`,
+                color:GOLD,fontSize:11,fontWeight:700,cursor:'pointer'}}>
+              <i className="ti ti-cloud-upload" style={{fontSize:13}}/>Push
+            </button>
+          </div>
+        )}
+        {showPush&&currentUser?.role==='admin'&&(
+          <PushPanel match={match} result={result} onSaved={()=>{setShowPush(false);onRefresh()}}/>
+        )}
+      </div>
+    </div>
+  )
 }
+
+
+
