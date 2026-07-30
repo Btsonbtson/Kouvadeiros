@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover,user-scalable=no"/>
   <meta name="theme-color" content="#08090d"/>
   <title>ΚΟΥΒΑΔΕΪΡΟΣ · 26/27</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
@@ -56,7 +56,6 @@
     @keyframes slide-u { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
     @keyframes glow-p  { 0%,100% { box-shadow:0 0 12px #ff224420; } 50% { box-shadow:0 0 28px #ff224440; } }
   </style>
-  <meta name="mobile-web-app-capable" content="yes"/>
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
   <meta name="apple-mobile-web-app-title" content="ΚΟΥΒΑΔΕΪΡΟΣ"/>
   <meta name="theme-color" content="#08090d"/>
@@ -73,9 +72,9 @@
     .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
   </style>
   <link rel="manifest" href="/manifest.json"/>
-  <script type="module" crossorigin src="/assets/index-9Ds6uXx9.js"></script>
 </head>
 <body>
-  <div id="root"></div>
+  <div id="root"><div style="min-height:100vh;background:#08090d;display:flex;align-items:center;justify-content:center;color:#fff;font-family:system-ui;font-size:16px;flex-direction:column;gap:12px"><div style="font-size:32px">⚽</div><div>Φορτώνει...</div></div></div>
+  <script type="module" src="/src/main.jsx"></script>
 </body>
 </html>

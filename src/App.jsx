@@ -658,9 +658,25 @@ function AddPlayerModal({ onClose, onAdded }) {
 
 
 // ─── DESKTOP SIDEBAR ─────────────────────────────────────────────────────────
-function LeaderSidebar({ predictions, results }) {
+function LeaderSidebar({ predictions, results, compact }) {
   const board = computeLeaderboard(ALL_FIXTURES, predictions, results)
   const maxPts = ALL_FIXTURES.filter(m=>results?.[m.id]!=null).length*2
+  // Compact horizontal strip for mobile
+  if(compact) return (
+    <div style={{display:'flex',gap:8,marginBottom:8}}>
+      {board.map((row,i)=>{
+        const pc2=PC[row.player]
+        return <div key={row.player} style={{flex:1,background:SURF,border:`1px solid ${pc2.b}`,borderRadius:10,padding:'8px 10px',display:'flex',alignItems:'center',gap:8}}>
+          <span style={{fontSize:13,fontWeight:700}}>{i===0?'🥇':i===1?'🥈':'🥉'}</span>
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{fontSize:10,fontWeight:700,color:pc2.p,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{PLAYER_NAMES[row.player].substring(0,5)}</div>
+            <div style={{fontSize:11,fontWeight:900,color:TEXT}}>{row.pts}p</div>
+          </div>
+        </div>
+      })}
+    </div>
+  )
+
   return (
     <div>
       {/* Mini leaderboard */}
@@ -906,6 +922,10 @@ export default function App({ user, onLogout }) {
       maxWidth:isTablet?768:'100%',margin:'0 auto',fontFamily:"'Space Grotesk',system-ui,sans-serif",color:TEXT}}>
       {showAddPlayer && user?.role==='admin' && <AddPlayerModal onClose={()=>setShowAddPlayer(false)} onAdded={load}/>}
       <Header/>
+      {/* Mobile/Tablet leaderboard strip */}
+      <div style={{padding:'8px 16px 0',overflowX:'auto',scrollbarWidth:'none'}}>
+        <LeaderSidebar predictions={state.predictions} results={state.results} compact/>
+      </div>
       <div style={{flex:1,overflowY:'auto',paddingBottom:isTablet?72:64}}>
         {pages[screen]}
       </div>
