@@ -52,12 +52,13 @@ function isUEFATie(id){return UEFA_FIXTURES.some(f=>f.id===id)}
 // ─── FETCH BTN ────────────────────────────────────────────────────────────────
 function FetchBtn({matchId,onFetched}){
   const [st,setSt]=useState('idle')
-  async function go(){setSt('loading');try{const r=await api.fetchScores(matchId);setSt(r.ok?'done':'pending');if(r.ok)onFetched?.()}catch{setSt('error')}}
+  async function go(){setSt('loading');try{const r=await api.fetchScores(matchId);if(r.ok){setSt(r.final===false?'live':'done');onFetched?.()}else setSt('pending')}catch{setSt('error')}}
   const cfg={idle:{bg:'rgba(77,159,255,.12)',c:BLUE,b:'rgba(77,159,255,.3)',i:'ti-world-search',l:'Update Score'},
              loading:{bg:'rgba(255,255,255,.06)',c:MUTED,b:LINE,i:'ti-loader-2',l:'...'},
              done:{bg:'rgba(0,255,136,.12)',c:GREEN,b:'rgba(0,255,136,.3)',i:'ti-check',l:'Updated ✓'},
              pending:{bg:'rgba(255,221,0,.12)',c:GOLD,b:'rgba(255,221,0,.3)',i:'ti-clock',l:'Not yet'},
-             error:{bg:'rgba(255,77,109,.12)',c:RED,b:'rgba(255,77,109,.3)',i:'ti-alert-circle',l:'Error'}}[st]
+             live:{bg:'rgba(0,255,136,.08)',c:GREEN,b:'rgba(0,255,136,.25)',i:'ti-live-photo',l:'Live ✓'},
+             error:{bg:'rgba(255,77,109,.12)',c:RED,b:'rgba(255,77,109,.3)',i:'ti-alert-circle',l:'Error'}}[st]||{bg:'rgba(255,255,255,.06)',c:MUTED,b:LINE,i:'ti-check',l:'OK'}
   return <button onClick={go} disabled={st==='loading'||st==='done'} style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',gap:5,padding:'8px 10px',borderRadius:8,border:`1px solid ${cfg.b}`,background:cfg.bg,color:cfg.c,fontSize:11,fontWeight:700,cursor:'pointer',letterSpacing:'.02em'}}>
     <i className={`ti ${cfg.i}`} style={{fontSize:13,animation:st==='loading'?'spin .7s linear infinite':undefined}}/>{cfg.l}
   </button>
