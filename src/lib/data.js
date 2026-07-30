@@ -286,10 +286,12 @@ export const SUPER_LEAGUE = [
 
 export const UEFA_FIXTURES = [
   {id:'uel-paok-1', t:'UEL', greek:'PAOK', home:'DYN', away:'PAOK', kickoff:'2026-07-23T17:00:00Z', round:'Q2 · Leg 1', leg:1, tie:'uel-paok', venue:'Motor Lublin Arena, Πολωνία'},
-  {id:'uel-paok-2', t:'UEL', greek:'PAOK', home:'PAOK',away:'DYN',  kickoff:'2026-07-30T18:30:00Z', round:'Q2 · Leg 2', leg:2, tie:'uel-paok', venue:'Toumba, Θεσσαλονίκη'},
+  {id:'uel-paok-2', t:'UEL', greek:'PAOK', home:'PAOK',away:'DYN',  kickoff:'2026-07-30T17:45:00Z', round:'Q2 · Leg 2', leg:2, tie:'uel-paok', venue:'Toumba, Θεσσαλονίκη'},
   {id:'uecl-pao-1', t:'UECL',greek:'PAO', home:'PKS', away:'PAO',  kickoff:'2026-07-23T18:00:00Z', round:'Q2 · Leg 1', leg:1, tie:'uecl-pao',venue:'Fehérvári úti, Paks'},
-  {id:'uecl-pao-2', t:'UECL',greek:'PAO', home:'PAO', away:'PKS',  kickoff:'2026-07-30T18:30:00Z', round:'Q2 · Leg 2', leg:2, tie:'uecl-pao',venue:'ΟΑΚΑ, Αθήνα'},
-  {id:'ucl-oly-1',  t:'UCL', greek:'OLY', home:'OLY', away:'NEC',  kickoff:'2026-08-04T18:30:00Z', round:'Q3 · Leg 1', leg:1, tie:'ucl-oly', venue:'Karaiskakis, Πειραιάς'},
+  {id:'uecl-pao-2', t:'UECL',greek:'PAO', home:'PAO', away:'PKS',  kickoff:'2026-07-30T17:45:00Z', round:'Q2 · Leg 2', leg:2, tie:'uecl-pao',venue:'ΟΑΚΑ, Αθήνα'},
+  {id:'uel-ofi-1',  t:'UEL', greek:'OFI', home:'OFI', away:'TBD',  kickoff:'2026-07-24T17:00:00Z', round:'Q2 · Leg 1', leg:1, tie:'uel-ofi', venue:'Πανκρήτιο, Ηράκλειο'},
+  {id:'uel-ofi-2',  t:'UEL', greek:'OFI', home:'TBD', away:'OFI',  kickoff:'2026-07-31T17:00:00Z', round:'Q2 · Leg 2', leg:2, tie:'uel-ofi', venue:'Έδρα αντιπάλου'},
+  {id:'ucl-oly-1',   t:'UCL', greek:'OLY', home:'OLY', away:'NEC',  kickoff:'2026-08-04T18:30:00Z', round:'Q3 · Leg 1', leg:1, tie:'ucl-oly', venue:'Karaiskakis, Πειραιάς'},
   {id:'ucl-oly-2',  t:'UCL', greek:'OLY', home:'NEC', away:'OLY',  kickoff:'2026-08-11T18:00:00Z', round:'Q3 · Leg 2', leg:2, tie:'ucl-oly', venue:'Goffert, Nijmegen'},
   {id:'ucl-aek-1',  t:'UCL', greek:'AEK', home:'AEK', away:'TBD',  kickoff:'2026-08-19T18:30:00Z', round:'PO · Leg 1', leg:1, tie:'ucl-aek', venue:'OPAP Arena, Αθήνα'},
   {id:'ucl-aek-2',  t:'UCL', greek:'AEK', home:'TBD', away:'AEK',  kickoff:'2026-08-26T18:30:00Z', round:'PO · Leg 2', leg:2, tie:'ucl-aek'},
