@@ -1,3 +1,4 @@
+// SL fixtures v2 — official slgr.gr schedule
 // ─── FIXTURES ─────────────────────────────────────────────────────────────────
 export const PLAYERS = ['boikos','mavromichalis','chousiadas']
 export const PLAYER_NAMES = { boikos:'Boikos', mavromichalis:'Mavromichalis', chousiadas:'Chousiadas' }

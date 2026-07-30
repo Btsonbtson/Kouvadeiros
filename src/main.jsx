@@ -52,7 +52,7 @@ function Root() {
   return React.createElement(App, { user, onLogout: handleLogout })
 }
 
-console.log('KOUVADEIROS v7 2026-07-29');
+console.log('KOUVADEIROS v7 2026-07-30');
 ReactDOM.createRoot(document.getElementById('root')).render(
   React.createElement(ErrorBoundary, null,
     React.createElement(Root)
