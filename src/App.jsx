@@ -66,6 +66,16 @@ function FetchBtn({matchId,onFetched}){
 
 // ─── PUSH RESULT ──────────────────────────────────────────────────────────────
 function PushPanel({match,result,onSaved}){
+  const [lh,setLh]=useState(0),[la,setLa]=useState(0),[lmin,setLmin]=useState(0)
+  const [lsaving,setLsaving]=useState(false),[lsaved,setLsaved]=useState(false)
+  async function saveLive(final=false){
+    setLsaving(true)
+    try{
+      const r=await api.setLive(match.id,lh,la,lmin,final)
+      if(r.ok){setLsaved(true);setTimeout(()=>setLsaved(false),2000);if(final)onSaved?.()}
+    }catch(e){console.error(e)}
+    finally{setLsaving(false)}
+  }
   const [h,setH]=useState(result?.h??0),[a,setA]=useState(result?.a??0)
   const [ot,setOt]=useState(false),[otH,setOtH]=useState(0),[otA,setOtA]=useState(0)
   const [pen,setPen]=useState(false),[penH,setPenH]=useState(0),[penA,setPenA]=useState(0)
