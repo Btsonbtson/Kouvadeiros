@@ -336,4 +336,4 @@ export const isToday = iso => {
   const f = d => d.toLocaleDateString('el-GR', { timeZone:TZ })
   return f(new Date()) === f(new Date(iso))
 }
-export const isLocked = iso => Date.now() >= new Date(iso).getTime() - 60_000
+export const isLocked = iso => Date.now() >= new Date(iso).getTime() - 60000

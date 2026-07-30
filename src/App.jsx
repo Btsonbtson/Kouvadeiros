@@ -922,9 +922,13 @@ export default function App({ user, onLogout }) {
       maxWidth:isTablet?768:'100%',margin:'0 auto',fontFamily:"'Space Grotesk',system-ui,sans-serif",color:TEXT}}>
       {showAddPlayer && user?.role==='admin' && <AddPlayerModal onClose={()=>setShowAddPlayer(false)} onAdded={load}/>}
       <Header/>
-      {/* Mobile/Tablet leaderboard strip */}
-      <div style={{padding:'8px 16px 0',overflowX:'auto',scrollbarWidth:'none'}}>
+      {/* Mobile/Tablet leaderboard + graph */}
+      <div style={{padding:'8px 16px 0'}}>
         <LeaderSidebar predictions={state.predictions} results={state.results} compact/>
+        <div style={{background:'rgba(255,255,255,.03)',borderRadius:12,padding:'10px 12px',marginTop:6,border:'1px solid rgba(255,255,255,.08)'}}>
+          <div style={{fontSize:10,fontWeight:700,letterSpacing:'.08em',textTransform:'uppercase',color:'rgba(255,255,255,.4)',marginBottom:6}}>📈 Εξέλιξη Διαγωνισμού</div>
+          <H2HGraph predictions={state.predictions} results={state.results}/>
+        </div>
       </div>
       <div style={{flex:1,overflowY:'auto',paddingBottom:isTablet?72:64}}>
         {pages[screen]}
