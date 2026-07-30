@@ -45,7 +45,7 @@ const SEEDED_PREDS={
   'uel-paok-1':{boikos:{h:2,a:1,qual:'DYN'},mavromichalis:{h:0,a:0,qual:'DYN'},chousiadas:{h:2,a:1,qual:'DYN'}},
   'uecl-pao-1':{boikos:{h:0,a:3,qual:'PAO'},mavromichalis:{h:0,a:1,qual:'PAO'},chousiadas:{h:1,a:2,qual:'PAO'}},
 }
-const SEEDED_RES={'uel-paok-1':{h:2,a:3},'uecl-pao-1':{h:1,a:2},'uel-paok-2':{h:2,a:0}}
+const SEEDED_RES={'uel-paok-1':{h:2,a:3},'uecl-pao-1':{h:1,a:2},'uel-paok-2':{h:2,a:0},'uecl-pao-2':{h:2,a:2}}
 
 function isUEFATie(id){return UEFA_FIXTURES.some(f=>f.id===id)}
 
@@ -744,7 +744,7 @@ function useBreakpoint() {
 export default function App({ user, onLogout }) {
   const [screen,  setScreen]  = useState('matchday')
   const [state,   setState]   = useState({ predictions:{...SEEDED_PREDS}, results:{...SEEDED_RES}, chat:[], slStandings:[] })
-  const [liveScores, setLiveScores] = useState({'uecl-pao-2':{h:2,a:2,min:85}})
+  const [liveScores, setLiveScores] = useState({})
   const [loading, setLoading] = useState(true)
   const [syncing, setSyncing] = useState(false)
   const [syncOk,  setSyncOk]  = useState(true)
