@@ -66,61 +66,65 @@ function FetchBtn({matchId,onFetched}){
 
 // ─── PUSH RESULT ──────────────────────────────────────────────────────────────
 function PushPanel({match,result,onSaved}){
-  const [lh,setLh]=useState(0),[la,setLa]=useState(0),[lmin,setLmin]=useState(0)
-  const [lsaving,setLsaving]=useState(false),[lsaved,setLsaved]=useState(false)
-  async function saveLive(final=false){
-    setLsaving(true)
-    try{
-      const r=await api.setLive(match.id,lh,la,lmin,final)
-      if(r.ok){setLsaved(true);setTimeout(()=>setLsaved(false),2000);if(final)onSaved?.()}
-    }catch(e){console.error(e)}
-    finally{setLsaving(false)}
-  }
   const [h,setH]=useState(result?.h??0),[a,setA]=useState(result?.a??0)
+  const [mn,setMn]=useState(0)
   const [ot,setOt]=useState(false),[otH,setOtH]=useState(0),[otA,setOtA]=useState(0)
   const [pen,setPen]=useState(false),[penH,setPenH]=useState(0),[penA,setPenA]=useState(0)
-  const [saving,setSaving]=useState(false),[saved,setSaved]=useState(false)
-  const adj=(v,set,d)=>set(Math.max(0,Math.min(9,v+d)))
-  const nb={background:SURF2,border:`1px solid ${LINE}`,borderRadius:9,width:42,height:42,display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,fontWeight:800,fontVariantNumeric:'tabular-nums'}
-  const ab=(w=30)=>({width:w,height:w,borderRadius:7,border:`1px solid ${LINE}`,background:'rgba(255,255,255,.06)',color:TEXT,cursor:'pointer',fontSize:16,display:'flex',alignItems:'center',justifyContent:'center'})
-  const NumRow=({label,hv,setHv,av,setAv})=><div style={{marginBottom:10}}>
-    {label&&<div style={{fontSize:10,fontWeight:700,color:MUTED,letterSpacing:'.06em',textTransform:'uppercase',marginBottom:6}}>{label}</div>}
-    <div style={{display:'grid',gridTemplateColumns:'1fr auto 1fr',alignItems:'center',gap:6}}>
-      <div style={{display:'flex',alignItems:'center',gap:5,justifyContent:'center'}}>
-        <button style={ab()} onClick={()=>adj(hv,setHv,-1)}>–</button>
-        <div style={nb}>{hv}</div>
-        <button style={ab()} onClick={()=>adj(hv,setHv,+1)}>+</button>
+  const [busy,setBusy]=useState(false),[msg,setMsg]=useState('')
+  const isuefa=isUEFATie(match.id)
+
+  async function doLive(){
+    setBusy(true);setMsg('')
+    try{const r=await api.setLive(match.id,h,a,mn,false);setMsg(r.ok?`✅ Live ${h}–${a} (${mn}')!`:'❌ '+JSON.stringify(r));if(r.ok)setTimeout(()=>setMsg(''),3000)}
+    catch(e){setMsg('❌ '+e.message)}
+    setBusy(false)
+  }
+  async function doFinal(){
+    setBusy(true);setMsg('')
+    try{const r=await api.saveResult(match.id,h,a,ot,otH,otA,pen,penH,penA);setMsg(r.ok?`✅ Τελικό ${h}–${a}!`:'❌ '+JSON.stringify(r));if(r.ok)setTimeout(()=>{setMsg('');onSaved?.()},1500)}
+    catch(e){setMsg('❌ '+e.message)}
+    setBusy(false)
+  }
+  const N=({v,s})=><div style={{display:'flex',alignItems:'center',gap:4}}>
+    <button onClick={()=>s(Math.max(0,v-1))} style={{width:28,height:28,borderRadius:6,border:'1px solid rgba(255,255,255,.15)',background:'rgba(255,255,255,.07)',color:'#e8e9ef',cursor:'pointer',fontSize:15}}>−</button>
+    <div style={{width:38,height:38,borderRadius:8,background:'rgba(255,255,255,.12)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,fontWeight:900,color:'#e8e9ef'}}>{v}</div>
+    <button onClick={()=>s(v+1)} style={{width:28,height:28,borderRadius:6,border:'1px solid rgba(255,255,255,.15)',background:'rgba(255,255,255,.07)',color:'#e8e9ef',cursor:'pointer',fontSize:15}}>+</button>
+  </div>
+  return <div style={{marginTop:10,background:'rgba(255,221,0,.05)',border:'1px solid rgba(255,221,0,.3)',borderRadius:12,padding:14}}>
+    <div style={{fontSize:12,fontWeight:700,color:'#f0c040',marginBottom:12}}>📋 ΕΙΣΑΓΩΓΗ ΣΚΟΡ</div>
+    <div style={{display:'grid',gridTemplateColumns:'1fr auto 1fr',alignItems:'end',gap:8,marginBottom:10}}>
+      <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:3}}>
+        <div style={{fontSize:10,color:'rgba(255,255,255,.4)'}}>{TEAMS[match.home]?.abbr||match.home}</div>
+        <N v={h} s={setH}/>
       </div>
-      <span style={{fontSize:16,color:DIM,textAlign:'center'}}>–</span>
-      <div style={{display:'flex',alignItems:'center',gap:5,justifyContent:'center'}}>
-        <button style={ab()} onClick={()=>adj(av,setAv,-1)}>–</button>
-        <div style={nb}>{av}</div>
-        <button style={ab()} onClick={()=>adj(av,setAv,+1)}>+</button>
+      <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:3}}>
+        <div style={{fontSize:10,color:'rgba(255,255,255,.4)'}}>ΛΕΠ</div>
+        <input value={mn} onChange={e=>setMn(+e.target.value||0)} type="number"
+          style={{width:44,padding:'5px 2px',borderRadius:7,border:'1px solid rgba(255,255,255,.15)',background:'rgba(255,255,255,.07)',color:'#e8e9ef',fontSize:13,fontWeight:700,textAlign:'center'}}/>
+      </div>
+      <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:3}}>
+        <div style={{fontSize:10,color:'rgba(255,255,255,.4)'}}>{TEAMS[match.away]?.abbr||match.away}</div>
+        <N v={a} s={setA}/>
       </div>
     </div>
-  </div>
-  async function save(){setSaving(true);try{await api.saveResult(match.id,h,a,ot,otH,otA,pen,penH,penA);setSaved(true);setTimeout(()=>setSaved(false),2000);onSaved?.()}catch{}finally{setSaving(false)}}
-  return <div style={{background:SURF2,borderRadius:10,padding:'14px',marginTop:8,border:`1px solid ${LINE}`}}>
-    <div style={{fontSize:10,fontWeight:700,letterSpacing:'.1em',textTransform:'uppercase',color:MUTED,marginBottom:12}}>Εισαγωγή Αποτελέσματος</div>
-    <NumRow label="90'" hv={h} setHv={setH} av={a} setAv={setA}/>
-    {match.leg===2&&<>
-      <label style={{display:'flex',alignItems:'center',gap:8,fontSize:12,fontWeight:600,cursor:'pointer',color:GOLD,marginBottom:ot?10:0,marginTop:6}}>
-        <input type="checkbox" checked={ot} onChange={e=>setOt(e.target.checked)} style={{width:15,height:15,accentColor:GOLD}}/>⏱ Παρατάσεις (AET)
-      </label>
-      {ot&&<NumRow label="Σκορ AET" hv={otH} setHv={setOtH} av={otA} setAv={setOtA}/>}
-      {ot&&<label style={{display:'flex',alignItems:'center',gap:8,fontSize:12,fontWeight:600,cursor:'pointer',color:GREEN,marginTop:4,marginBottom:pen?10:0}}>
-        <input type="checkbox" checked={pen} onChange={e=>setPen(e.target.checked)} style={{width:15,height:15,accentColor:GREEN}}/>⚽ Πέναλτι
-      </label>}
-      {ot&&pen&&<NumRow label="Σκορ Pen" hv={penH} setHv={setPenH} av={penA} setAv={setPenA}/>}
-    </>}
-    <button onClick={save} disabled={saving||saved} style={{width:'100%',padding:'10px',borderRadius:9,border:'none',background:saved?GREEN:'rgba(26,92,56,.9)',color:saved?SURF:'#fff',fontSize:13,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:7,marginTop:10,transition:'all .2s'}}>
-      <i className={`ti ${saved?'ti-check':saving?'ti-loader-2':'ti-send'}`} style={{fontSize:15,animation:saving?'spin .7s linear infinite':undefined}}/>
-      {saved?'Αποθηκεύτηκε!':saving?'Αποστολή…':'Push Result'}
-    </button>
+    {isuefa&&<div style={{display:'flex',gap:6,marginBottom:8}}>
+      <button onClick={()=>{setOt(v=>!v);if(ot)setPen(false)}} style={{flex:1,padding:'5px',borderRadius:7,border:'1px solid '+(ot?'rgba(255,221,0,.4)':'rgba(255,255,255,.1)'),background:ot?'rgba(255,221,0,.12)':'transparent',color:ot?'#f0c040':'rgba(255,255,255,.4)',fontSize:11,fontWeight:700,cursor:'pointer'}}>{ot?'✓ ':''}ΠΑΡ</button>
+      {ot&&<button onClick={()=>setPen(v=>!v)} style={{flex:1,padding:'5px',borderRadius:7,border:'1px solid '+(pen?'rgba(255,77,109,.4)':'rgba(255,255,255,.1)'),background:pen?'rgba(255,77,109,.12)':'transparent',color:pen?'#ff4d6d':'rgba(255,255,255,.4)',fontSize:11,fontWeight:700,cursor:'pointer'}}>{pen?'✓ ':''}ΠΕΝ</button>}
+    </div>}
+    {ot&&<div style={{display:'grid',gridTemplateColumns:'1fr auto 1fr',gap:8,alignItems:'center',marginBottom:10}}>
+      <N v={pen?penH:otH} s={pen?setPenH:setOtH}/>
+      <span style={{color:'rgba(255,255,255,.4)',fontSize:11,textAlign:'center'}}>{pen?'Πέν':'Παρ'}</span>
+      <N v={pen?penA:otA} s={pen?setPenA:setOtA}/>
+    </div>}
+    {msg&&<div style={{fontSize:11,fontWeight:700,color:msg.startsWith('✅')?'#00ff88':'#ff4d6d',textAlign:'center',marginBottom:8,padding:'6px',borderRadius:7,background:msg.startsWith('✅')?'rgba(0,255,136,.1)':'rgba(255,77,109,.1)'}}>{msg}</div>}
+    <div style={{display:'flex',gap:8}}>
+      <button onClick={doLive} disabled={busy} style={{flex:1,padding:'9px',borderRadius:9,border:'1px solid rgba(0,255,136,.4)',background:'rgba(0,255,136,.12)',color:'#00ff88',fontSize:12,fontWeight:700,cursor:'pointer'}}>{busy?'...':'📡 LIVE'}</button>
+      <button onClick={doFinal} disabled={busy} style={{flex:1,padding:'9px',borderRadius:9,border:'1px solid rgba(255,221,0,.4)',background:'rgba(255,221,0,.12)',color:'#f0c040',fontSize:12,fontWeight:700,cursor:'pointer'}}>{busy?'...':'🏁 ΤΕΛΙΚΟ'}</button>
+    </div>
   </div>
 }
 
-// ─── ODDS DISPLAY ────────────────────────────────────────────────────────────
+
 function OddsRow({matchId}){
   const odds=ODDS[matchId]
   if(!odds) return null
