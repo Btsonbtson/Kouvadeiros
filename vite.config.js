@@ -5,6 +5,7 @@ export default defineConfig({
   build: { 
     outDir: 'dist',
     minify: false,
+    modulePreload: false,
     rollupOptions: {
       output: { manualChunks: undefined }
     }
