@@ -306,7 +306,11 @@ export function scoreMatch(pred, actual) {
   if (!pred || actual == null) return null
   const exact   = pred.h === actual.h && pred.a === actual.a
   const correct = matchResult(pred.h, pred.a) === matchResult(actual.h, actual.a)
-  return { exact, correct, points: (exact ? 1 : 0) + (correct ? 1 : 0) }
+  // Qual bonus: +1 if correct qualifier predicted (for UEFA Leg 2)
+  const qualCorrect = pred.qual && actual.qual && pred.qual === actual.qual
+  const basePoints = (exact ? 1 : 0) + (correct ? 1 : 0)
+  const qualBonus  = qualCorrect ? 1 : 0
+  return { exact, correct, qualCorrect, points: basePoints + qualBonus }
 }
 
 export function computeLeaderboard(fixtures, predictions, results) {
@@ -320,8 +324,9 @@ export function computeLeaderboard(fixtures, predictions, results) {
       if (!sc) return
       t[p].pts    += sc.points
       t[p].played += 1
-      if (sc.exact)   t[p].exact++
-      if (sc.correct) t[p].correct++
+      if (sc.exact)      t[p].exact++
+      if (sc.correct)    t[p].correct++
+      if (sc.qualCorrect) t[p].qual = (t[p].qual||0)+1
     })
   })
   return PLAYERS.slice().sort((a, b) => t[b].pts - t[a].pts)
