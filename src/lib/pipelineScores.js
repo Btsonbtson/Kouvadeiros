@@ -21,6 +21,8 @@ const NAME_TO_KEY = {
   'dynamo kyiv': 'DYN', 'dynamo kiev': 'DYN', 'fc dynamo kyiv': 'DYN',
   'nec nijmegen': 'NEC', nec: 'NEC',
   paks: 'PKS', paksi: 'PKS', 'paksi se': 'PKS',
+  anderlecht: 'AND', 'rsc anderlecht': 'AND',
+  'cska 1948': 'CSK', 'cska sofia 1948': 'CSK', 'cska 1948 sofia': 'CSK',
 }
 
 function norm(s) {

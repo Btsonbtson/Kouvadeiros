@@ -224,5 +224,5 @@ class KouvadeirosLivePipeline:
     def _write_output(self, data: dict, filename: str) -> None:
         self.output_dir.mkdir(parents=True, exist_ok=True)
         path = self.output_dir / filename
-        path.write_text(json.dumps(data, ensure_ascii=False, indent=2))
+        path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
         logger.info(f"[Pipeline] Written → {path}")

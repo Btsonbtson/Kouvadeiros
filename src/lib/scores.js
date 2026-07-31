@@ -28,6 +28,8 @@ export const TSDB_TEAM_IDS = {
   DYN:  '133944',
   NEC:  '133760',
   PKS:  '138185', // "Paks"
+  AND:  '133610',
+  CSK:  '137170',
   ARI:  '133742',
   ATR:  '133744',
   AST:  '133752',
@@ -57,6 +59,8 @@ export const TSDB_NAME_ALIASES = {
   DYN:  ['Dynamo Kyiv', 'Dynamo Kiev', 'FC Dynamo Kyiv'],
   NEC:  ['NEC Nijmegen', 'NEC', 'Nijmegen'],
   PKS:  ['Paks', 'Paksi', 'Paksi SE'],
+  AND:  ['Anderlecht', 'RSC Anderlecht'],
+  CSK:  ['CSKA 1948', 'CSKA Sofia 1948', 'CSKA 1948 Sofia'],
   TBD:  ['TBD'],
 }
 

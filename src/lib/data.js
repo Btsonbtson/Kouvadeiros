@@ -22,6 +22,8 @@ export const TEAMS = {
   DYN: {name:'Dynamo Kyiv',abbr:'DYN',color:'#003594'},
   NEC: {name:'NEC Nijmegen',abbr:'NEC',color:'#c00000'},
   PKS: {name:'Paksi SE',abbr:'PKS',color:'#006400'},
+  AND: {name:'Anderlecht',abbr:'AND',color:'#6c3'},
+  CSK: {name:'CSKA 1948',abbr:'CSK',color:'#c41e1e'},
   TBD: {name:'TBD',abbr:'TBD',color:'#444444'},
 }
 
@@ -59,245 +61,252 @@ export const SUPER_LEAGUE = [
   {id:'sl-1-7',t:'SL',md:1,home:'PAOK',away:'LEV', kickoff:'2026-08-23T18:00:00Z',round:'Αγωνιστική 1'}, // Κυρ 23/8 21:00
 
   // ── 2η Αγωνιστική ──
-  {id:'sl-2-1',t:'SL',md:2,home:'AST', away:'OLY', kickoff:'2026-08-29T17:00:00Z',round:'Αγωνιστική 2'},
-  {id:'sl-2-2',t:'SL',md:2,home:'ARI', away:'OFI', kickoff:'2026-08-29T17:00:00Z',round:'Αγωνιστική 2'},
-  {id:'sl-2-3',t:'SL',md:2,home:'ATR', away:'PAOK',kickoff:'2026-08-29T17:00:00Z',round:'Αγωνιστική 2'},
-  {id:'sl-2-4',t:'SL',md:2,home:'VOL', away:'IRA', kickoff:'2026-08-29T17:00:00Z',round:'Αγωνιστική 2'},
-  {id:'sl-2-5',t:'SL',md:2,home:'KIF', away:'AEK', kickoff:'2026-08-29T17:00:00Z',round:'Αγωνιστική 2'},
-  {id:'sl-2-6',t:'SL',md:2,home:'LEV', away:'PAO', kickoff:'2026-08-29T17:00:00Z',round:'Αγωνιστική 2'},
-  {id:'sl-2-7',t:'SL',md:2,home:'PNE', away:'KAL', kickoff:'2026-08-29T17:00:00Z',round:'Αγωνιστική 2'},
+  {id:'sl-2-1',t:'SL',md:2,home:'AST', away:'OLY', kickoff:'2026-08-29T17:00:00Z',round:'Αγωνιστική 2', timeTbd:true},
+  {id:'sl-2-2',t:'SL',md:2,home:'ARI', away:'OFI', kickoff:'2026-08-29T17:00:00Z',round:'Αγωνιστική 2', timeTbd:true},
+  {id:'sl-2-3',t:'SL',md:2,home:'ATR', away:'PAOK',kickoff:'2026-08-29T17:00:00Z',round:'Αγωνιστική 2', timeTbd:true},
+  {id:'sl-2-4',t:'SL',md:2,home:'VOL', away:'IRA', kickoff:'2026-08-29T17:00:00Z',round:'Αγωνιστική 2', timeTbd:true},
+  {id:'sl-2-5',t:'SL',md:2,home:'KIF', away:'AEK', kickoff:'2026-08-29T17:00:00Z',round:'Αγωνιστική 2', timeTbd:true},
+  {id:'sl-2-6',t:'SL',md:2,home:'LEV', away:'PAO', kickoff:'2026-08-29T17:00:00Z',round:'Αγωνιστική 2', timeTbd:true},
+  {id:'sl-2-7',t:'SL',md:2,home:'PNE', away:'KAL', kickoff:'2026-08-29T17:00:00Z',round:'Αγωνιστική 2', timeTbd:true},
 
   // ── 3η Αγωνιστική ──
-  {id:'sl-3-1',t:'SL',md:3,home:'AEK', away:'ARI', kickoff:'2026-09-05T17:00:00Z',round:'Αγωνιστική 3'},
-  {id:'sl-3-2',t:'SL',md:3,home:'ATR', away:'KAL', kickoff:'2026-09-05T17:00:00Z',round:'Αγωνιστική 3'},
-  {id:'sl-3-3',t:'SL',md:3,home:'VOL', away:'OLY', kickoff:'2026-09-05T17:00:00Z',round:'Αγωνιστική 3'},
-  {id:'sl-3-4',t:'SL',md:3,home:'LEV', away:'PNE', kickoff:'2026-09-05T17:00:00Z',round:'Αγωνιστική 3'},
-  {id:'sl-3-5',t:'SL',md:3,home:'OFI', away:'KIF', kickoff:'2026-09-05T17:00:00Z',round:'Αγωνιστική 3'},
-  {id:'sl-3-6',t:'SL',md:3,home:'PAO', away:'PAOK',kickoff:'2026-09-05T17:00:00Z',round:'Αγωνιστική 3'},
-  {id:'sl-3-7',t:'SL',md:3,home:'IRA', away:'AST', kickoff:'2026-09-05T17:00:00Z',round:'Αγωνιστική 3'},
+  {id:'sl-3-1',t:'SL',md:3,home:'AEK', away:'ARI', kickoff:'2026-09-05T17:00:00Z',round:'Αγωνιστική 3', timeTbd:true},
+  {id:'sl-3-2',t:'SL',md:3,home:'ATR', away:'KAL', kickoff:'2026-09-05T17:00:00Z',round:'Αγωνιστική 3', timeTbd:true},
+  {id:'sl-3-3',t:'SL',md:3,home:'VOL', away:'OLY', kickoff:'2026-09-05T17:00:00Z',round:'Αγωνιστική 3', timeTbd:true},
+  {id:'sl-3-4',t:'SL',md:3,home:'LEV', away:'PNE', kickoff:'2026-09-05T17:00:00Z',round:'Αγωνιστική 3', timeTbd:true},
+  {id:'sl-3-5',t:'SL',md:3,home:'OFI', away:'KIF', kickoff:'2026-09-05T17:00:00Z',round:'Αγωνιστική 3', timeTbd:true},
+  {id:'sl-3-6',t:'SL',md:3,home:'PAO', away:'PAOK',kickoff:'2026-09-05T17:00:00Z',round:'Αγωνιστική 3', timeTbd:true},
+  {id:'sl-3-7',t:'SL',md:3,home:'IRA', away:'AST', kickoff:'2026-09-05T17:00:00Z',round:'Αγωνιστική 3', timeTbd:true},
 
   // ── 4η Αγωνιστική ──
-  {id:'sl-4-1',t:'SL',md:4,home:'AST', away:'AEK', kickoff:'2026-09-12T17:00:00Z',round:'Αγωνιστική 4'},
-  {id:'sl-4-2',t:'SL',md:4,home:'KAL', away:'VOL', kickoff:'2026-09-12T17:00:00Z',round:'Αγωνιστική 4'},
-  {id:'sl-4-3',t:'SL',md:4,home:'KIF', away:'LEV', kickoff:'2026-09-12T17:00:00Z',round:'Αγωνιστική 4'},
-  {id:'sl-4-4',t:'SL',md:4,home:'OLY', away:'OFI', kickoff:'2026-09-12T17:00:00Z',round:'Αγωνιστική 4'},
-  {id:'sl-4-5',t:'SL',md:4,home:'PAO', away:'PNE', kickoff:'2026-09-12T17:00:00Z',round:'Αγωνιστική 4'},
-  {id:'sl-4-6',t:'SL',md:4,home:'PAOK',away:'ARI', kickoff:'2026-09-12T17:00:00Z',round:'Αγωνιστική 4'},
-  {id:'sl-4-7',t:'SL',md:4,home:'IRA', away:'ATR', kickoff:'2026-09-12T17:00:00Z',round:'Αγωνιστική 4'},
+  {id:'sl-4-1',t:'SL',md:4,home:'AST', away:'AEK', kickoff:'2026-09-12T17:00:00Z',round:'Αγωνιστική 4', timeTbd:true},
+  {id:'sl-4-2',t:'SL',md:4,home:'KAL', away:'VOL', kickoff:'2026-09-12T17:00:00Z',round:'Αγωνιστική 4', timeTbd:true},
+  {id:'sl-4-3',t:'SL',md:4,home:'KIF', away:'LEV', kickoff:'2026-09-12T17:00:00Z',round:'Αγωνιστική 4', timeTbd:true},
+  {id:'sl-4-4',t:'SL',md:4,home:'OLY', away:'OFI', kickoff:'2026-09-12T17:00:00Z',round:'Αγωνιστική 4', timeTbd:true},
+  {id:'sl-4-5',t:'SL',md:4,home:'PAO', away:'PNE', kickoff:'2026-09-12T17:00:00Z',round:'Αγωνιστική 4', timeTbd:true},
+  {id:'sl-4-6',t:'SL',md:4,home:'PAOK',away:'ARI', kickoff:'2026-09-12T17:00:00Z',round:'Αγωνιστική 4', timeTbd:true},
+  {id:'sl-4-7',t:'SL',md:4,home:'IRA', away:'ATR', kickoff:'2026-09-12T17:00:00Z',round:'Αγωνιστική 4', timeTbd:true},
 
   // ── 5η Αγωνιστική ──
-  {id:'sl-5-1',t:'SL',md:5,home:'ARI', away:'IRA', kickoff:'2026-09-19T17:00:00Z',round:'Αγωνιστική 5'},
-  {id:'sl-5-2',t:'SL',md:5,home:'ATR', away:'KIF', kickoff:'2026-09-19T17:00:00Z',round:'Αγωνιστική 5'},
-  {id:'sl-5-3',t:'SL',md:5,home:'VOL', away:'AEK', kickoff:'2026-09-19T17:00:00Z',round:'Αγωνιστική 5'},
-  {id:'sl-5-4',t:'SL',md:5,home:'KAL', away:'PAO', kickoff:'2026-09-19T17:00:00Z',round:'Αγωνιστική 5'},
-  {id:'sl-5-5',t:'SL',md:5,home:'LEV', away:'OLY', kickoff:'2026-09-19T17:00:00Z',round:'Αγωνιστική 5'},
-  {id:'sl-5-6',t:'SL',md:5,home:'OFI', away:'AST', kickoff:'2026-09-19T17:00:00Z',round:'Αγωνιστική 5'},
-  {id:'sl-5-7',t:'SL',md:5,home:'PNE', away:'PAOK',kickoff:'2026-09-19T17:00:00Z',round:'Αγωνιστική 5'},
+  {id:'sl-5-1',t:'SL',md:5,home:'ARI', away:'IRA', kickoff:'2026-09-19T17:00:00Z',round:'Αγωνιστική 5', timeTbd:true},
+  {id:'sl-5-2',t:'SL',md:5,home:'ATR', away:'KIF', kickoff:'2026-09-19T17:00:00Z',round:'Αγωνιστική 5', timeTbd:true},
+  {id:'sl-5-3',t:'SL',md:5,home:'VOL', away:'AEK', kickoff:'2026-09-19T17:00:00Z',round:'Αγωνιστική 5', timeTbd:true},
+  {id:'sl-5-4',t:'SL',md:5,home:'KAL', away:'PAO', kickoff:'2026-09-19T17:00:00Z',round:'Αγωνιστική 5', timeTbd:true},
+  {id:'sl-5-5',t:'SL',md:5,home:'LEV', away:'OLY', kickoff:'2026-09-19T17:00:00Z',round:'Αγωνιστική 5', timeTbd:true},
+  {id:'sl-5-6',t:'SL',md:5,home:'OFI', away:'AST', kickoff:'2026-09-19T17:00:00Z',round:'Αγωνιστική 5', timeTbd:true},
+  {id:'sl-5-7',t:'SL',md:5,home:'PNE', away:'PAOK',kickoff:'2026-09-19T17:00:00Z',round:'Αγωνιστική 5', timeTbd:true},
 
   // ── 6η Αγωνιστική ──
-  {id:'sl-6-1',t:'SL',md:6,home:'AEK', away:'OFI', kickoff:'2026-10-10T17:00:00Z',round:'Αγωνιστική 6'},
-  {id:'sl-6-2',t:'SL',md:6,home:'AST', away:'ATR', kickoff:'2026-10-10T17:00:00Z',round:'Αγωνιστική 6'},
-  {id:'sl-6-3',t:'SL',md:6,home:'ARI', away:'VOL', kickoff:'2026-10-10T17:00:00Z',round:'Αγωνιστική 6'},
-  {id:'sl-6-4',t:'SL',md:6,home:'KIF', away:'PNE', kickoff:'2026-10-10T17:00:00Z',round:'Αγωνιστική 6'},
-  {id:'sl-6-5',t:'SL',md:6,home:'OLY', away:'PAO', kickoff:'2026-10-10T17:00:00Z',round:'Αγωνιστική 6'},
-  {id:'sl-6-6',t:'SL',md:6,home:'PAOK',away:'KAL', kickoff:'2026-10-10T17:00:00Z',round:'Αγωνιστική 6'},
-  {id:'sl-6-7',t:'SL',md:6,home:'IRA', away:'LEV', kickoff:'2026-10-10T17:00:00Z',round:'Αγωνιστική 6'},
+  {id:'sl-6-1',t:'SL',md:6,home:'AEK', away:'OFI', kickoff:'2026-10-10T17:00:00Z',round:'Αγωνιστική 6', timeTbd:true},
+  {id:'sl-6-2',t:'SL',md:6,home:'AST', away:'ATR', kickoff:'2026-10-10T17:00:00Z',round:'Αγωνιστική 6', timeTbd:true},
+  {id:'sl-6-3',t:'SL',md:6,home:'ARI', away:'VOL', kickoff:'2026-10-10T17:00:00Z',round:'Αγωνιστική 6', timeTbd:true},
+  {id:'sl-6-4',t:'SL',md:6,home:'KIF', away:'PNE', kickoff:'2026-10-10T17:00:00Z',round:'Αγωνιστική 6', timeTbd:true},
+  {id:'sl-6-5',t:'SL',md:6,home:'OLY', away:'PAO', kickoff:'2026-10-10T17:00:00Z',round:'Αγωνιστική 6', timeTbd:true},
+  {id:'sl-6-6',t:'SL',md:6,home:'PAOK',away:'KAL', kickoff:'2026-10-10T17:00:00Z',round:'Αγωνιστική 6', timeTbd:true},
+  {id:'sl-6-7',t:'SL',md:6,home:'IRA', away:'LEV', kickoff:'2026-10-10T17:00:00Z',round:'Αγωνιστική 6', timeTbd:true},
 
   // ── 7η Αγωνιστική ──
-  {id:'sl-7-1',t:'SL',md:7,home:'ATR', away:'AEK', kickoff:'2026-10-17T17:00:00Z',round:'Αγωνιστική 7'},
-  {id:'sl-7-2',t:'SL',md:7,home:'KAL', away:'OFI', kickoff:'2026-10-17T17:00:00Z',round:'Αγωνιστική 7'},
-  {id:'sl-7-3',t:'SL',md:7,home:'KIF', away:'ARI', kickoff:'2026-10-17T17:00:00Z',round:'Αγωνιστική 7'},
-  {id:'sl-7-4',t:'SL',md:7,home:'LEV', away:'VOL', kickoff:'2026-10-17T17:00:00Z',round:'Αγωνιστική 7'},
-  {id:'sl-7-5',t:'SL',md:7,home:'PAO', away:'AST', kickoff:'2026-10-17T17:00:00Z',round:'Αγωνιστική 7'},
-  {id:'sl-7-6',t:'SL',md:7,home:'PNE', away:'OLY', kickoff:'2026-10-17T17:00:00Z',round:'Αγωνιστική 7'},
-  {id:'sl-7-7',t:'SL',md:7,home:'PAOK',away:'IRA', kickoff:'2026-10-17T17:00:00Z',round:'Αγωνιστική 7'},
+  {id:'sl-7-1',t:'SL',md:7,home:'ATR', away:'AEK', kickoff:'2026-10-17T17:00:00Z',round:'Αγωνιστική 7', timeTbd:true},
+  {id:'sl-7-2',t:'SL',md:7,home:'KAL', away:'OFI', kickoff:'2026-10-17T17:00:00Z',round:'Αγωνιστική 7', timeTbd:true},
+  {id:'sl-7-3',t:'SL',md:7,home:'KIF', away:'ARI', kickoff:'2026-10-17T17:00:00Z',round:'Αγωνιστική 7', timeTbd:true},
+  {id:'sl-7-4',t:'SL',md:7,home:'LEV', away:'VOL', kickoff:'2026-10-17T17:00:00Z',round:'Αγωνιστική 7', timeTbd:true},
+  {id:'sl-7-5',t:'SL',md:7,home:'PAO', away:'AST', kickoff:'2026-10-17T17:00:00Z',round:'Αγωνιστική 7', timeTbd:true},
+  {id:'sl-7-6',t:'SL',md:7,home:'PNE', away:'OLY', kickoff:'2026-10-17T17:00:00Z',round:'Αγωνιστική 7', timeTbd:true},
+  {id:'sl-7-7',t:'SL',md:7,home:'PAOK',away:'IRA', kickoff:'2026-10-17T17:00:00Z',round:'Αγωνιστική 7', timeTbd:true},
 
   // ── 8η Αγωνιστική ──
-  {id:'sl-8-1',t:'SL',md:8,home:'AEK', away:'PNE', kickoff:'2026-10-24T17:00:00Z',round:'Αγωνιστική 8'},
-  {id:'sl-8-2',t:'SL',md:8,home:'AST', away:'LEV', kickoff:'2026-10-24T17:00:00Z',round:'Αγωνιστική 8'},
-  {id:'sl-8-3',t:'SL',md:8,home:'ARI', away:'ATR', kickoff:'2026-10-24T17:00:00Z',round:'Αγωνιστική 8'},
-  {id:'sl-8-4',t:'SL',md:8,home:'VOL', away:'PAO', kickoff:'2026-10-24T17:00:00Z',round:'Αγωνιστική 8'},
-  {id:'sl-8-5',t:'SL',md:8,home:'OLY', away:'KAL', kickoff:'2026-10-24T17:00:00Z',round:'Αγωνιστική 8'},
-  {id:'sl-8-6',t:'SL',md:8,home:'OFI', away:'PAOK',kickoff:'2026-10-24T17:00:00Z',round:'Αγωνιστική 8'},
-  {id:'sl-8-7',t:'SL',md:8,home:'IRA', away:'KIF', kickoff:'2026-10-24T17:00:00Z',round:'Αγωνιστική 8'},
+  {id:'sl-8-1',t:'SL',md:8,home:'AEK', away:'PNE', kickoff:'2026-10-24T17:00:00Z',round:'Αγωνιστική 8', timeTbd:true},
+  {id:'sl-8-2',t:'SL',md:8,home:'AST', away:'LEV', kickoff:'2026-10-24T17:00:00Z',round:'Αγωνιστική 8', timeTbd:true},
+  {id:'sl-8-3',t:'SL',md:8,home:'ARI', away:'ATR', kickoff:'2026-10-24T17:00:00Z',round:'Αγωνιστική 8', timeTbd:true},
+  {id:'sl-8-4',t:'SL',md:8,home:'VOL', away:'PAO', kickoff:'2026-10-24T17:00:00Z',round:'Αγωνιστική 8', timeTbd:true},
+  {id:'sl-8-5',t:'SL',md:8,home:'OLY', away:'KAL', kickoff:'2026-10-24T17:00:00Z',round:'Αγωνιστική 8', timeTbd:true},
+  {id:'sl-8-6',t:'SL',md:8,home:'OFI', away:'PAOK',kickoff:'2026-10-24T17:00:00Z',round:'Αγωνιστική 8', timeTbd:true},
+  {id:'sl-8-7',t:'SL',md:8,home:'IRA', away:'KIF', kickoff:'2026-10-24T17:00:00Z',round:'Αγωνιστική 8', timeTbd:true},
 
   // ── 9η Αγωνιστική ──
-  {id:'sl-9-1',t:'SL',md:9,home:'ATR', away:'VOL', kickoff:'2026-10-31T17:00:00Z',round:'Αγωνιστική 9'},
-  {id:'sl-9-2',t:'SL',md:9,home:'KAL', away:'IRA', kickoff:'2026-10-31T17:00:00Z',round:'Αγωνιστική 9'},
-  {id:'sl-9-3',t:'SL',md:9,home:'KIF', away:'OLY', kickoff:'2026-10-31T17:00:00Z',round:'Αγωνιστική 9'},
-  {id:'sl-9-4',t:'SL',md:9,home:'LEV', away:'ARI', kickoff:'2026-10-31T17:00:00Z',round:'Αγωνιστική 9'},
-  {id:'sl-9-5',t:'SL',md:9,home:'PAO', away:'AEK', kickoff:'2026-10-31T17:00:00Z',round:'Αγωνιστική 9'},
-  {id:'sl-9-6',t:'SL',md:9,home:'PNE', away:'OFI', kickoff:'2026-10-31T17:00:00Z',round:'Αγωνιστική 9'},
-  {id:'sl-9-7',t:'SL',md:9,home:'PAOK',away:'AST', kickoff:'2026-10-31T17:00:00Z',round:'Αγωνιστική 9'},
+  {id:'sl-9-1',t:'SL',md:9,home:'ATR', away:'VOL', kickoff:'2026-10-31T17:00:00Z',round:'Αγωνιστική 9', timeTbd:true},
+  {id:'sl-9-2',t:'SL',md:9,home:'KAL', away:'IRA', kickoff:'2026-10-31T17:00:00Z',round:'Αγωνιστική 9', timeTbd:true},
+  {id:'sl-9-3',t:'SL',md:9,home:'KIF', away:'OLY', kickoff:'2026-10-31T17:00:00Z',round:'Αγωνιστική 9', timeTbd:true},
+  {id:'sl-9-4',t:'SL',md:9,home:'LEV', away:'ARI', kickoff:'2026-10-31T17:00:00Z',round:'Αγωνιστική 9', timeTbd:true},
+  {id:'sl-9-5',t:'SL',md:9,home:'PAO', away:'AEK', kickoff:'2026-10-31T17:00:00Z',round:'Αγωνιστική 9', timeTbd:true},
+  {id:'sl-9-6',t:'SL',md:9,home:'PNE', away:'OFI', kickoff:'2026-10-31T17:00:00Z',round:'Αγωνιστική 9', timeTbd:true},
+  {id:'sl-9-7',t:'SL',md:9,home:'PAOK',away:'AST', kickoff:'2026-10-31T17:00:00Z',round:'Αγωνιστική 9', timeTbd:true},
 
   // ── 10η Αγωνιστική ──
-  {id:'sl-10-1',t:'SL',md:10,home:'AEK', away:'LEV', kickoff:'2026-11-07T17:00:00Z',round:'Αγωνιστική 10'},
-  {id:'sl-10-2',t:'SL',md:10,home:'AST', away:'KAL', kickoff:'2026-11-07T17:00:00Z',round:'Αγωνιστική 10'},
-  {id:'sl-10-3',t:'SL',md:10,home:'ARI', away:'PNE', kickoff:'2026-11-07T17:00:00Z',round:'Αγωνιστική 10'},
-  {id:'sl-10-4',t:'SL',md:10,home:'VOL', away:'KIF', kickoff:'2026-11-07T17:00:00Z',round:'Αγωνιστική 10'},
-  {id:'sl-10-5',t:'SL',md:10,home:'OLY', away:'PAOK',kickoff:'2026-11-07T17:00:00Z',round:'Αγωνιστική 10'},
-  {id:'sl-10-6',t:'SL',md:10,home:'OFI', away:'ATR', kickoff:'2026-11-07T17:00:00Z',round:'Αγωνιστική 10'},
-  {id:'sl-10-7',t:'SL',md:10,home:'IRA', away:'PAO', kickoff:'2026-11-07T17:00:00Z',round:'Αγωνιστική 10'},
+  {id:'sl-10-1',t:'SL',md:10,home:'AEK', away:'LEV', kickoff:'2026-11-07T17:00:00Z',round:'Αγωνιστική 10', timeTbd:true},
+  {id:'sl-10-2',t:'SL',md:10,home:'AST', away:'KAL', kickoff:'2026-11-07T17:00:00Z',round:'Αγωνιστική 10', timeTbd:true},
+  {id:'sl-10-3',t:'SL',md:10,home:'ARI', away:'PNE', kickoff:'2026-11-07T17:00:00Z',round:'Αγωνιστική 10', timeTbd:true},
+  {id:'sl-10-4',t:'SL',md:10,home:'VOL', away:'KIF', kickoff:'2026-11-07T17:00:00Z',round:'Αγωνιστική 10', timeTbd:true},
+  {id:'sl-10-5',t:'SL',md:10,home:'OLY', away:'PAOK',kickoff:'2026-11-07T17:00:00Z',round:'Αγωνιστική 10', timeTbd:true},
+  {id:'sl-10-6',t:'SL',md:10,home:'OFI', away:'ATR', kickoff:'2026-11-07T17:00:00Z',round:'Αγωνιστική 10', timeTbd:true},
+  {id:'sl-10-7',t:'SL',md:10,home:'IRA', away:'PAO', kickoff:'2026-11-07T17:00:00Z',round:'Αγωνιστική 10', timeTbd:true},
 
   // ── 11η Αγωνιστική ──
-  {id:'sl-11-1',t:'SL',md:11,home:'AST', away:'ARI', kickoff:'2026-11-21T17:00:00Z',round:'Αγωνιστική 11'},
-  {id:'sl-11-2',t:'SL',md:11,home:'KAL', away:'AEK', kickoff:'2026-11-21T17:00:00Z',round:'Αγωνιστική 11'},
-  {id:'sl-11-3',t:'SL',md:11,home:'LEV', away:'ATR', kickoff:'2026-11-21T17:00:00Z',round:'Αγωνιστική 11'},
-  {id:'sl-11-4',t:'SL',md:11,home:'OLY', away:'IRA', kickoff:'2026-11-21T17:00:00Z',round:'Αγωνιστική 11'},
-  {id:'sl-11-5',t:'SL',md:11,home:'PAO', away:'OFI', kickoff:'2026-11-21T17:00:00Z',round:'Αγωνιστική 11'},
-  {id:'sl-11-6',t:'SL',md:11,home:'PNE', away:'VOL', kickoff:'2026-11-21T17:00:00Z',round:'Αγωνιστική 11'},
-  {id:'sl-11-7',t:'SL',md:11,home:'PAOK',away:'KIF', kickoff:'2026-11-21T17:00:00Z',round:'Αγωνιστική 11'},
+  {id:'sl-11-1',t:'SL',md:11,home:'AST', away:'ARI', kickoff:'2026-11-21T17:00:00Z',round:'Αγωνιστική 11', timeTbd:true},
+  {id:'sl-11-2',t:'SL',md:11,home:'KAL', away:'AEK', kickoff:'2026-11-21T17:00:00Z',round:'Αγωνιστική 11', timeTbd:true},
+  {id:'sl-11-3',t:'SL',md:11,home:'LEV', away:'ATR', kickoff:'2026-11-21T17:00:00Z',round:'Αγωνιστική 11', timeTbd:true},
+  {id:'sl-11-4',t:'SL',md:11,home:'OLY', away:'IRA', kickoff:'2026-11-21T17:00:00Z',round:'Αγωνιστική 11', timeTbd:true},
+  {id:'sl-11-5',t:'SL',md:11,home:'PAO', away:'OFI', kickoff:'2026-11-21T17:00:00Z',round:'Αγωνιστική 11', timeTbd:true},
+  {id:'sl-11-6',t:'SL',md:11,home:'PNE', away:'VOL', kickoff:'2026-11-21T17:00:00Z',round:'Αγωνιστική 11', timeTbd:true},
+  {id:'sl-11-7',t:'SL',md:11,home:'PAOK',away:'KIF', kickoff:'2026-11-21T17:00:00Z',round:'Αγωνιστική 11', timeTbd:true},
 
   // ── 12η Αγωνιστική ──
-  {id:'sl-12-1',t:'SL',md:12,home:'AEK', away:'PAOK',kickoff:'2026-11-28T17:00:00Z',round:'Αγωνιστική 12'},
-  {id:'sl-12-2',t:'SL',md:12,home:'ARI', away:'OLY', kickoff:'2026-11-28T17:00:00Z',round:'Αγωνιστική 12'},
-  {id:'sl-12-3',t:'SL',md:12,home:'ATR', away:'PAO', kickoff:'2026-11-28T17:00:00Z',round:'Αγωνιστική 12'},
-  {id:'sl-12-4',t:'SL',md:12,home:'VOL', away:'AST', kickoff:'2026-11-28T17:00:00Z',round:'Αγωνιστική 12'},
-  {id:'sl-12-5',t:'SL',md:12,home:'KIF', away:'KAL', kickoff:'2026-11-28T17:00:00Z',round:'Αγωνιστική 12'},
-  {id:'sl-12-6',t:'SL',md:12,home:'OFI', away:'LEV', kickoff:'2026-11-28T17:00:00Z',round:'Αγωνιστική 12'},
-  {id:'sl-12-7',t:'SL',md:12,home:'IRA', away:'PNE', kickoff:'2026-11-28T17:00:00Z',round:'Αγωνιστική 12'},
+  {id:'sl-12-1',t:'SL',md:12,home:'AEK', away:'PAOK',kickoff:'2026-11-28T17:00:00Z',round:'Αγωνιστική 12', timeTbd:true},
+  {id:'sl-12-2',t:'SL',md:12,home:'ARI', away:'OLY', kickoff:'2026-11-28T17:00:00Z',round:'Αγωνιστική 12', timeTbd:true},
+  {id:'sl-12-3',t:'SL',md:12,home:'ATR', away:'PAO', kickoff:'2026-11-28T17:00:00Z',round:'Αγωνιστική 12', timeTbd:true},
+  {id:'sl-12-4',t:'SL',md:12,home:'VOL', away:'AST', kickoff:'2026-11-28T17:00:00Z',round:'Αγωνιστική 12', timeTbd:true},
+  {id:'sl-12-5',t:'SL',md:12,home:'KIF', away:'KAL', kickoff:'2026-11-28T17:00:00Z',round:'Αγωνιστική 12', timeTbd:true},
+  {id:'sl-12-6',t:'SL',md:12,home:'OFI', away:'LEV', kickoff:'2026-11-28T17:00:00Z',round:'Αγωνιστική 12', timeTbd:true},
+  {id:'sl-12-7',t:'SL',md:12,home:'IRA', away:'PNE', kickoff:'2026-11-28T17:00:00Z',round:'Αγωνιστική 12', timeTbd:true},
 
   // ── 13η Αγωνιστική ──
-  {id:'sl-13-1',t:'SL',md:13,home:'AST', away:'KIF', kickoff:'2026-12-05T17:00:00Z',round:'Αγωνιστική 13'},
-  {id:'sl-13-2',t:'SL',md:13,home:'KAL', away:'LEV', kickoff:'2026-12-05T17:00:00Z',round:'Αγωνιστική 13'},
-  {id:'sl-13-3',t:'SL',md:13,home:'OLY', away:'AEK', kickoff:'2026-12-05T17:00:00Z',round:'Αγωνιστική 13'},
-  {id:'sl-13-4',t:'SL',md:13,home:'OFI', away:'IRA', kickoff:'2026-12-05T17:00:00Z',round:'Αγωνιστική 13'},
-  {id:'sl-13-5',t:'SL',md:13,home:'PAO', away:'ARI', kickoff:'2026-12-05T17:00:00Z',round:'Αγωνιστική 13'},
-  {id:'sl-13-6',t:'SL',md:13,home:'PNE', away:'ATR', kickoff:'2026-12-05T17:00:00Z',round:'Αγωνιστική 13'},
-  {id:'sl-13-7',t:'SL',md:13,home:'PAOK',away:'VOL', kickoff:'2026-12-05T17:00:00Z',round:'Αγωνιστική 13'},
+  {id:'sl-13-1',t:'SL',md:13,home:'AST', away:'KIF', kickoff:'2026-12-05T17:00:00Z',round:'Αγωνιστική 13', timeTbd:true},
+  {id:'sl-13-2',t:'SL',md:13,home:'KAL', away:'LEV', kickoff:'2026-12-05T17:00:00Z',round:'Αγωνιστική 13', timeTbd:true},
+  {id:'sl-13-3',t:'SL',md:13,home:'OLY', away:'AEK', kickoff:'2026-12-05T17:00:00Z',round:'Αγωνιστική 13', timeTbd:true},
+  {id:'sl-13-4',t:'SL',md:13,home:'OFI', away:'IRA', kickoff:'2026-12-05T17:00:00Z',round:'Αγωνιστική 13', timeTbd:true},
+  {id:'sl-13-5',t:'SL',md:13,home:'PAO', away:'ARI', kickoff:'2026-12-05T17:00:00Z',round:'Αγωνιστική 13', timeTbd:true},
+  {id:'sl-13-6',t:'SL',md:13,home:'PNE', away:'ATR', kickoff:'2026-12-05T17:00:00Z',round:'Αγωνιστική 13', timeTbd:true},
+  {id:'sl-13-7',t:'SL',md:13,home:'PAOK',away:'VOL', kickoff:'2026-12-05T17:00:00Z',round:'Αγωνιστική 13', timeTbd:true},
 
   // ── 14η Αγωνιστική ──
-  {id:'sl-14-1',t:'SL',md:14,home:'AEK', away:'VOL', kickoff:'2026-12-12T17:00:00Z',round:'Αγωνιστική 14'},
-  {id:'sl-14-2',t:'SL',md:14,home:'ATR', away:'OLY', kickoff:'2026-12-12T17:00:00Z',round:'Αγωνιστική 14'},
-  {id:'sl-14-3',t:'SL',md:14,home:'KAL', away:'PNE', kickoff:'2026-12-12T17:00:00Z',round:'Αγωνιστική 14'},
-  {id:'sl-14-4',t:'SL',md:14,home:'KIF', away:'OFI', kickoff:'2026-12-12T17:00:00Z',round:'Αγωνιστική 14'},
-  {id:'sl-14-5',t:'SL',md:14,home:'LEV', away:'AST', kickoff:'2026-12-12T17:00:00Z',round:'Αγωνιστική 14'},
-  {id:'sl-14-6',t:'SL',md:14,home:'PAOK',away:'PAO', kickoff:'2026-12-12T17:00:00Z',round:'Αγωνιστική 14'},
-  {id:'sl-14-7',t:'SL',md:14,home:'IRA', away:'ARI', kickoff:'2026-12-12T17:00:00Z',round:'Αγωνιστική 14'},
+  {id:'sl-14-1',t:'SL',md:14,home:'AEK', away:'VOL', kickoff:'2026-12-12T17:00:00Z',round:'Αγωνιστική 14', timeTbd:true},
+  {id:'sl-14-2',t:'SL',md:14,home:'ATR', away:'OLY', kickoff:'2026-12-12T17:00:00Z',round:'Αγωνιστική 14', timeTbd:true},
+  {id:'sl-14-3',t:'SL',md:14,home:'KAL', away:'PNE', kickoff:'2026-12-12T17:00:00Z',round:'Αγωνιστική 14', timeTbd:true},
+  {id:'sl-14-4',t:'SL',md:14,home:'KIF', away:'OFI', kickoff:'2026-12-12T17:00:00Z',round:'Αγωνιστική 14', timeTbd:true},
+  {id:'sl-14-5',t:'SL',md:14,home:'LEV', away:'AST', kickoff:'2026-12-12T17:00:00Z',round:'Αγωνιστική 14', timeTbd:true},
+  {id:'sl-14-6',t:'SL',md:14,home:'PAOK',away:'PAO', kickoff:'2026-12-12T17:00:00Z',round:'Αγωνιστική 14', timeTbd:true},
+  {id:'sl-14-7',t:'SL',md:14,home:'IRA', away:'ARI', kickoff:'2026-12-12T17:00:00Z',round:'Αγωνιστική 14', timeTbd:true},
 
   // ── 15η Αγωνιστική ──
-  {id:'sl-15-1',t:'SL',md:15,home:'AST', away:'PAOK',kickoff:'2026-12-19T17:00:00Z',round:'Αγωνιστική 15'},
-  {id:'sl-15-2',t:'SL',md:15,home:'ARI', away:'AEK', kickoff:'2026-12-19T17:00:00Z',round:'Αγωνιστική 15'},
-  {id:'sl-15-3',t:'SL',md:15,home:'VOL', away:'LEV', kickoff:'2026-12-19T17:00:00Z',round:'Αγωνιστική 15'},
-  {id:'sl-15-4',t:'SL',md:15,home:'KIF', away:'ATR', kickoff:'2026-12-19T17:00:00Z',round:'Αγωνιστική 15'},
-  {id:'sl-15-5',t:'SL',md:15,home:'OLY', away:'PNE', kickoff:'2026-12-19T17:00:00Z',round:'Αγωνιστική 15'},
-  {id:'sl-15-6',t:'SL',md:15,home:'OFI', away:'KAL', kickoff:'2026-12-19T17:00:00Z',round:'Αγωνιστική 15'},
-  {id:'sl-15-7',t:'SL',md:15,home:'PAO', away:'IRA', kickoff:'2026-12-19T17:00:00Z',round:'Αγωνιστική 15'},
+  {id:'sl-15-1',t:'SL',md:15,home:'AST', away:'PAOK',kickoff:'2026-12-19T17:00:00Z',round:'Αγωνιστική 15', timeTbd:true},
+  {id:'sl-15-2',t:'SL',md:15,home:'ARI', away:'AEK', kickoff:'2026-12-19T17:00:00Z',round:'Αγωνιστική 15', timeTbd:true},
+  {id:'sl-15-3',t:'SL',md:15,home:'VOL', away:'LEV', kickoff:'2026-12-19T17:00:00Z',round:'Αγωνιστική 15', timeTbd:true},
+  {id:'sl-15-4',t:'SL',md:15,home:'KIF', away:'ATR', kickoff:'2026-12-19T17:00:00Z',round:'Αγωνιστική 15', timeTbd:true},
+  {id:'sl-15-5',t:'SL',md:15,home:'OLY', away:'PNE', kickoff:'2026-12-19T17:00:00Z',round:'Αγωνιστική 15', timeTbd:true},
+  {id:'sl-15-6',t:'SL',md:15,home:'OFI', away:'KAL', kickoff:'2026-12-19T17:00:00Z',round:'Αγωνιστική 15', timeTbd:true},
+  {id:'sl-15-7',t:'SL',md:15,home:'PAO', away:'IRA', kickoff:'2026-12-19T17:00:00Z',round:'Αγωνιστική 15', timeTbd:true},
 
   // ── 16η Αγωνιστική ──
-  {id:'sl-16-1',t:'SL',md:16,home:'AEK', away:'ATR', kickoff:'2027-01-09T17:00:00Z',round:'Αγωνιστική 16'},
-  {id:'sl-16-2',t:'SL',md:16,home:'AST', away:'PAO', kickoff:'2027-01-09T17:00:00Z',round:'Αγωνιστική 16'},
-  {id:'sl-16-3',t:'SL',md:16,home:'ARI', away:'PAOK',kickoff:'2027-01-09T17:00:00Z',round:'Αγωνιστική 16'},
-  {id:'sl-16-4',t:'SL',md:16,home:'KAL', away:'OLY', kickoff:'2027-01-09T17:00:00Z',round:'Αγωνιστική 16'},
-  {id:'sl-16-5',t:'SL',md:16,home:'LEV', away:'OFI', kickoff:'2027-01-09T17:00:00Z',round:'Αγωνιστική 16'},
-  {id:'sl-16-6',t:'SL',md:16,home:'PNE', away:'KIF', kickoff:'2027-01-09T17:00:00Z',round:'Αγωνιστική 16'},
-  {id:'sl-16-7',t:'SL',md:16,home:'IRA', away:'VOL', kickoff:'2027-01-09T17:00:00Z',round:'Αγωνιστική 16'},
+  {id:'sl-16-1',t:'SL',md:16,home:'AEK', away:'ATR', kickoff:'2027-01-09T17:00:00Z',round:'Αγωνιστική 16', timeTbd:true},
+  {id:'sl-16-2',t:'SL',md:16,home:'AST', away:'PAO', kickoff:'2027-01-09T17:00:00Z',round:'Αγωνιστική 16', timeTbd:true},
+  {id:'sl-16-3',t:'SL',md:16,home:'ARI', away:'PAOK',kickoff:'2027-01-09T17:00:00Z',round:'Αγωνιστική 16', timeTbd:true},
+  {id:'sl-16-4',t:'SL',md:16,home:'KAL', away:'OLY', kickoff:'2027-01-09T17:00:00Z',round:'Αγωνιστική 16', timeTbd:true},
+  {id:'sl-16-5',t:'SL',md:16,home:'LEV', away:'OFI', kickoff:'2027-01-09T17:00:00Z',round:'Αγωνιστική 16', timeTbd:true},
+  {id:'sl-16-6',t:'SL',md:16,home:'PNE', away:'KIF', kickoff:'2027-01-09T17:00:00Z',round:'Αγωνιστική 16', timeTbd:true},
+  {id:'sl-16-7',t:'SL',md:16,home:'IRA', away:'VOL', kickoff:'2027-01-09T17:00:00Z',round:'Αγωνιστική 16', timeTbd:true},
 
   // ── 17η Αγωνιστική ──
-  {id:'sl-17-1',t:'SL',md:17,home:'AEK', away:'KAL', kickoff:'2027-01-16T17:00:00Z',round:'Αγωνιστική 17'},
-  {id:'sl-17-2',t:'SL',md:17,home:'ATR', away:'PNE', kickoff:'2027-01-16T17:00:00Z',round:'Αγωνιστική 17'},
-  {id:'sl-17-3',t:'SL',md:17,home:'VOL', away:'ARI', kickoff:'2027-01-16T17:00:00Z',round:'Αγωνιστική 17'},
-  {id:'sl-17-4',t:'SL',md:17,home:'KIF', away:'AST', kickoff:'2027-01-16T17:00:00Z',round:'Αγωνιστική 17'},
-  {id:'sl-17-5',t:'SL',md:17,home:'LEV', away:'IRA', kickoff:'2027-01-16T17:00:00Z',round:'Αγωνιστική 17'},
-  {id:'sl-17-6',t:'SL',md:17,home:'OFI', away:'PAO', kickoff:'2027-01-16T17:00:00Z',round:'Αγωνιστική 17'},
-  {id:'sl-17-7',t:'SL',md:17,home:'PAOK',away:'OLY', kickoff:'2027-01-16T17:00:00Z',round:'Αγωνιστική 17'},
+  {id:'sl-17-1',t:'SL',md:17,home:'AEK', away:'KAL', kickoff:'2027-01-16T17:00:00Z',round:'Αγωνιστική 17', timeTbd:true},
+  {id:'sl-17-2',t:'SL',md:17,home:'ATR', away:'PNE', kickoff:'2027-01-16T17:00:00Z',round:'Αγωνιστική 17', timeTbd:true},
+  {id:'sl-17-3',t:'SL',md:17,home:'VOL', away:'ARI', kickoff:'2027-01-16T17:00:00Z',round:'Αγωνιστική 17', timeTbd:true},
+  {id:'sl-17-4',t:'SL',md:17,home:'KIF', away:'AST', kickoff:'2027-01-16T17:00:00Z',round:'Αγωνιστική 17', timeTbd:true},
+  {id:'sl-17-5',t:'SL',md:17,home:'LEV', away:'IRA', kickoff:'2027-01-16T17:00:00Z',round:'Αγωνιστική 17', timeTbd:true},
+  {id:'sl-17-6',t:'SL',md:17,home:'OFI', away:'PAO', kickoff:'2027-01-16T17:00:00Z',round:'Αγωνιστική 17', timeTbd:true},
+  {id:'sl-17-7',t:'SL',md:17,home:'PAOK',away:'OLY', kickoff:'2027-01-16T17:00:00Z',round:'Αγωνιστική 17', timeTbd:true},
 
   // ── 18η Αγωνιστική ──
-  {id:'sl-18-1',t:'SL',md:18,home:'ARI', away:'KIF', kickoff:'2027-01-23T17:00:00Z',round:'Αγωνιστική 18'},
-  {id:'sl-18-2',t:'SL',md:18,home:'VOL', away:'OFI', kickoff:'2027-01-23T17:00:00Z',round:'Αγωνιστική 18'},
-  {id:'sl-18-3',t:'SL',md:18,home:'KAL', away:'AST', kickoff:'2027-01-23T17:00:00Z',round:'Αγωνιστική 18'},
-  {id:'sl-18-4',t:'SL',md:18,home:'OLY', away:'LEV', kickoff:'2027-01-23T17:00:00Z',round:'Αγωνιστική 18'},
-  {id:'sl-18-5',t:'SL',md:18,home:'PAO', away:'ATR', kickoff:'2027-01-23T17:00:00Z',round:'Αγωνιστική 18'},
-  {id:'sl-18-6',t:'SL',md:18,home:'PNE', away:'AEK', kickoff:'2027-01-23T17:00:00Z',round:'Αγωνιστική 18'},
-  {id:'sl-18-7',t:'SL',md:18,home:'IRA', away:'PAOK',kickoff:'2027-01-23T17:00:00Z',round:'Αγωνιστική 18'},
+  {id:'sl-18-1',t:'SL',md:18,home:'ARI', away:'KIF', kickoff:'2027-01-23T17:00:00Z',round:'Αγωνιστική 18', timeTbd:true},
+  {id:'sl-18-2',t:'SL',md:18,home:'VOL', away:'OFI', kickoff:'2027-01-23T17:00:00Z',round:'Αγωνιστική 18', timeTbd:true},
+  {id:'sl-18-3',t:'SL',md:18,home:'KAL', away:'AST', kickoff:'2027-01-23T17:00:00Z',round:'Αγωνιστική 18', timeTbd:true},
+  {id:'sl-18-4',t:'SL',md:18,home:'OLY', away:'LEV', kickoff:'2027-01-23T17:00:00Z',round:'Αγωνιστική 18', timeTbd:true},
+  {id:'sl-18-5',t:'SL',md:18,home:'PAO', away:'ATR', kickoff:'2027-01-23T17:00:00Z',round:'Αγωνιστική 18', timeTbd:true},
+  {id:'sl-18-6',t:'SL',md:18,home:'PNE', away:'AEK', kickoff:'2027-01-23T17:00:00Z',round:'Αγωνιστική 18', timeTbd:true},
+  {id:'sl-18-7',t:'SL',md:18,home:'IRA', away:'PAOK',kickoff:'2027-01-23T17:00:00Z',round:'Αγωνιστική 18', timeTbd:true},
 
   // ── 19η Αγωνιστική ──
-  {id:'sl-19-1',t:'SL',md:19,home:'AST', away:'IRA', kickoff:'2027-01-30T17:00:00Z',round:'Αγωνιστική 19'},
-  {id:'sl-19-2',t:'SL',md:19,home:'ATR', away:'ARI', kickoff:'2027-01-30T17:00:00Z',round:'Αγωνιστική 19'},
-  {id:'sl-19-3',t:'SL',md:19,home:'KIF', away:'VOL', kickoff:'2027-01-30T17:00:00Z',round:'Αγωνιστική 19'},
-  {id:'sl-19-4',t:'SL',md:19,home:'LEV', away:'KAL', kickoff:'2027-01-30T17:00:00Z',round:'Αγωνιστική 19'},
-  {id:'sl-19-5',t:'SL',md:19,home:'OFI', away:'AEK', kickoff:'2027-01-30T17:00:00Z',round:'Αγωνιστική 19'},
-  {id:'sl-19-6',t:'SL',md:19,home:'PAO', away:'OLY', kickoff:'2027-01-30T17:00:00Z',round:'Αγωνιστική 19'},
-  {id:'sl-19-7',t:'SL',md:19,home:'PAOK',away:'PNE', kickoff:'2027-01-30T17:00:00Z',round:'Αγωνιστική 19'},
+  {id:'sl-19-1',t:'SL',md:19,home:'AST', away:'IRA', kickoff:'2027-01-30T17:00:00Z',round:'Αγωνιστική 19', timeTbd:true},
+  {id:'sl-19-2',t:'SL',md:19,home:'ATR', away:'ARI', kickoff:'2027-01-30T17:00:00Z',round:'Αγωνιστική 19', timeTbd:true},
+  {id:'sl-19-3',t:'SL',md:19,home:'KIF', away:'VOL', kickoff:'2027-01-30T17:00:00Z',round:'Αγωνιστική 19', timeTbd:true},
+  {id:'sl-19-4',t:'SL',md:19,home:'LEV', away:'KAL', kickoff:'2027-01-30T17:00:00Z',round:'Αγωνιστική 19', timeTbd:true},
+  {id:'sl-19-5',t:'SL',md:19,home:'OFI', away:'AEK', kickoff:'2027-01-30T17:00:00Z',round:'Αγωνιστική 19', timeTbd:true},
+  {id:'sl-19-6',t:'SL',md:19,home:'PAO', away:'OLY', kickoff:'2027-01-30T17:00:00Z',round:'Αγωνιστική 19', timeTbd:true},
+  {id:'sl-19-7',t:'SL',md:19,home:'PAOK',away:'PNE', kickoff:'2027-01-30T17:00:00Z',round:'Αγωνιστική 19', timeTbd:true},
 
   // ── 20η Αγωνιστική ──
-  {id:'sl-20-1',t:'SL',md:20,home:'AEK', away:'KIF', kickoff:'2027-02-06T17:00:00Z',round:'Αγωνιστική 20'},
-  {id:'sl-20-2',t:'SL',md:20,home:'ARI', away:'PAO', kickoff:'2027-02-06T17:00:00Z',round:'Αγωνιστική 20'},
-  {id:'sl-20-3',t:'SL',md:20,home:'VOL', away:'ATR', kickoff:'2027-02-06T17:00:00Z',round:'Αγωνιστική 20'},
-  {id:'sl-20-4',t:'SL',md:20,home:'KAL', away:'PAOK',kickoff:'2027-02-06T17:00:00Z',round:'Αγωνιστική 20'},
-  {id:'sl-20-5',t:'SL',md:20,home:'OLY', away:'AST', kickoff:'2027-02-06T17:00:00Z',round:'Αγωνιστική 20'},
-  {id:'sl-20-6',t:'SL',md:20,home:'PNE', away:'LEV', kickoff:'2027-02-06T17:00:00Z',round:'Αγωνιστική 20'},
-  {id:'sl-20-7',t:'SL',md:20,home:'IRA', away:'OFI', kickoff:'2027-02-06T17:00:00Z',round:'Αγωνιστική 20'},
+  {id:'sl-20-1',t:'SL',md:20,home:'AEK', away:'KIF', kickoff:'2027-02-06T17:00:00Z',round:'Αγωνιστική 20', timeTbd:true},
+  {id:'sl-20-2',t:'SL',md:20,home:'ARI', away:'PAO', kickoff:'2027-02-06T17:00:00Z',round:'Αγωνιστική 20', timeTbd:true},
+  {id:'sl-20-3',t:'SL',md:20,home:'VOL', away:'ATR', kickoff:'2027-02-06T17:00:00Z',round:'Αγωνιστική 20', timeTbd:true},
+  {id:'sl-20-4',t:'SL',md:20,home:'KAL', away:'PAOK',kickoff:'2027-02-06T17:00:00Z',round:'Αγωνιστική 20', timeTbd:true},
+  {id:'sl-20-5',t:'SL',md:20,home:'OLY', away:'AST', kickoff:'2027-02-06T17:00:00Z',round:'Αγωνιστική 20', timeTbd:true},
+  {id:'sl-20-6',t:'SL',md:20,home:'PNE', away:'LEV', kickoff:'2027-02-06T17:00:00Z',round:'Αγωνιστική 20', timeTbd:true},
+  {id:'sl-20-7',t:'SL',md:20,home:'IRA', away:'OFI', kickoff:'2027-02-06T17:00:00Z',round:'Αγωνιστική 20', timeTbd:true},
 
   // ── 21η Αγωνιστική ──
-  {id:'sl-21-1',t:'SL',md:21,home:'AST', away:'PNE', kickoff:'2027-02-13T17:00:00Z',round:'Αγωνιστική 21'},
-  {id:'sl-21-2',t:'SL',md:21,home:'ATR', away:'IRA', kickoff:'2027-02-13T17:00:00Z',round:'Αγωνιστική 21'},
-  {id:'sl-21-3',t:'SL',md:21,home:'LEV', away:'KIF', kickoff:'2027-02-13T17:00:00Z',round:'Αγωνιστική 21'},
-  {id:'sl-21-4',t:'SL',md:21,home:'OLY', away:'VOL', kickoff:'2027-02-13T17:00:00Z',round:'Αγωνιστική 21'},
-  {id:'sl-21-5',t:'SL',md:21,home:'OFI', away:'ARI', kickoff:'2027-02-13T17:00:00Z',round:'Αγωνιστική 21'},
-  {id:'sl-21-6',t:'SL',md:21,home:'PAO', away:'KAL', kickoff:'2027-02-13T17:00:00Z',round:'Αγωνιστική 21'},
-  {id:'sl-21-7',t:'SL',md:21,home:'PAOK',away:'AEK', kickoff:'2027-02-13T17:00:00Z',round:'Αγωνιστική 21'},
+  {id:'sl-21-1',t:'SL',md:21,home:'AST', away:'PNE', kickoff:'2027-02-13T17:00:00Z',round:'Αγωνιστική 21', timeTbd:true},
+  {id:'sl-21-2',t:'SL',md:21,home:'ATR', away:'IRA', kickoff:'2027-02-13T17:00:00Z',round:'Αγωνιστική 21', timeTbd:true},
+  {id:'sl-21-3',t:'SL',md:21,home:'LEV', away:'KIF', kickoff:'2027-02-13T17:00:00Z',round:'Αγωνιστική 21', timeTbd:true},
+  {id:'sl-21-4',t:'SL',md:21,home:'OLY', away:'VOL', kickoff:'2027-02-13T17:00:00Z',round:'Αγωνιστική 21', timeTbd:true},
+  {id:'sl-21-5',t:'SL',md:21,home:'OFI', away:'ARI', kickoff:'2027-02-13T17:00:00Z',round:'Αγωνιστική 21', timeTbd:true},
+  {id:'sl-21-6',t:'SL',md:21,home:'PAO', away:'KAL', kickoff:'2027-02-13T17:00:00Z',round:'Αγωνιστική 21', timeTbd:true},
+  {id:'sl-21-7',t:'SL',md:21,home:'PAOK',away:'AEK', kickoff:'2027-02-13T17:00:00Z',round:'Αγωνιστική 21', timeTbd:true},
 
   // ── 22η Αγωνιστική ──
-  {id:'sl-22-1',t:'SL',md:22,home:'AEK', away:'AST', kickoff:'2027-02-20T17:00:00Z',round:'Αγωνιστική 22'},
-  {id:'sl-22-2',t:'SL',md:22,home:'ARI', away:'LEV', kickoff:'2027-02-20T17:00:00Z',round:'Αγωνιστική 22'},
-  {id:'sl-22-3',t:'SL',md:22,home:'ATR', away:'OFI', kickoff:'2027-02-20T17:00:00Z',round:'Αγωνιστική 22'},
-  {id:'sl-22-4',t:'SL',md:22,home:'VOL', away:'KAL', kickoff:'2027-02-20T17:00:00Z',round:'Αγωνιστική 22'},
-  {id:'sl-22-5',t:'SL',md:22,home:'KIF', away:'PAOK',kickoff:'2027-02-20T17:00:00Z',round:'Αγωνιστική 22'},
-  {id:'sl-22-6',t:'SL',md:22,home:'PNE', away:'PAO', kickoff:'2027-02-20T17:00:00Z',round:'Αγωνιστική 22'},
-  {id:'sl-22-7',t:'SL',md:22,home:'IRA', away:'OLY', kickoff:'2027-02-20T17:00:00Z',round:'Αγωνιστική 22'},
+  {id:'sl-22-1',t:'SL',md:22,home:'AEK', away:'AST', kickoff:'2027-02-20T17:00:00Z',round:'Αγωνιστική 22', timeTbd:true},
+  {id:'sl-22-2',t:'SL',md:22,home:'ARI', away:'LEV', kickoff:'2027-02-20T17:00:00Z',round:'Αγωνιστική 22', timeTbd:true},
+  {id:'sl-22-3',t:'SL',md:22,home:'ATR', away:'OFI', kickoff:'2027-02-20T17:00:00Z',round:'Αγωνιστική 22', timeTbd:true},
+  {id:'sl-22-4',t:'SL',md:22,home:'VOL', away:'KAL', kickoff:'2027-02-20T17:00:00Z',round:'Αγωνιστική 22', timeTbd:true},
+  {id:'sl-22-5',t:'SL',md:22,home:'KIF', away:'PAOK',kickoff:'2027-02-20T17:00:00Z',round:'Αγωνιστική 22', timeTbd:true},
+  {id:'sl-22-6',t:'SL',md:22,home:'PNE', away:'PAO', kickoff:'2027-02-20T17:00:00Z',round:'Αγωνιστική 22', timeTbd:true},
+  {id:'sl-22-7',t:'SL',md:22,home:'IRA', away:'OLY', kickoff:'2027-02-20T17:00:00Z',round:'Αγωνιστική 22', timeTbd:true},
 
   // ── 23η Αγωνιστική ──
-  {id:'sl-23-1',t:'SL',md:23,home:'AST', away:'OFI', kickoff:'2027-02-27T17:00:00Z',round:'Αγωνιστική 23'},
-  {id:'sl-23-2',t:'SL',md:23,home:'KAL', away:'KIF', kickoff:'2027-02-27T17:00:00Z',round:'Αγωνιστική 23'},
-  {id:'sl-23-3',t:'SL',md:23,home:'LEV', away:'AEK', kickoff:'2027-02-27T17:00:00Z',round:'Αγωνιστική 23'},
-  {id:'sl-23-4',t:'SL',md:23,home:'OLY', away:'ARI', kickoff:'2027-02-27T17:00:00Z',round:'Αγωνιστική 23'},
-  {id:'sl-23-5',t:'SL',md:23,home:'PAO', away:'VOL', kickoff:'2027-02-27T17:00:00Z',round:'Αγωνιστική 23'},
-  {id:'sl-23-6',t:'SL',md:23,home:'PNE', away:'IRA', kickoff:'2027-02-27T17:00:00Z',round:'Αγωνιστική 23'},
-  {id:'sl-23-7',t:'SL',md:23,home:'PAOK',away:'ATR', kickoff:'2027-02-27T17:00:00Z',round:'Αγωνιστική 23'},
+  {id:'sl-23-1',t:'SL',md:23,home:'AST', away:'OFI', kickoff:'2027-02-27T17:00:00Z',round:'Αγωνιστική 23', timeTbd:true},
+  {id:'sl-23-2',t:'SL',md:23,home:'KAL', away:'KIF', kickoff:'2027-02-27T17:00:00Z',round:'Αγωνιστική 23', timeTbd:true},
+  {id:'sl-23-3',t:'SL',md:23,home:'LEV', away:'AEK', kickoff:'2027-02-27T17:00:00Z',round:'Αγωνιστική 23', timeTbd:true},
+  {id:'sl-23-4',t:'SL',md:23,home:'OLY', away:'ARI', kickoff:'2027-02-27T17:00:00Z',round:'Αγωνιστική 23', timeTbd:true},
+  {id:'sl-23-5',t:'SL',md:23,home:'PAO', away:'VOL', kickoff:'2027-02-27T17:00:00Z',round:'Αγωνιστική 23', timeTbd:true},
+  {id:'sl-23-6',t:'SL',md:23,home:'PNE', away:'IRA', kickoff:'2027-02-27T17:00:00Z',round:'Αγωνιστική 23', timeTbd:true},
+  {id:'sl-23-7',t:'SL',md:23,home:'PAOK',away:'ATR', kickoff:'2027-02-27T17:00:00Z',round:'Αγωνιστική 23', timeTbd:true},
 
   // ── 24η Αγωνιστική ──
-  {id:'sl-24-1',t:'SL',md:24,home:'AEK', away:'OLY', kickoff:'2027-03-06T17:00:00Z',round:'Αγωνιστική 24'},
-  {id:'sl-24-2',t:'SL',md:24,home:'ARI', away:'AST', kickoff:'2027-03-06T17:00:00Z',round:'Αγωνιστική 24'},
-  {id:'sl-24-3',t:'SL',md:24,home:'ATR', away:'LEV', kickoff:'2027-03-06T17:00:00Z',round:'Αγωνιστική 24'},
-  {id:'sl-24-4',t:'SL',md:24,home:'VOL', away:'PAOK',kickoff:'2027-03-06T17:00:00Z',round:'Αγωνιστική 24'},
-  {id:'sl-24-5',t:'SL',md:24,home:'KIF', away:'PAO', kickoff:'2027-03-06T17:00:00Z',round:'Αγωνιστική 24'},
-  {id:'sl-24-6',t:'SL',md:24,home:'OFI', away:'PNE', kickoff:'2027-03-06T17:00:00Z',round:'Αγωνιστική 24'},
-  {id:'sl-24-7',t:'SL',md:24,home:'IRA', away:'KAL', kickoff:'2027-03-06T17:00:00Z',round:'Αγωνιστική 24'},
+  {id:'sl-24-1',t:'SL',md:24,home:'AEK', away:'OLY', kickoff:'2027-03-06T17:00:00Z',round:'Αγωνιστική 24', timeTbd:true},
+  {id:'sl-24-2',t:'SL',md:24,home:'ARI', away:'AST', kickoff:'2027-03-06T17:00:00Z',round:'Αγωνιστική 24', timeTbd:true},
+  {id:'sl-24-3',t:'SL',md:24,home:'ATR', away:'LEV', kickoff:'2027-03-06T17:00:00Z',round:'Αγωνιστική 24', timeTbd:true},
+  {id:'sl-24-4',t:'SL',md:24,home:'VOL', away:'PAOK',kickoff:'2027-03-06T17:00:00Z',round:'Αγωνιστική 24', timeTbd:true},
+  {id:'sl-24-5',t:'SL',md:24,home:'KIF', away:'PAO', kickoff:'2027-03-06T17:00:00Z',round:'Αγωνιστική 24', timeTbd:true},
+  {id:'sl-24-6',t:'SL',md:24,home:'OFI', away:'PNE', kickoff:'2027-03-06T17:00:00Z',round:'Αγωνιστική 24', timeTbd:true},
+  {id:'sl-24-7',t:'SL',md:24,home:'IRA', away:'KAL', kickoff:'2027-03-06T17:00:00Z',round:'Αγωνιστική 24', timeTbd:true},
 
   // ── 25η Αγωνιστική ──
-  {id:'sl-25-1',t:'SL',md:25,home:'AST', away:'VOL', kickoff:'2027-03-13T17:00:00Z',round:'Αγωνιστική 25'},
-  {id:'sl-25-2',t:'SL',md:25,home:'KAL', away:'ATR', kickoff:'2027-03-13T17:00:00Z',round:'Αγωνιστική 25'},
-  {id:'sl-25-3',t:'SL',md:25,home:'OLY', away:'KIF', kickoff:'2027-03-13T17:00:00Z',round:'Αγωνιστική 25'},
-  {id:'sl-25-4',t:'SL',md:25,home:'PAO', away:'LEV', kickoff:'2027-03-13T17:00:00Z',round:'Αγωνιστική 25'},
-  {id:'sl-25-5',t:'SL',md:25,home:'PNE', away:'ARI', kickoff:'2027-03-13T17:00:00Z',round:'Αγωνιστική 25'},
-  {id:'sl-25-6',t:'SL',md:25,home:'PAOK',away:'OFI', kickoff:'2027-03-13T17:00:00Z',round:'Αγωνιστική 25'},
-  {id:'sl-25-7',t:'SL',md:25,home:'IRA', away:'AEK', kickoff:'2027-03-13T17:00:00Z',round:'Αγωνιστική 25'},
+  {id:'sl-25-1',t:'SL',md:25,home:'AST', away:'VOL', kickoff:'2027-03-13T17:00:00Z',round:'Αγωνιστική 25', timeTbd:true},
+  {id:'sl-25-2',t:'SL',md:25,home:'KAL', away:'ATR', kickoff:'2027-03-13T17:00:00Z',round:'Αγωνιστική 25', timeTbd:true},
+  {id:'sl-25-3',t:'SL',md:25,home:'OLY', away:'KIF', kickoff:'2027-03-13T17:00:00Z',round:'Αγωνιστική 25', timeTbd:true},
+  {id:'sl-25-4',t:'SL',md:25,home:'PAO', away:'LEV', kickoff:'2027-03-13T17:00:00Z',round:'Αγωνιστική 25', timeTbd:true},
+  {id:'sl-25-5',t:'SL',md:25,home:'PNE', away:'ARI', kickoff:'2027-03-13T17:00:00Z',round:'Αγωνιστική 25', timeTbd:true},
+  {id:'sl-25-6',t:'SL',md:25,home:'PAOK',away:'OFI', kickoff:'2027-03-13T17:00:00Z',round:'Αγωνιστική 25', timeTbd:true},
+  {id:'sl-25-7',t:'SL',md:25,home:'IRA', away:'AEK', kickoff:'2027-03-13T17:00:00Z',round:'Αγωνιστική 25', timeTbd:true},
 
   // ── 26η Αγωνιστική ──
-  {id:'sl-26-1',t:'SL',md:26,home:'AEK', away:'PAO', kickoff:'2027-03-20T17:00:00Z',round:'Αγωνιστική 26'},
-  {id:'sl-26-2',t:'SL',md:26,home:'ARI', away:'KAL', kickoff:'2027-03-20T17:00:00Z',round:'Αγωνιστική 26'},
-  {id:'sl-26-3',t:'SL',md:26,home:'ATR', away:'AST', kickoff:'2027-03-20T17:00:00Z',round:'Αγωνιστική 26'},
-  {id:'sl-26-4',t:'SL',md:26,home:'VOL', away:'PNE', kickoff:'2027-03-20T17:00:00Z',round:'Αγωνιστική 26'},
-  {id:'sl-26-5',t:'SL',md:26,home:'KIF', away:'IRA', kickoff:'2027-03-20T17:00:00Z',round:'Αγωνιστική 26'},
-  {id:'sl-26-6',t:'SL',md:26,home:'LEV', away:'PAOK',kickoff:'2027-03-20T17:00:00Z',round:'Αγωνιστική 26'},
-  {id:'sl-26-7',t:'SL',md:26,home:'OFI', away:'OLY', kickoff:'2027-03-20T17:00:00Z',round:'Αγωνιστική 26'},
+  {id:'sl-26-1',t:'SL',md:26,home:'AEK', away:'PAO', kickoff:'2027-03-20T17:00:00Z',round:'Αγωνιστική 26', timeTbd:true},
+  {id:'sl-26-2',t:'SL',md:26,home:'ARI', away:'KAL', kickoff:'2027-03-20T17:00:00Z',round:'Αγωνιστική 26', timeTbd:true},
+  {id:'sl-26-3',t:'SL',md:26,home:'ATR', away:'AST', kickoff:'2027-03-20T17:00:00Z',round:'Αγωνιστική 26', timeTbd:true},
+  {id:'sl-26-4',t:'SL',md:26,home:'VOL', away:'PNE', kickoff:'2027-03-20T17:00:00Z',round:'Αγωνιστική 26', timeTbd:true},
+  {id:'sl-26-5',t:'SL',md:26,home:'KIF', away:'IRA', kickoff:'2027-03-20T17:00:00Z',round:'Αγωνιστική 26', timeTbd:true},
+  {id:'sl-26-6',t:'SL',md:26,home:'LEV', away:'PAOK',kickoff:'2027-03-20T17:00:00Z',round:'Αγωνιστική 26', timeTbd:true},
+  {id:'sl-26-7',t:'SL',md:26,home:'OFI', away:'OLY', kickoff:'2027-03-20T17:00:00Z',round:'Αγωνιστική 26', timeTbd:true},
 ]
 
 export const UEFA_FIXTURES = [
+  // Q2 — completed (times: Greek local → UTC, EEST = UTC+3)
   {id:'uel-paok-1', t:'UEL', greek:'PAOK', home:'DYN', away:'PAOK', kickoff:'2026-07-23T17:00:00Z', round:'Q2 · Leg 1', leg:1, tie:'uel-paok', venue:'Motor Lublin Arena, Πολωνία'},
   {id:'uel-paok-2', t:'UEL', greek:'PAOK', home:'PAOK',away:'DYN',  kickoff:'2026-07-30T17:45:00Z', round:'Q2 · Leg 2', leg:2, tie:'uel-paok', venue:'Toumba, Θεσσαλονίκη'}, // Πέμ 30/7 20:45
   {id:'uecl-pao-1', t:'UECL',greek:'PAO', home:'PKS', away:'PAO',  kickoff:'2026-07-23T18:00:00Z', round:'Q2 · Leg 1', leg:1, tie:'uecl-pao',venue:'Fehérvári úti, Paks'},
   {id:'uecl-pao-2', t:'UECL',greek:'PAO', home:'PAO', away:'PKS',  kickoff:'2026-07-30T18:30:00Z', round:'Q2 · Leg 2', leg:2, tie:'uecl-pao',venue:'ΟΑΚΑ, Αθήνα'}, // Πέμ 30/7 21:30
-  // ΟΦΗ UEL playoffs — Πέμ 20/8 & 27/8, κλήρωση 3/8, αντίπαλος+ώρα TBD (betarades)
-  {id:'uel-ofi-1',  t:'UEL', greek:'OFI', home:'OFI', away:'TBD',  kickoff:'2026-08-20T18:00:00Z', round:'PO · Leg 1', leg:1, tie:'uel-ofi', venue:'Πανκρήτιο, Ηράκλειο', timeTbd:true},
-  {id:'uel-ofi-2',  t:'UEL', greek:'OFI', home:'TBD', away:'OFI',  kickoff:'2026-08-27T18:00:00Z', round:'PO · Leg 2', leg:2, tie:'uel-ofi', venue:'Έδρα αντιπάλου', timeTbd:true},
-  // Ολυμπιακός–NEC: olympiacos.org / UEFA — Τρί 4/8 21:00, ρεβάνς 11/8 20:30 Ελλ.
+  // Ολυμπιακός–NEC Q3 (olympiacos.org / UEFA): Τρί 4/8 21:00 · Τρί 11/8 20:30 Ελλ.
   {id:'ucl-oly-1',  t:'UCL', greek:'OLY', home:'OLY', away:'NEC',  kickoff:'2026-08-04T18:00:00Z', round:'Q3 · Leg 1', leg:1, tie:'ucl-oly', venue:'Karaiskakis, Πειραιάς'},
   {id:'ucl-oly-2',  t:'UCL', greek:'OLY', home:'NEC', away:'OLY',  kickoff:'2026-08-11T17:30:00Z', round:'Q3 · Leg 2', leg:2, tie:'ucl-oly', venue:'Goffert, Nijmegen'},
-  // ΑΕΚ playoffs: παράθυρο 18–19 & 25–26/8 — ακριβής ώρα μετά την κλήρωση
+  // Παναθηναϊκός–ΤΣΣΚΑ 1948 Q3 (pao.gr / sport24): Τετ 5/8 21:30 ΟΑΚΑ · Τρί 11/8 Σόφια ώρα TBA
+  {id:'uecl-pao-3', t:'UECL',greek:'PAO', home:'PAO', away:'CSK', kickoff:'2026-08-05T18:30:00Z', round:'Q3 · Leg 1', leg:1, tie:'uecl-pao-q3', venue:'ΟΑΚΑ, Αθήνα'},
+  {id:'uecl-pao-4', t:'UECL',greek:'PAO', home:'CSK', away:'PAO', kickoff:'2026-08-11T18:00:00Z', round:'Q3 · Leg 2', leg:2, tie:'uecl-pao-q3', venue:'Σόφια', timeTbd:true},
+  // ΠΑΟΚ–Άντερλεχτ Q3 (UEFA 31/7): Πέμ 6/8 20:45 Τούμπα · Πέμ 13/8 21:30 Βρυξέλλες
+  {id:'uel-paok-3', t:'UEL', greek:'PAOK', home:'PAOK',away:'AND', kickoff:'2026-08-06T17:45:00Z', round:'Q3 · Leg 1', leg:1, tie:'uel-paok-q3', venue:'Toumba, Θεσσαλονίκη'},
+  {id:'uel-paok-4', t:'UEL', greek:'PAOK', home:'AND', away:'PAOK',kickoff:'2026-08-13T18:30:00Z', round:'Q3 · Leg 2', leg:2, tie:'uel-paok-q3', venue:'Lotto Park, Βρυξέλλες'},
+  // ΑΕΚ UCL playoffs: παράθυρο 18–19 & 25–26/8 — αντίπαλος+ώρα μετά κλήρωση
   {id:'ucl-aek-1',  t:'UCL', greek:'AEK', home:'AEK', away:'TBD',  kickoff:'2026-08-19T18:00:00Z', round:'PO · Leg 1', leg:1, tie:'ucl-aek', venue:'OPAP Arena, Αθήνα', timeTbd:true},
   {id:'ucl-aek-2',  t:'UCL', greek:'AEK', home:'TBD', away:'AEK',  kickoff:'2026-08-26T18:00:00Z', round:'PO · Leg 2', leg:2, tie:'ucl-aek', timeTbd:true},
+  // ΟΦΗ UEL playoffs — Πέμ 20/8 & 27/8, κλήρωση 3/8, αντίπαλος+ώρα TBD (όχι σήμερα)
+  {id:'uel-ofi-1',  t:'UEL', greek:'OFI', home:'OFI', away:'TBD',  kickoff:'2026-08-20T18:00:00Z', round:'PO · Leg 1', leg:1, tie:'uel-ofi', venue:'Πανκρήτιο, Ηράκλειο', timeTbd:true},
+  {id:'uel-ofi-2',  t:'UEL', greek:'OFI', home:'TBD', away:'OFI',  kickoff:'2026-08-27T18:00:00Z', round:'PO · Leg 2', leg:2, tie:'uel-ofi', venue:'Έδρα αντιπάλου', timeTbd:true},
 ]
 
 export const ALL_FIXTURES = [...SUPER_LEAGUE, ...UEFA_FIXTURES]
@@ -313,7 +322,37 @@ export function scoreMatch(pred, actual) {
   const qualCorrect = pred.qual && actual.qual && pred.qual === actual.qual
   const basePoints = (exact ? 1 : 0) + (correct ? 1 : 0)
   const qualBonus  = qualCorrect ? 1 : 0
-  return { exact, correct, qualCorrect, points: basePoints + qualBonus }
+  return { exact, correct, qualCorrect, points: basePoints + qualBonus, provisional: !!actual.provisional }
+}
+
+/** Turn a live / hint scoreline into an actual for scoreMatch (provisional until official result). */
+export function scorelineToActual(scoreline) {
+  if (!scoreline || scoreline.h == null || scoreline.a == null) return null
+  const actual = {
+    h: Number(scoreline.h),
+    a: Number(scoreline.a),
+    provisional: true,
+  }
+  if (scoreline.qual) actual.qual = scoreline.qual
+  return actual
+}
+
+/**
+ * Official finals win; otherwise use in-play liveScores, then finished pipeline hints.
+ * Used so leaderboard / H2H / cards move with the scoreline before ΤΕΛΙΚΟ is saved.
+ */
+export function mergeScoringResults(results = {}, liveScores = {}, finishedHints = {}) {
+  const out = { ...(results || {}) }
+  const fill = (src) => {
+    for (const [id, scoreline] of Object.entries(src || {})) {
+      if (out[id] != null) continue
+      const actual = scorelineToActual(scoreline)
+      if (actual) out[id] = actual
+    }
+  }
+  fill(liveScores)
+  fill(finishedHints)
+  return out
 }
 
 export function computeLeaderboard(fixtures, predictions, results) {
@@ -348,7 +387,11 @@ export const isToday = iso => {
   const f = d => d.toLocaleDateString('el-GR', { timeZone:TZ })
   return f(new Date()) === f(new Date(iso))
 }
-export const isLocked = iso => Date.now() >= new Date(iso).getTime() - 60000
+/** Predictions lock & all-player reveal: 15 minutes before kickoff */
+export const LOCK_BEFORE_MS = 15 * 60 * 1000
+export const isLocked = iso => Date.now() >= new Date(iso).getTime() - LOCK_BEFORE_MS
+/** True once lock window opens (reveal predictions; no more edits) */
+export const isRevealOpen = iso => isLocked(iso)
 /** Match is in the live kickoff window (0–120 min), ignoring stored results */
 export const inLiveWindow = iso => {
   const mins = (Date.now() - new Date(iso).getTime()) / 60000

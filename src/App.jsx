@@ -1,11 +1,11 @@
 // KOUVADEIROS v7 — build 2026-07-26
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { api, clearAuth, storeUser } from './lib/api'
 import {
   ALL_FIXTURES, SUPER_LEAGUE, UEFA_FIXTURES,
   TEAMS, PLAYERS, PLAYER_NAMES, PCOL,
-  scoreMatch, computeLeaderboard,
-  grTime, grDate, grKick, isToday, isLocked, nowGR, inLiveWindow,
+  scoreMatch, computeLeaderboard, mergeScoringResults, scorelineToActual,
+  grTime, grDate, grKick, isToday, isLocked, isRevealOpen, nowGR, inLiveWindow,
 } from './lib/data'
 import { mapPipelineToLiveScores } from './lib/pipelineScores'
 import { TeamLogo, TPill, PtsBadge, ScorePill, Card, SLbl, Spinner } from './components/UI'
@@ -685,19 +685,23 @@ function AddPlayerModal({ onClose, onAdded }) {
 function LeaderSidebar({ predictions, results, compact }) {
   const board = computeLeaderboard(ALL_FIXTURES, predictions, results)
   const maxPts = ALL_FIXTURES.filter(m=>results?.[m.id]!=null).length*2
+  const hasLivePts = Object.values(results||{}).some(r=>r?.provisional)
   // Compact horizontal strip for mobile
   if(compact) return (
-    <div style={{display:'flex',gap:8,marginBottom:8}}>
+    <div>
+      {hasLivePts&&<div style={{fontSize:9,fontWeight:700,color:GREEN,letterSpacing:'.06em',marginBottom:6}}>⚡ ΖΩΝΤΑΝΟΙ ΠΟΝΤΟΙ</div>}
+      <div style={{display:'flex',gap:8,marginBottom:8}}>
       {board.map((row,i)=>{
         const pc2=PC[row.player]
         return <div key={row.player} style={{flex:1,background:SURF,border:`1px solid ${pc2.b}`,borderRadius:10,padding:'8px 10px',display:'flex',alignItems:'center',gap:8}}>
           <span style={{fontSize:13,fontWeight:700}}>{i===0?'🥇':i===1?'🥈':'🥉'}</span>
           <div style={{flex:1,minWidth:0}}>
             <div style={{fontSize:10,fontWeight:700,color:pc2.p,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{PLAYER_NAMES[row.player].substring(0,5)}</div>
-            <div style={{fontSize:11,fontWeight:900,color:TEXT}}>{row.pts}p</div>
+            <div style={{fontSize:11,fontWeight:900,color:TEXT}}>{row.pts}p{hasLivePts?'~':''}</div>
           </div>
         </div>
       })}
+      </div>
     </div>
   )
 
@@ -705,7 +709,8 @@ function LeaderSidebar({ predictions, results, compact }) {
     <div>
       {/* Mini leaderboard */}
       <div style={{background:SURF,border:`1px solid ${LINE}`,borderRadius:14,padding:'14px 16px',marginBottom:16}}>
-        <div style={{fontSize:10,fontWeight:700,letterSpacing:'.1em',textTransform:'uppercase',color:MUTED,marginBottom:12}}>Κατάταξη</div>
+        <div style={{fontSize:10,fontWeight:700,letterSpacing:'.1em',textTransform:'uppercase',color:MUTED,marginBottom:hasLivePts?6:12}}>Κατάταξη</div>
+        {hasLivePts&&<div style={{fontSize:9,fontWeight:700,color:GREEN,marginBottom:10,letterSpacing:'.04em'}}>⚡ Περιλαμβάνει ζωντανούς πόντους</div>}
         {board.map((row,i)=>{
           const p=PC[row.player]
           return <div key={row.player} style={{display:'flex',alignItems:'center',gap:10,marginBottom:i<board.length-1?10:0}}>
@@ -716,7 +721,7 @@ function LeaderSidebar({ predictions, results, compact }) {
               <div style={{fontSize:10,color:MUTED}}>{row.exact}🎯 {row.correct}✓</div>
             </div>
             <div style={{textAlign:'right'}}>
-              <div style={{fontSize:20,fontWeight:900,color:p.p,fontVariantNumeric:'tabular-nums'}}>{row.pts}</div>
+              <div style={{fontSize:20,fontWeight:900,color:p.p,fontVariantNumeric:'tabular-nums'}}>{row.pts}{hasLivePts?<span style={{fontSize:12,opacity:.7}}>~</span>:null}</div>
               <div style={{fontSize:9,color:MUTED}}>pts{maxPts>0?`/${maxPts}`:''}</div>
             </div>
           </div>
@@ -855,6 +860,12 @@ export default function App({ user, onLogout }) {
 
   async function handleLogout(){await api.logout();clearAuth();onLogout()}
 
+  // Provisional points: finals first, else live scoreline / pipeline FT hints
+  const scoringResults = useMemo(
+    () => mergeScoringResults(state.results, liveScores, pipelineHints),
+    [state.results, liveScores, pipelineHints],
+  )
+
   if(showGuide) return <Guide onBack={()=>setShowGuide(false)}/>
 
   if(loading) return(
@@ -866,10 +877,10 @@ export default function App({ user, onLogout }) {
 
   const pc = PC[user.id] || PC.boikos
   const pages={
-    matchday:<MatchdayPage predictions={state.predictions} results={state.results} onRefresh={load} currentUser={user} revealed={state.revealed} onSave={savePrediction} liveScores={liveScores} pipelineHints={pipelineHints} slStandings={state.slStandings}/>,
-    league:  <LeaguePage   predictions={state.predictions} results={state.results} thavmaStats={state.thavmaStats}/>,
+    matchday:<MatchdayPage predictions={state.predictions} results={state.results} scoringResults={scoringResults} onRefresh={load} currentUser={user} revealed={state.revealed} onSave={savePrediction} liveScores={liveScores} pipelineHints={pipelineHints} slStandings={state.slStandings}/>,
+    league:  <LeaguePage   predictions={state.predictions} results={scoringResults} thavmaStats={state.thavmaStats}/>,
     schedule: <SchedulePage slStandings={state.slStandings}/>,
-    history: <HistoryPage  predictions={state.predictions} results={state.results}/>,
+    history: <HistoryPage  predictions={state.predictions} results={scoringResults}/>,
     banter:  <BanterPage   chat={state.chat} onSend={sendChat}/>,
   }
 
@@ -964,7 +975,7 @@ export default function App({ user, onLogout }) {
         <div style={{flex:1,display:'grid',gridTemplateColumns:'300px 1fr',maxWidth:1280,width:'100%',margin:'0 auto',padding:'24px 32px',gap:24,alignItems:'start'}}>
           {/* Left sidebar: leaderboard + graph */}
           <div style={{position:'sticky',top:80}}>
-            <LeaderSidebar predictions={state.predictions} results={state.results}/>
+            <LeaderSidebar predictions={state.predictions} results={scoringResults}/>
           </div>
           {/* Main content */}
           <div style={{minWidth:0}}>
@@ -983,10 +994,10 @@ export default function App({ user, onLogout }) {
       <Header/>
       {/* Mobile/Tablet leaderboard + graph */}
       <div style={{padding:'8px 16px 0'}}>
-        <LeaderSidebar predictions={state.predictions} results={state.results} compact/>
+        <LeaderSidebar predictions={state.predictions} results={scoringResults} compact/>
         <div style={{background:'rgba(255,255,255,.03)',borderRadius:12,padding:'10px 12px',marginTop:6,border:'1px solid rgba(255,255,255,.08)'}}>
           <div style={{fontSize:10,fontWeight:700,letterSpacing:'.08em',textTransform:'uppercase',color:'rgba(255,255,255,.4)',marginBottom:6}}>📈 Εξέλιξη Διαγωνισμού</div>
-          <H2HGraph predictions={state.predictions} results={state.results}/>
+          <H2HGraph predictions={state.predictions} results={scoringResults}/>
         </div>
       </div>
       <div style={{flex:1,overflowY:'auto',paddingBottom:isTablet?72:64}}>
@@ -1155,7 +1166,7 @@ function LeaguePage({predictions,results,thavmaStats}){
 }
 
 // ─── MATCHDAY PAGE ────────────────────────────────────────────────────────────
-function MatchdayPage({predictions,results,onRefresh,currentUser,revealed,onSave,liveScores,pipelineHints,slStandings}){
+function MatchdayPage({predictions,results,scoringResults,onRefresh,currentUser,revealed,onSave,liveScores,pipelineHints,slStandings}){
   const now=Date.now()
   const ONE_HOUR=3600000
   const isLive=(m,res)=>{
@@ -1182,11 +1193,12 @@ function MatchdayPage({predictions,results,onRefresh,currentUser,revealed,onSave
     })
   return <div style={{padding:'12px 16px 80px'}}>
     <div style={{fontSize:10,fontWeight:700,letterSpacing:'.08em',textTransform:'uppercase',color:MUTED,marginBottom:14}}>
-      Χρονολογικά · Ζωντανοί αγώνες επάνω
+      Χρονολογικά · Ζωντανοί αγώνες επάνω · πόντοι live
     </div>
     {sorted.map(m=>(
       <MatchPredictCard key={m.id} match={m}
         result={results?.[m.id]}
+        scoringActual={scoringResults?.[m.id]}
         predictions={predictions?.[m.id]}
         onRefresh={onRefresh}
         allResults={results}
@@ -1219,7 +1231,7 @@ function FormStrip({form}){
 }
 
 // ─── UNIFIED MATCH+PREDICT CARD ───────────────────────────────────────────────
-function MatchPredictCard({match,result,predictions,onRefresh,allResults,currentUser,revealed,onSave,liveScore,pipelineHint,slStandings}){
+function MatchPredictCard({match,result,scoringActual,predictions,onRefresh,allResults,currentUser,revealed,onSave,liveScore,pipelineHint,slStandings}){
   // ── State ──────────────────────────────────────────────────────────────────
   const [showPush,setShowPush]=useState(false)
   const myPred=currentUser?predictions?.[currentUser.id]:null
@@ -1246,9 +1258,11 @@ function MatchPredictCard({match,result,predictions,onRefresh,allResults,current
   const locked=isLocked(match.kickoff)
   const isUEFA=isUEFATie(match.id)
   const isRevealed=revealed?.[match.id]||false
-  const minsUntil=(new Date(match.kickoff).getTime()-Date.now())/60000
-  const isPreKickoff=minsUntil>=-1&&minsUntil<=1
-  const showAllPreds=hasRes||(isRevealed||isPreKickoff)
+  const revealOpen=isRevealOpen(match.kickoff)||isRevealed
+  const actualForScore=scoringActual??result??scorelineToActual(liveScore)??scorelineToActual(pipelineHint)
+  const isProvisional=!hasRes&&!!actualForScore?.provisional
+  // 15' before KO: lock edits + reveal all predictions; also after result / live score
+  const showAllPreds=hasRes||revealOpen||!!liveScore||!!pipelineHint||(locked&&!!actualForScore)
   const today=isToday(match.kickoff)
   // SL standings lookup - robust matching
   const isSL=match.t==='SL'
@@ -1270,8 +1284,8 @@ function MatchPredictCard({match,result,predictions,onRefresh,allResults,current
   const tC={SL:'#f0c040',UCL:BLUE,UEL:'#f5733a',UECL:GREEN}[match.t]||GOLD
 
   // Leg 1 aggregate
-  const leg1Res=match.leg===2&&match.tie&&allResults?allResults[match.tie+'-1']:null
-  const leg1Fix=match.leg===2&&match.tie?UEFA_FIXTURES.find(f=>f.id===match.tie+'-1'):null
+  const leg1Fix=match.leg===2&&match.tie?UEFA_FIXTURES.find(f=>f.tie===match.tie&&f.leg===1):null
+  const leg1Res=leg1Fix&&allResults?allResults[leg1Fix.id]:null
   const leg1Agg=leg1Res&&leg1Fix?(()=>{
     const greek=match.greek
     const wasHome=leg1Fix.home===greek
@@ -1466,23 +1480,27 @@ function MatchPredictCard({match,result,predictions,onRefresh,allResults,current
         {/* ── ALL PREDICTIONS (reveal or result) ── */}
         {showAllPreds&&predictions&&(
           <div style={{marginTop:10}}>
-            {(isPreKickoff||isRevealed)&&!hasRes&&(
-              <div style={{fontSize:10,fontWeight:700,color:GOLD,textAlign:'center',marginBottom:6,letterSpacing:'.06em'}}>🔒 ΑΠΟΚΑΛΥΨΗ ΠΡΟΒΛΕΨΕΩΝ</div>
+            {revealOpen&&!hasRes&&!isProvisional&&(
+              <div style={{fontSize:10,fontWeight:700,color:GOLD,textAlign:'center',marginBottom:6,letterSpacing:'.06em'}}>🔒 ΑΠΟΚΑΛΥΨΗ · κλειδωμένο 15′ πριν</div>
+            )}
+            {isProvisional&&(
+              <div style={{fontSize:10,fontWeight:700,color:GREEN,textAlign:'center',marginBottom:6,letterSpacing:'.06em'}}>⚡ ΖΩΝΤΑΝΟΙ ΠΟΝΤΟΙ · {actualForScore.h}–{actualForScore.a}</div>
             )}
             <div style={{display:'flex',gap:5}}>
               {PLAYERS.map(playerKey=>{
                 const pred=predictions[playerKey]
-                const sc=pred?scoreMatch(pred,result):null
+                const sc=pred?scoreMatch(pred,actualForScore):null
                 const pc=PC[playerKey]
                 return (
                   <div key={playerKey} style={{flex:1,
                     background:sc?.exact?`${GREEN}15`:sc?.correct?`${GOLD}0a`:'rgba(255,255,255,.04)',
                     border:`1px solid ${sc?.exact?GREEN+'44':sc?.correct?GOLD+'22':LINE}`,
-                    borderRadius:9,padding:'7px 6px',textAlign:'center'}}>
+                    borderRadius:9,padding:'7px 6px',textAlign:'center',
+                    opacity:isProvisional&&sc?0.92:1}}>
                     <div style={{fontSize:9,fontWeight:700,color:pc.p,marginBottom:3,letterSpacing:'.04em'}}>{PLAYER_NAMES[playerKey].substring(0,4).toUpperCase()}</div>
                     <div style={{fontSize:13,fontWeight:800,color:TEXT,fontVariantNumeric:'tabular-nums'}}>{pred?`${pred.h}–${pred.a}`:'–'}</div>
                     {pred?.qual&&<div style={{fontSize:9,color:MUTED,marginTop:1}}>→{pred.qual}</div>}
-                    {sc&&<div style={{fontSize:10,fontWeight:700,color:sc.points===2?GREEN:sc.points===1?GOLD:DIM,marginTop:2}}>{sc.points===2?'🎯':sc.points===1?'✓':'✗'}{sc.points}p</div>}
+                    {sc&&<div style={{fontSize:10,fontWeight:700,color:sc.points===2?GREEN:sc.points===1?GOLD:DIM,marginTop:2}}>{sc.points===2?'🎯':sc.points===1?'✓':'✗'}{sc.points}p{isProvisional?'~':''}</div>}
                   </div>
                 )
               })}

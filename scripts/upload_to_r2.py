@@ -72,8 +72,10 @@ def upload_kv(local_path: Path, key: str) -> None:
         KV_NAMESPACE_ID,
         "--remote",
     ]
-    print("Running:", " ".join(cmd))
-    subprocess.check_call(cmd, cwd=str(ROOT))
+    # Avoid printing absolute paths (Greek chars break Windows cp1252 consoles).
+    print(f"Uploading {local_path.name} → KV:{key}")
+    # Windows needs shell=True so npx.cmd resolves from PATH.
+    subprocess.check_call(cmd, cwd=str(ROOT), shell=(os.name == "nt"))
     print(f"Uploaded {local_path.name} → KV:{key}")
 
 

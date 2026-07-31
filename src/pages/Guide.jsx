@@ -69,13 +69,13 @@ export default function Guide({ onBack }) {
 
           <Section emoji="🔒" title="Προθεσμία Πρόβλεψης" accent={RED}>
             <div style={{ background:'rgba(255,34,68,.08)', border:`1px solid rgba(255,34,68,.2)`, borderRadius:10, padding:'12px 14px', marginBottom:10 }}>
-              <div style={{ fontSize:13, fontWeight:700, color:RED, marginBottom:6 }}>⚠️ Κλείδωμα 1 λεπτό πριν την εκκίνηση</div>
+              <div style={{ fontSize:13, fontWeight:700, color:RED, marginBottom:6 }}>⚠️ Κλείδωμα 15 λεπτά πριν την εκκίνηση</div>
               <div style={{ fontSize:12, color:MUTED, lineHeight:1.6 }}>
-                Μόλις ξεκινήσει ο αγώνας, δεν μπορείς να αλλάξεις ή να εισάγεις πρόβλεψη. Κάνε τις προβλέψεις σου εγκαίρως!
+                15 λεπτά πριν τη σέντρα οι προβλέψεις κλειδώνουν και εμφανίζονται σε όλους. Δεν μπορείς να αλλάξεις ή να εισάγεις πρόβλεψη μετά από αυτό το σημείο.
               </div>
             </div>
             <div style={{ fontSize:12, color:MUTED, lineHeight:1.6 }}>
-              💡 <strong style={{color:TEXT}}>Tip:</strong> Θα λάβεις WhatsApp υπενθύμιση 10 λεπτά πριν κάθε αγώνα για τον οποίο δεν έχεις κάνει πρόβλεψη.
+              💡 <strong style={{color:TEXT}}>Tip:</strong> Θα λάβεις WhatsApp υπενθυμίσεις <strong style={{color:TEXT}}>1 ώρα</strong> και <strong style={{color:TEXT}}>30 λεπτά</strong> πριν κάθε αγώνα για τον οποίο δεν έχεις κάνει πρόβλεψη.
             </div>
           </Section>
         </>}
@@ -145,7 +145,7 @@ export default function Guide({ onBack }) {
             <Rule n="2" text="Επίλεξε το σκορ που προβλέπεις" sub="Χρησιμοποίησε τα +/– κουμπιά για γκολ Γηπεδούχου και Φιλοξενούμενου"/>
             <Rule n="3" text="UEFA: επίλεξε ποιος προκρίνεται" sub="Εμφανίζεται μπλε κουτί με dropdown — +1 πόντος εάν βρεις σωστά"/>
             <Rule n="4" text="UEFA Leg 2: πρόβλεψη παράτασης/πέναλτι" sub="Τσέκαρε τα κουτάκια ΑΕΤ & Pen αν πιστεύεις ότι θα χρειαστούν"/>
-            <Rule n="5" text='Πάτα "Αποθήκευσε πρόβλεψη"' sub="Πράσινο κουμπί στο κάτω μέρος. Μπορείς να αλλάξεις μέχρι 1 λεπτό πριν τον αγώνα"/>
+            <Rule n="5" text='Πάτα "Αποθήκευσε πρόβλεψη"' sub="Πράσινο κουμπί στο κάτω μέρος. Μπορείς να αλλάξεις μέχρι 15 λεπτά πριν τον αγώνα"/>
           </Section>
 
           <Section emoji="🏆" title="Πώς βλέπω την κατάταξη;" accent={GOLD}>
@@ -166,7 +166,7 @@ export default function Guide({ onBack }) {
             <div style={{ background:'rgba(0,255,136,.06)', border:`1px solid rgba(0,255,136,.2)`, borderRadius:10, padding:'14px', marginBottom:14 }}>
               <div style={{ fontSize:13, fontWeight:700, color:GREEN, marginBottom:8 }}>Πότε στέλνουμε μήνυμα;</div>
               <div style={{ fontSize:12, color:MUTED, lineHeight:1.7 }}>
-                Αν <strong style={{color:TEXT}}>δεν έχεις κάνει πρόβλεψη</strong> για κάποιον αγώνα, λαμβάνεις αυτόματο WhatsApp μήνυμα <strong style={{color:TEXT}}>10 λεπτά πριν</strong> την εκκίνηση.
+                Αν <strong style={{color:TEXT}}>δεν έχεις κάνει πρόβλεψη</strong> για κάποιον αγώνα, λαμβάνεις αυτόματο WhatsApp μήνυμα <strong style={{color:TEXT}}>1 ώρα</strong> και ξανά <strong style={{color:TEXT}}>30 λεπτά</strong> πριν την εκκίνηση.
               </div>
             </div>
             <div style={{ fontSize:12, fontWeight:700, color:MUTED, letterSpacing:'.06em', textTransform:'uppercase', marginBottom:10 }}>Μορφή μηνύματος</div>

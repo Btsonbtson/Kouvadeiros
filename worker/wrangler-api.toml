@@ -1,0 +1,17 @@
+name = "kouvadeiros-api"
+main = "kouvadeiros-api.js"
+compatibility_date = "2026-07-24"
+workers_dev = true
+
+[[kv_namespaces]]
+binding = "KOUV"
+id = "5988821db92146b08969e4b27ec8854e"
+
+[triggers]
+crons = ["*/5 * * * *"]
+
+# Secrets (set via wrangler secret put):
+#   TWILIO_SID
+#   TWILIO_TOKEN
+#   TWILIO_FROM   (optional, default whatsapp:+14155238886)
+# Optional: FDORG_TOKEN

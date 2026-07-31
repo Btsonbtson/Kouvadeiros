@@ -29,6 +29,8 @@ export const ESPN_TEAM_ALIASES = {
   DYN:  ['DYN', 'Dynamo Kyiv', 'Dynamo Kiev', 'FC Dynamo Kyiv'],
   NEC:  ['NEC', 'NEC Nijmegen', 'Nijmegen'],
   PKS:  ['PKS', 'Paksi', 'Paks', 'Paksi SE'],
+  AND:  ['AND', 'Anderlecht', 'RSC Anderlecht'],
+  CSK:  ['CSK', 'CSKA 1948', 'CSKA Sofia 1948'],
   TBD:  ['TBD'],
 }
 
