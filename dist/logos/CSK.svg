@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="CSKA 1948">
+  <circle cx="32" cy="32" r="30" fill="#c41e1e"/>
+  <circle cx="32" cy="32" r="24" fill="#fff"/>
+  <path d="M32 12 L38 28 L55 28 L41 38 L46 54 L32 44 L18 54 L23 38 L9 28 L26 28 Z" fill="#c41e1e"/>
+  <text x="32" y="58" text-anchor="middle" font-family="Arial Black,Arial,sans-serif" font-size="7" font-weight="900" fill="#c41e1e">1948</text>
+</svg>

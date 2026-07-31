@@ -1,22 +1,24 @@
-// Team logos — served from public/logos/
+// Team logos — real crests from /logos copied into public/logos/ (Vite static)
 export const LOGOS = {
   OLY: '/logos/OLY.svg',
   AEK: '/logos/AEK.svg',
   PAOK: '/logos/PAOK.svg',
   PAO: '/logos/PAO.svg',
-  ARI: '/logos/ARI.png',
+  ARI: '/logos/ARI.svg',
   ATR: '/logos/ATR.svg',
-  AST: '/logos/AST.png',
+  AST: '/logos/AST.svg',
   KIF: '/logos/KIF.svg',
-  LEV: '/logos/LEV.png',
+  LEV: '/logos/LEV.svg',
   OFI: '/logos/OFI.svg',
-  PNE: '/logos/PNE.png',
+  PNE: '/logos/PNE.svg',
   VOL: '/logos/VOL.svg',
-  KAL: '/logos/KAL.png',
-  IRA: '/logos/IRA.png',
-  DYN: null,
-  NEC: null,
-  PKS: null,
+  KAL: '/logos/KAL.svg',
+  IRA: '/logos/IRA.svg',
+  DYN: '/logos/DYN.svg',
+  NEC: '/logos/NEC.svg',
+  PKS: '/logos/PKS.svg',
+  AND: '/logos/AND.svg',
+  CSK: '/logos/CSK.svg',
   TBD: null,
 }
 
@@ -25,5 +27,12 @@ export const TEAM_COLORS = {
   ARI:'#DAA520', ATR:'#003087', AST:'#FF6600', KIF:'#003F8A',
   LEV:'#006633', OFI:'#8B0000', PNE:'#6600AA', VOL:'#003366',
   IRA:'#0000CC', KAL:'#1a1a1a', DYN:'#003F87', NEC:'#CC0000',
-  PKS:'#006400', TBD:'#444',
+  PKS:'#006400', AND:'#6c3', CSK:'#c41e1e', TBD:'#444',
+}
+
+/** Resolve logo URL with svg→png fallback for resilience */
+export function logoUrl(k) {
+  if (!k || k === 'TBD') return null
+  if (LOGOS[k]) return LOGOS[k]
+  return `/logos/${k}.svg`
 }

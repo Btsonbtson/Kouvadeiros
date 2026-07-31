@@ -6,6 +6,7 @@ import {
   TEAMS, PLAYERS, PLAYER_NAMES, PCOL,
   scoreMatch, computeLeaderboard, mergeScoringResults, scorelineToActual,
   grTime, grDate, grKick, isToday, isLocked, isRevealOpen, nowGR, inLiveWindow,
+  anyLiveScoreActivity, msUntilNextLiveScoreBand, inLiveScoreBand,
 } from './lib/data'
 import { mapPipelineToLiveScores } from './lib/pipelineScores'
 import { TeamLogo, TPill, PtsBadge, ScorePill, Card, SLbl, Spinner } from './components/UI'
@@ -765,13 +766,42 @@ export default function App({ user, onLogout }) {
   const [syncOk,  setSyncOk]  = useState(true)
   const [showGuide, setShowGuide] = useState(false)
   const [showAddPlayer, setShowAddPlayer] = useState(false)
-  const poll = useRef()
+  const chatReadKey = `kouv_chat_read_${user?.id || 'anon'}`
+  const [chatReadIdx, setChatReadIdx] = useState(() => {
+    try { return parseInt(localStorage.getItem(chatReadKey) || '-1', 10) } catch { return -1 }
+  })
   const bp   = useBreakpoint()
   const isDesktop = bp === 'desktop'
   const isTablet  = bp === 'tablet'
   const isMobile  = bp === 'mobile'
 
+  const markChatRead = useCallback(() => {
+    const idx = (state.chat || []).length - 1
+    try { localStorage.setItem(chatReadKey, String(idx)) } catch {}
+    setChatReadIdx(idx)
+  }, [state.chat, chatReadKey])
+
+  useEffect(() => {
+    if (screen === 'banter') markChatRead()
+  }, [screen, state.chat, markChatRead])
+
+  const banterUnread = useMemo(() => {
+    const chat = state.chat || []
+    if (!chat.length || screen === 'banter') return false
+    // Unread if there are messages after last read that aren't solely from this user
+    for (let i = chatReadIdx + 1; i < chat.length; i++) {
+      const m = chat[i]
+      if (!m) continue
+      const fromMe = (m.p || '').toLowerCase() === (user?.name || '').toLowerCase()
+        || (m.p || '').toLowerCase() === (user?.id || '').toLowerCase()
+      if (!fromMe) return true
+    }
+    return false
+  }, [state.chat, chatReadIdx, screen, user?.name, user?.id])
+
   const pullPipelineScores = useCallback(async () => {
+    // Live pipeline only during match windows — not idle all day
+    if (!anyLiveScoreActivity(ALL_FIXTURES)) return { live: {}, hints: {} }
     try {
       const [livePayload, todayPayload] = await Promise.all([
         api.getLiveScores('live').catch(() => ({ matches: [] })),
@@ -793,18 +823,17 @@ export default function App({ user, onLogout }) {
     }
   }, [])
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (opts = {}) => {
+    const wantLive = opts.live !== false && anyLiveScoreActivity(ALL_FIXTURES)
     try {
       const s = await api.getState()
-      // Extract liveScores from state (Worker stores live_{matchId})
       const fromKv={}
       Object.entries(s).forEach(([k,v])=>{
         if(k.startsWith('live_')&&v) fromKv[k.replace('live_','')]=v
       })
-      const pipe = await pullPipelineScores()
-      // Pipeline live first; manual KV /set-live overrides
-      setLiveScores({ ...pipe.live, ...fromKv })
-      setPipelineHints(pipe.hints)
+      const pipe = wantLive ? await pullPipelineScores() : { live: {}, hints: {} }
+      setLiveScores(wantLive ? { ...pipe.live, ...fromKv } : { ...fromKv })
+      setPipelineHints(wantLive ? pipe.hints : {})
       setState({
         ...s,
         predictions:{ ...SEEDED_PREDS,...s.predictions,
@@ -819,28 +848,47 @@ export default function App({ user, onLogout }) {
     finally { setLoading(false) }
   },[pullPipelineScores])
 
-  // Poll /state + pipeline R2 scores; faster in kickoff windows
+  // Live scores/results poll ONLY while a match is on (15′ warm-up → +200′). Idle = rare state sync.
   useEffect(()=>{
     let cancelled=false
-    load()
-    const tick=async()=>{
-      if(cancelled) return
-      const due=ALL_FIXTURES.filter(m=>{
-        if(m.home==='TBD'||m.away==='TBD'||m.timeTbd) return false
-        return inLiveWindow(m.kickoff)
-      })
-      // Legacy on-demand fetch still available for admin; pipeline is primary
-      if(user?.role==='admin'&&due.length){
-        await Promise.allSettled(due.map(m=>api.fetchScores(m.id).catch(()=>null)))
-      }
-      if(!cancelled) await load()
-      if(cancelled) return
-      clearInterval(poll.current)
-      const fast=due.length>0||ALL_FIXTURES.some(m=>inLiveWindow(m.kickoff))
-      poll.current=setInterval(tick, fast?8000:20000)
+    let timer
+    const clear = () => { if (timer) clearTimeout(timer) }
+
+    const schedule = (ms) => {
+      clear()
+      timer = setTimeout(run, ms)
     }
-    poll.current=setInterval(tick,12000)
-    return()=>{cancelled=true;clearInterval(poll.current)}
+
+    const run = async () => {
+      if (cancelled) return
+      const liveNow = anyLiveScoreActivity(ALL_FIXTURES)
+      const due = ALL_FIXTURES.filter(m => {
+        if (m.home==='TBD'||m.away==='TBD'||m.timeTbd) return false
+        return inLiveScoreBand(m.kickoff)
+      })
+
+      if (liveNow) {
+        if (user?.role==='admin' && due.length) {
+          await Promise.allSettled(due.map(m => api.fetchScores(m.id).catch(() => null)))
+        }
+        if (!cancelled) await load({ live: true })
+        if (!cancelled) schedule(8000)
+        return
+      }
+
+      // Idle day / between matches: light state sync only (chat etc.), no live score APIs
+      if (!cancelled) await load({ live: false })
+      if (cancelled) return
+      const until = msUntilNextLiveScoreBand(ALL_FIXTURES)
+      // Wake at warm-up, or re-check every 5 min (chat), whichever sooner
+      const wait = until == null ? 5 * 60 * 1000 : Math.min(Math.max(until, 15_000), 5 * 60 * 1000)
+      schedule(wait)
+    }
+
+    load({ live: anyLiveScoreActivity(ALL_FIXTURES) }).then(() => {
+      if (!cancelled) run()
+    })
+    return () => { cancelled = true; clear() }
   },[load,user?.role])
 
   async function savePrediction(matchId,h,a,qual,predOT,otH,otA,predPen,penH,penA){
@@ -854,7 +902,12 @@ export default function App({ user, onLogout }) {
 
   async function sendChat(text){
     const msg={p:user.name,t:text,ts:nowGR(),a:user.id==='boikos'}
-    setState(prev=>({...prev,chat:[...(prev.chat||[]),msg]}))
+    setState(prev=>{
+      const chat=[...(prev.chat||[]),msg]
+      try { localStorage.setItem(chatReadKey, String(chat.length - 1)) } catch {}
+      setChatReadIdx(chat.length - 1)
+      return {...prev,chat}
+    })
     try{await api.sendChat(text)}catch{}
   }
 
@@ -881,7 +934,12 @@ export default function App({ user, onLogout }) {
     league:  <LeaguePage   predictions={state.predictions} results={scoringResults} thavmaStats={state.thavmaStats}/>,
     schedule: <SchedulePage slStandings={state.slStandings}/>,
     history: <HistoryPage  predictions={state.predictions} results={scoringResults}/>,
-    banter:  <BanterPage   chat={state.chat} onSend={sendChat}/>,
+    banter:  <BanterPage   chat={state.chat} onSend={sendChat} onRead={markChatRead}/>,
+  }
+
+  function navIcon(navItem) {
+    if (navItem.id === 'banter' && banterUnread) return '🔔'
+    return navItem.icon
   }
 
   // ── HEADER ───────────────────────────────────────────────────────────────────
@@ -907,9 +965,15 @@ export default function App({ user, onLogout }) {
               background:screen===navItem.id?'rgba(255,255,255,.1)':'transparent',
               color:screen===navItem.id?TEXT:MUTED,cursor:'pointer',fontSize:13,fontWeight:600,
               borderBottom:screen===navItem.id?`2px solid ${GREEN}`:'2px solid transparent',
-              transition:'all .15s'
+              transition:'all .15s', position:'relative'
             }}>
-              <span>{navItem.icon}</span>{navItem.l}
+              <span style={{position:'relative'}}>
+                {navIcon(navItem)}
+                {navItem.id==='banter'&&banterUnread&&(
+                  <span style={{position:'absolute',top:-4,right:-8,width:8,height:8,borderRadius:'50%',background:RED,boxShadow:`0 0 0 2px #0a0b0f`}}/>
+                )}
+              </span>
+              {navItem.l}
             </button>
           ))}
         </div>
@@ -951,9 +1015,14 @@ export default function App({ user, onLogout }) {
       {NAV.map(navItem=>(
         <button key={navItem.id} onClick={()=>setScreen(navItem.id)}
           style={{display:'flex',flexDirection:'column',alignItems:'center',gap:3,
-            padding:'3px 8px',background:'none',border:'none',cursor:'pointer',minWidth:44,flex:1}}>
-          <span style={{fontSize:isTablet?22:19,filter:screen===navItem.id?undefined:'grayscale(.6) opacity(.5)'}}>{navItem.icon}</span>
-          <span style={{fontSize:isTablet?10:9,fontWeight:700,letterSpacing:'.04em',color:screen===navItem.id?GREEN:MUTED,textTransform:'uppercase'}}>{navItem.l}</span>
+            padding:'3px 8px',background:'none',border:'none',cursor:'pointer',minWidth:44,flex:1,position:'relative'}}>
+          <span style={{fontSize:isTablet?22:19,filter:screen===navItem.id||(navItem.id==='banter'&&banterUnread)?undefined:'grayscale(.6) opacity(.5)',position:'relative'}}>
+            {navIcon(navItem)}
+            {navItem.id==='banter'&&banterUnread&&(
+              <span style={{position:'absolute',top:-2,right:-6,width:8,height:8,borderRadius:'50%',background:RED,boxShadow:`0 0 0 2px #0a0b0f`}}/>
+            )}
+          </span>
+          <span style={{fontSize:isTablet?10:9,fontWeight:700,letterSpacing:'.04em',color:screen===navItem.id?GREEN:(navItem.id==='banter'&&banterUnread?GOLD:MUTED),textTransform:'uppercase'}}>{navItem.l}</span>
           {screen===navItem.id&&<div style={{width:16,height:2,background:GREEN,borderRadius:1}}/>}
         </button>
       ))}
@@ -1647,7 +1716,15 @@ function SchedulePage({slStandings}){
     fixtures = fixtures.filter(m=>new Date(m.kickoff).getTime()<now).slice(-5)
   }
 
-  fixtures.sort((a,b)=>new Date(a.kickoff)-new Date(b.kickoff))
+  fixtures.sort((a, b) => {
+    const aPast = new Date(a.kickoff).getTime() < now
+    const bPast = new Date(b.kickoff).getTime() < now
+    // Upcoming first, played at the end
+    if (aPast !== bPast) return aPast ? 1 : -1
+    if (!aPast) return new Date(a.kickoff) - new Date(b.kickoff)
+    // Among played: most recent first
+    return new Date(b.kickoff) - new Date(a.kickoff)
+  })
 
   // H2H selected match
   const h2hData = h2hMatch ? ALL_FIXTURES.find(m=>m.id===h2hMatch) : null

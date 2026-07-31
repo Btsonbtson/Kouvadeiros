@@ -45,6 +45,8 @@ export const api = {
   sendChat:   (text)    => call('PATCH','/chat',{text}),
   savePhone:  (phone)   => call('PATCH','/save-phone',{phone}),
   addPlayer:  (data)    => call('POST','/add-player',data),
+  /** Admin: send Ο Κουβάς sample (default adminOnly) */
+  newspaperTest: (opts={}) => call('POST','/newspaper-test', opts),
 }
 export function getStoredUser(){try{return JSON.parse(localStorage.getItem('kouv_user')||'null')}catch{return null}}
 export function storeUser(u){localStorage.setItem('kouv_user',JSON.stringify(u))}

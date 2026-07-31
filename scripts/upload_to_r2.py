@@ -11,6 +11,7 @@ import argparse
 import os
 import subprocess
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -79,6 +80,33 @@ def upload_kv(local_path: Path, key: str) -> None:
     print(f"Uploaded {local_path.name} → KV:{key}")
 
 
+def load_kickoffs() -> list[datetime]:
+    """Kickoffs from Worker MATCHES schedule (UTC)."""
+    import re
+
+    src = ROOT / "worker" / "kouvadeiros-api.js"
+    if not src.exists():
+        return []
+    text = src.read_text(encoding="utf-8")
+    out: list[datetime] = []
+    for raw in re.findall(r"kickoff:\s*'([^']+Z)'", text):
+        try:
+            out.append(datetime.fromisoformat(raw.replace("Z", "+00:00")))
+        except ValueError:
+            continue
+    return out
+
+
+def in_live_score_band(now: datetime | None = None, warmup_min: int = 15, after_min: int = 200) -> bool:
+    """True only while a scheduled match is 15′ warm-up → +200′ — not idle days."""
+    now = now or datetime.now(timezone.utc)
+    for ko in load_kickoffs():
+        mins_after = (now - ko).total_seconds() / 60.0
+        if -warmup_min <= mins_after <= after_min:
+            return True
+    return False
+
+
 def run_pipeline() -> None:
     from scraper.pipeline import KouvadeirosLivePipeline
 
@@ -97,7 +125,16 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="KOUVADEIROS score sync → R2/KV")
     parser.add_argument("--skip-fetch", action="store_true")
     parser.add_argument("--kv-only", action="store_true", help="Skip R2; write to Workers KV")
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Run even outside live match windows",
+    )
     args = parser.parse_args()
+
+    if not args.force and not args.skip_fetch and not in_live_score_band():
+        print("Skip live sync — no match in warm-up/+120′ window (use --force to override)")
+        return
 
     if not args.skip_fetch:
         run_pipeline()

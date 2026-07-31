@@ -5,7 +5,7 @@ export const PLAYER_NAMES = { boikos:'Boikos', mavromichalis:'Mavromichalis', ch
 export const PCOL = { boikos:'#ff2244', mavromichalis:'#4d9fff', chousiadas:'#ff6b35' }
 
 export const TEAMS = {
-  PAO: {name:'Παναθηναϊκός',abbr:'PAOK',color:'#1a7c2a'},
+  PAO: {name:'Παναθηναϊκός',abbr:'PAO',color:'#1a7c2a'},
   KIF: {name:'Kifisia',abbr:'KIF',color:'#1a3c6a'},
   KAL: {name:'Καλαμάτα',abbr:'KAL',color:'#6a1a1a'},
   ARI: {name:'Άρης',abbr:'ARI',color:'#b8960c'},
@@ -392,8 +392,45 @@ export const LOCK_BEFORE_MS = 15 * 60 * 1000
 export const isLocked = iso => Date.now() >= new Date(iso).getTime() - LOCK_BEFORE_MS
 /** True once lock window opens (reveal predictions; no more edits) */
 export const isRevealOpen = iso => isLocked(iso)
-/** Match is in the live kickoff window (0–120 min), ignoring stored results */
+
+/** Live score window: kickoff → +200′ (wait for final even if late) */
+export const LIVE_AFTER_MIN = 200
+/** Warm-up before KO so pipeline/ESPN are ready at séntra */
+export const LIVE_WARMUP_MIN = 15
+
+/** Match is in the live kickoff window (0–200 min after KO) */
 export const inLiveWindow = iso => {
   const mins = (Date.now() - new Date(iso).getTime()) / 60000
-  return mins >= 0 && mins <= 120
+  return mins >= 0 && mins <= LIVE_AFTER_MIN
+}
+
+/** True if fixture should drive live score fetches (15′ warm-up → +200′) */
+export function inLiveScoreBand(iso, now = Date.now()) {
+  const minsAfter = (now - new Date(iso).getTime()) / 60000
+  return minsAfter >= -LIVE_WARMUP_MIN && minsAfter <= LIVE_AFTER_MIN
+}
+
+function isSchedulableFixture(m) {
+  return m && m.home !== 'TBD' && m.away !== 'TBD' && !m.timeTbd && m.kickoff
+}
+
+/** Any fixture currently needing live scores / results polling */
+export function anyLiveScoreActivity(fixtures = ALL_FIXTURES, now = Date.now()) {
+  return fixtures.some(m => isSchedulableFixture(m) && inLiveScoreBand(m.kickoff, now))
+}
+
+/**
+ * Ms until the next live-score band opens (warm-up).
+ * null if nothing upcoming; 0 if already active.
+ */
+export function msUntilNextLiveScoreBand(fixtures = ALL_FIXTURES, now = Date.now()) {
+  if (anyLiveScoreActivity(fixtures, now)) return 0
+  let best = null
+  for (const m of fixtures) {
+    if (!isSchedulableFixture(m)) continue
+    const start = new Date(m.kickoff).getTime() - LIVE_WARMUP_MIN * 60000
+    const delta = start - now
+    if (delta > 0 && (best == null || delta < best)) best = delta
+  }
+  return best
 }

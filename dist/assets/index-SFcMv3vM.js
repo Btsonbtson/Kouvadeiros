@@ -1,45 +1,6 @@
-(function polyfill() {
-  const relList = document.createElement("link").relList;
-  if (relList && relList.supports && relList.supports("modulepreload")) {
-    return;
-  }
-  for (const link of document.querySelectorAll('link[rel="modulepreload"]')) {
-    processPreload(link);
-  }
-  new MutationObserver((mutations) => {
-    for (const mutation of mutations) {
-      if (mutation.type !== "childList") {
-        continue;
-      }
-      for (const node of mutation.addedNodes) {
-        if (node.tagName === "LINK" && node.rel === "modulepreload")
-          processPreload(node);
-      }
-    }
-  }).observe(document, { childList: true, subtree: true });
-  function getFetchOpts(link) {
-    const fetchOpts = {};
-    if (link.integrity) fetchOpts.integrity = link.integrity;
-    if (link.referrerPolicy) fetchOpts.referrerPolicy = link.referrerPolicy;
-    if (link.crossOrigin === "use-credentials")
-      fetchOpts.credentials = "include";
-    else if (link.crossOrigin === "anonymous") fetchOpts.credentials = "omit";
-    else fetchOpts.credentials = "same-origin";
-    return fetchOpts;
-  }
-  function processPreload(link) {
-    if (link.ep)
-      return;
-    link.ep = true;
-    const fetchOpts = getFetchOpts(link);
-    fetch(link.href, fetchOpts);
-  }
-})();
 function getDefaultExportFromCjs(x2) {
   return x2 && x2.__esModule && Object.prototype.hasOwnProperty.call(x2, "default") ? x2["default"] : x2;
 }
-var jsxRuntime = { exports: {} };
-var reactJsxRuntime_production_min = {};
 var react = { exports: {} };
 var react_production_min = {};
 /**
@@ -304,32 +265,6 @@ react_production_min.version = "18.3.1";
 }
 var reactExports = react.exports;
 const React = /* @__PURE__ */ getDefaultExportFromCjs(reactExports);
-/**
- * @license React
- * react-jsx-runtime.production.min.js
- *
- * Copyright (c) Facebook, Inc. and its affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-var f = reactExports, k = Symbol.for("react.element"), l = Symbol.for("react.fragment"), m$1 = Object.prototype.hasOwnProperty, n = f.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentOwner, p$1 = { key: true, ref: true, __self: true, __source: true };
-function q(c, a, g) {
-  var b, d = {}, e = null, h = null;
-  void 0 !== g && (e = "" + g);
-  void 0 !== a.key && (e = "" + a.key);
-  void 0 !== a.ref && (h = a.ref);
-  for (b in a) m$1.call(a, b) && !p$1.hasOwnProperty(b) && (d[b] = a[b]);
-  if (c && c.defaultProps) for (b in a = c.defaultProps, a) void 0 === d[b] && (d[b] = a[b]);
-  return { $$typeof: k, type: c, key: e, ref: h, props: d, _owner: n.current };
-}
-reactJsxRuntime_production_min.Fragment = l;
-reactJsxRuntime_production_min.jsx = q;
-reactJsxRuntime_production_min.jsxs = q;
-{
-  jsxRuntime.exports = reactJsxRuntime_production_min;
-}
-var jsxRuntimeExports = jsxRuntime.exports;
 var client = {};
 var reactDom = { exports: {} };
 var reactDom_production_min = {};
@@ -587,7 +522,7 @@ var schedulerExports = scheduler.exports;
  * LICENSE file in the root directory of this source tree.
  */
 var aa = reactExports, ca = schedulerExports;
-function p(a) {
+function p$1(a) {
   for (var b = "https://reactjs.org/docs/error-decoder.html?invariant=" + a, c = 1; c < arguments.length; c++) b += "&args[]=" + encodeURIComponent(arguments[c]);
   return "Minified React error #" + a + "; visit " + b + " for the full message or use the non-minified dev environment for full errors and additional helpful warnings.";
 }
@@ -1016,7 +951,7 @@ function fb(a, b, c, d) {
   }
 }
 function gb(a, b) {
-  if (null != b.dangerouslySetInnerHTML) throw Error(p(91));
+  if (null != b.dangerouslySetInnerHTML) throw Error(p$1(91));
   return A({}, b, { value: void 0, defaultValue: void 0, children: "" + a._wrapperState.initialValue });
 }
 function hb(a, b) {
@@ -1025,9 +960,9 @@ function hb(a, b) {
     c = b.children;
     b = b.defaultValue;
     if (null != c) {
-      if (null != b) throw Error(p(92));
+      if (null != b) throw Error(p$1(92));
       if (eb(c)) {
-        if (1 < c.length) throw Error(p(93));
+        if (1 < c.length) throw Error(p$1(93));
         c = c[0];
       }
       b = c;
@@ -1149,12 +1084,12 @@ function sb(a, b) {
 var tb = A({ menuitem: true }, { area: true, base: true, br: true, col: true, embed: true, hr: true, img: true, input: true, keygen: true, link: true, meta: true, param: true, source: true, track: true, wbr: true });
 function ub(a, b) {
   if (b) {
-    if (tb[a] && (null != b.children || null != b.dangerouslySetInnerHTML)) throw Error(p(137, a));
+    if (tb[a] && (null != b.children || null != b.dangerouslySetInnerHTML)) throw Error(p$1(137, a));
     if (null != b.dangerouslySetInnerHTML) {
-      if (null != b.children) throw Error(p(60));
-      if ("object" !== typeof b.dangerouslySetInnerHTML || !("__html" in b.dangerouslySetInnerHTML)) throw Error(p(61));
+      if (null != b.children) throw Error(p$1(60));
+      if ("object" !== typeof b.dangerouslySetInnerHTML || !("__html" in b.dangerouslySetInnerHTML)) throw Error(p$1(61));
     }
-    if (null != b.style && "object" !== typeof b.style) throw Error(p(62));
+    if (null != b.style && "object" !== typeof b.style) throw Error(p$1(62));
   }
 }
 function vb(a, b) {
@@ -1182,7 +1117,7 @@ function xb(a) {
 var yb = null, zb = null, Ab = null;
 function Bb(a) {
   if (a = Cb(a)) {
-    if ("function" !== typeof yb) throw Error(p(280));
+    if ("function" !== typeof yb) throw Error(p$1(280));
     var b = a.stateNode;
     b && (b = Db(b), yb(a.stateNode, a.type, b));
   }
@@ -1238,7 +1173,7 @@ function Kb(a, b) {
       a = false;
   }
   if (a) return null;
-  if (c && "function" !== typeof c) throw Error(p(231, b, typeof c));
+  if (c && "function" !== typeof c) throw Error(p$1(231, b, typeof c));
   return c;
 }
 var Lb = false;
@@ -1276,7 +1211,7 @@ function Ub(a, b, c, d, e, f2, g, h, k2) {
       var l2 = Pb;
       Ob = false;
       Pb = null;
-    } else throw Error(p(198));
+    } else throw Error(p$1(198));
     Qb || (Qb = true, Rb = l2);
   }
 }
@@ -1300,13 +1235,13 @@ function Wb(a) {
   return null;
 }
 function Xb(a) {
-  if (Vb(a) !== a) throw Error(p(188));
+  if (Vb(a) !== a) throw Error(p$1(188));
 }
 function Yb(a) {
   var b = a.alternate;
   if (!b) {
     b = Vb(a);
-    if (null === b) throw Error(p(188));
+    if (null === b) throw Error(p$1(188));
     return b !== a ? null : a;
   }
   for (var c = a, d = b; ; ) {
@@ -1327,7 +1262,7 @@ function Yb(a) {
         if (f2 === d) return Xb(e), b;
         f2 = f2.sibling;
       }
-      throw Error(p(188));
+      throw Error(p$1(188));
     }
     if (c.return !== d.return) c = e, d = f2;
     else {
@@ -1362,12 +1297,12 @@ function Yb(a) {
           }
           h = h.sibling;
         }
-        if (!g) throw Error(p(189));
+        if (!g) throw Error(p$1(189));
       }
     }
-    if (c.alternate !== d) throw Error(p(190));
+    if (c.alternate !== d) throw Error(p$1(190));
   }
-  if (3 !== c.tag) throw Error(p(188));
+  if (3 !== c.tag) throw Error(p$1(188));
   return c.stateNode.current === c ? a : b;
 }
 function Zb(a) {
@@ -2538,7 +2473,7 @@ function zf(a) {
 }
 function Af(a, b, c) {
   b = zf(b);
-  if (zf(a) !== b && c) throw Error(p(425));
+  if (zf(a) !== b && c) throw Error(p$1(425));
 }
 function Bf() {
 }
@@ -2621,7 +2556,7 @@ function Cb(a) {
 }
 function ue(a) {
   if (5 === a.tag || 6 === a.tag) return a.stateNode;
-  throw Error(p(33));
+  throw Error(p$1(33));
 }
 function Db(a) {
   return a[Pf] || null;
@@ -2658,7 +2593,7 @@ function $f() {
   E(H);
 }
 function ag(a, b, c) {
-  if (H.current !== Vf) throw Error(p(168));
+  if (H.current !== Vf) throw Error(p$1(168));
   G(H, b);
   G(Wf, c);
 }
@@ -2667,7 +2602,7 @@ function bg(a, b, c) {
   b = b.childContextTypes;
   if ("function" !== typeof d.getChildContext) return c;
   d = d.getChildContext();
-  for (var e in d) if (!(e in b)) throw Error(p(108, Ra(a) || "Unknown", e));
+  for (var e in d) if (!(e in b)) throw Error(p$1(108, Ra(a) || "Unknown", e));
   return A({}, c, d);
 }
 function cg(a) {
@@ -2679,7 +2614,7 @@ function cg(a) {
 }
 function dg(a, b, c) {
   var d = a.stateNode;
-  if (!d) throw Error(p(169));
+  if (!d) throw Error(p$1(169));
   c ? (a = bg(a, b, Xf), d.__reactInternalMemoizedMergedChildContext = a, E(Wf), E(H), G(H, a)) : E(Wf);
   G(Wf, c);
 }
@@ -2779,13 +2714,13 @@ function Eg(a) {
     if (b) {
       var c = b;
       if (!Cg(a, b)) {
-        if (Dg(a)) throw Error(p(418));
+        if (Dg(a)) throw Error(p$1(418));
         b = Lf(c.nextSibling);
         var d = xg;
         b && Cg(a, b) ? Ag(d, c) : (a.flags = a.flags & -4097 | 2, I = false, xg = a);
       }
     } else {
-      if (Dg(a)) throw Error(p(418));
+      if (Dg(a)) throw Error(p$1(418));
       a.flags = a.flags & -4097 | 2;
       I = false;
       xg = a;
@@ -2802,14 +2737,14 @@ function Gg(a) {
   var b;
   (b = 3 !== a.tag) && !(b = 5 !== a.tag) && (b = a.type, b = "head" !== b && "body" !== b && !Ef(a.type, a.memoizedProps));
   if (b && (b = yg)) {
-    if (Dg(a)) throw Hg(), Error(p(418));
+    if (Dg(a)) throw Hg(), Error(p$1(418));
     for (; b; ) Ag(a, b), b = Lf(b.nextSibling);
   }
   Fg(a);
   if (13 === a.tag) {
     a = a.memoizedState;
     a = null !== a ? a.dehydrated : null;
-    if (!a) throw Error(p(317));
+    if (!a) throw Error(p$1(317));
     a: {
       a = a.nextSibling;
       for (b = 0; a; ) {
@@ -2847,10 +2782,10 @@ function Lg(a, b, c) {
     if (c._owner) {
       c = c._owner;
       if (c) {
-        if (1 !== c.tag) throw Error(p(309));
+        if (1 !== c.tag) throw Error(p$1(309));
         var d = c.stateNode;
       }
-      if (!d) throw Error(p(147, a));
+      if (!d) throw Error(p$1(147, a));
       var e = d, f2 = "" + a;
       if (null !== b && null !== b.ref && "function" === typeof b.ref && b.ref._stringRef === f2) return b.ref;
       b = function(a2) {
@@ -2860,14 +2795,14 @@ function Lg(a, b, c) {
       b._stringRef = f2;
       return b;
     }
-    if ("string" !== typeof a) throw Error(p(284));
-    if (!c._owner) throw Error(p(290, a));
+    if ("string" !== typeof a) throw Error(p$1(284));
+    if (!c._owner) throw Error(p$1(290, a));
   }
   return a;
 }
 function Mg(a, b) {
   a = Object.prototype.toString.call(b);
-  throw Error(p(31, "[object Object]" === a ? "object with keys {" + Object.keys(b).join(", ") + "}" : a));
+  throw Error(p$1(31, "[object Object]" === a ? "object with keys {" + Object.keys(b).join(", ") + "}" : a));
 }
 function Ng(a) {
   var b = a._init;
@@ -3019,9 +2954,9 @@ function Og(a) {
   }
   function t2(e2, g2, h2, k3) {
     var l3 = Ka(h2);
-    if ("function" !== typeof l3) throw Error(p(150));
+    if ("function" !== typeof l3) throw Error(p$1(150));
     h2 = l3.call(h2);
-    if (null == h2) throw Error(p(151));
+    if (null == h2) throw Error(p$1(151));
     for (var u2 = l3 = null, m3 = g2, w2 = g2 = 0, x2 = null, n3 = h2.next(); null !== m3 && !n3.done; w2++, n3 = h2.next()) {
       m3.index > w2 ? (x2 = m3, m3 = null) : x2 = m3.sibling;
       var t3 = r2(e2, m3, n3.value, k3);
@@ -3142,7 +3077,7 @@ function ch(a, b) {
 function eh(a) {
   var b = a._currentValue;
   if (Zg !== a) if (a = { context: a, memoizedValue: b, next: null }, null === Yg) {
-    if (null === Xg) throw Error(p(308));
+    if (null === Xg) throw Error(p$1(308));
     Yg = a;
     Xg.dependencies = { lanes: 0, firstContext: a };
   } else Yg = Yg.next = a;
@@ -3307,14 +3242,14 @@ function sh(a, b, c) {
     if (null !== e) {
       d.callback = null;
       d = c;
-      if ("function" !== typeof e) throw Error(p(191, e));
+      if ("function" !== typeof e) throw Error(p$1(191, e));
       e.call(d);
     }
   }
 }
 var th = {}, uh = Uf(th), vh = Uf(th), wh = Uf(th);
 function xh(a) {
-  if (a === th) throw Error(p(174));
+  if (a === th) throw Error(p$1(174));
   return a;
 }
 function yh(a, b) {
@@ -3377,7 +3312,7 @@ function Eh() {
 }
 var Fh = ua.ReactCurrentDispatcher, Gh = ua.ReactCurrentBatchConfig, Hh = 0, M = null, N = null, O = null, Ih = false, Jh = false, Kh = 0, Lh = 0;
 function P() {
-  throw Error(p(321));
+  throw Error(p$1(321));
 }
 function Mh(a, b) {
   if (null === b) return false;
@@ -3397,7 +3332,7 @@ function Nh(a, b, c, d, e, f2) {
     do {
       Jh = false;
       Kh = 0;
-      if (25 <= f2) throw Error(p(301));
+      if (25 <= f2) throw Error(p$1(301));
       f2 += 1;
       O = N = null;
       b.updateQueue = null;
@@ -3410,7 +3345,7 @@ function Nh(a, b, c, d, e, f2) {
   Hh = 0;
   O = N = M = null;
   Ih = false;
-  if (b) throw Error(p(300));
+  if (b) throw Error(p$1(300));
   return a;
 }
 function Sh() {
@@ -3431,7 +3366,7 @@ function Uh() {
   var b = null === O ? M.memoizedState : O.next;
   if (null !== b) O = b, N = a;
   else {
-    if (null === a) throw Error(p(310));
+    if (null === a) throw Error(p$1(310));
     N = a;
     a = { memoizedState: N.memoizedState, baseState: N.baseState, baseQueue: N.baseQueue, queue: N.queue, next: null };
     null === O ? M.memoizedState = O = a : O = O.next = a;
@@ -3443,7 +3378,7 @@ function Vh(a, b) {
 }
 function Wh(a) {
   var b = Uh(), c = b.queue;
-  if (null === c) throw Error(p(311));
+  if (null === c) throw Error(p$1(311));
   c.lastRenderedReducer = a;
   var d = N, e = d.baseQueue, f2 = c.pending;
   if (null !== f2) {
@@ -3494,7 +3429,7 @@ function Wh(a) {
 }
 function Xh(a) {
   var b = Uh(), c = b.queue;
-  if (null === c) throw Error(p(311));
+  if (null === c) throw Error(p$1(311));
   c.lastRenderedReducer = a;
   var d = c.dispatch, e = c.pending, f2 = b.memoizedState;
   if (null !== e) {
@@ -3520,7 +3455,7 @@ function Zh(a, b) {
   if (d.getSnapshot !== b || f2 || null !== O && O.memoizedState.tag & 1) {
     c.flags |= 2048;
     bi(9, ci.bind(null, c, d, e, b), void 0, null);
-    if (null === Q) throw Error(p(349));
+    if (null === Q) throw Error(p$1(349));
     0 !== (Hh & 30) || di(c, b, e);
   }
   return e;
@@ -3751,11 +3686,11 @@ var Rh = { readContext: eh, useCallback: P, useContext: P, useEffect: P, useImpe
 }, useSyncExternalStore: function(a, b, c) {
   var d = M, e = Th();
   if (I) {
-    if (void 0 === c) throw Error(p(407));
+    if (void 0 === c) throw Error(p$1(407));
     c = c();
   } else {
     c = b();
-    if (null === Q) throw Error(p(349));
+    if (null === Q) throw Error(p$1(349));
     0 !== (Hh & 30) || di(d, b, c);
   }
   e.memoizedState = c;
@@ -4186,7 +4121,7 @@ function sj(a, b, c, d) {
 }
 function rj(a, b, c, d, e, f2, g) {
   if (c) {
-    if (b.flags & 256) return b.flags &= -257, d = Ki(Error(p(422))), sj(a, b, g, d);
+    if (b.flags & 256) return b.flags &= -257, d = Ki(Error(p$1(422))), sj(a, b, g, d);
     if (null !== b.memoizedState) return b.child = a.child, b.flags |= 128, null;
     f2 = d.fallback;
     e = b.mode;
@@ -4207,7 +4142,7 @@ function rj(a, b, c, d, e, f2, g) {
     d = e.nextSibling && e.nextSibling.dataset;
     if (d) var h = d.dgst;
     d = h;
-    f2 = Error(p(419));
+    f2 = Error(p$1(419));
     d = Ki(f2, d, void 0);
     return sj(a, b, g, d);
   }
@@ -4255,7 +4190,7 @@ function rj(a, b, c, d, e, f2, g) {
       0 !== e && e !== f2.retryLane && (f2.retryLane = e, ih(a, e), gi(d, a, e, -1));
     }
     tj();
-    d = Ki(Error(p(421)));
+    d = Ki(Error(p$1(421)));
     return sj(a, b, g, d);
   }
   if ("$?" === e.data) return b.flags |= 128, b.child = a.child, b = uj.bind(null, a), e._reactRetry = b, null;
@@ -4344,7 +4279,7 @@ function Zi(a, b, c) {
   null !== a && (b.dependencies = a.dependencies);
   rh |= b.lanes;
   if (0 === (c & b.childLanes)) return null;
-  if (null !== a && b.child !== a.child) throw Error(p(153));
+  if (null !== a && b.child !== a.child) throw Error(p$1(153));
   if (null !== b.child) {
     a = b.child;
     c = Pg(a, a.pendingProps);
@@ -4530,7 +4465,7 @@ function Ej(a, b, c) {
       if (null !== a && null != b.stateNode) Bj(a, b, c, d, e), a.ref !== b.ref && (b.flags |= 512, b.flags |= 2097152);
       else {
         if (!d) {
-          if (null === b.stateNode) throw Error(p(166));
+          if (null === b.stateNode) throw Error(p$1(166));
           S(b);
           return null;
         }
@@ -4730,7 +4665,7 @@ function Ej(a, b, c) {
     case 6:
       if (a && null != b.stateNode) Cj(a, b, a.memoizedProps, d);
       else {
-        if ("string" !== typeof d && null === b.stateNode) throw Error(p(166));
+        if ("string" !== typeof d && null === b.stateNode) throw Error(p$1(166));
         c = xh(wh.current);
         xh(uh.current);
         if (Gg(b)) {
@@ -4758,10 +4693,10 @@ function Ej(a, b, c) {
         if (I && null !== yg && 0 !== (b.mode & 1) && 0 === (b.flags & 128)) Hg(), Ig(), b.flags |= 98560, f2 = false;
         else if (f2 = Gg(b), null !== d && null !== d.dehydrated) {
           if (null === a) {
-            if (!f2) throw Error(p(318));
+            if (!f2) throw Error(p$1(318));
             f2 = b.memoizedState;
             f2 = null !== f2 ? f2.dehydrated : null;
-            if (!f2) throw Error(p(317));
+            if (!f2) throw Error(p$1(317));
             f2[Of] = b;
           } else Ig(), 0 === (b.flags & 128) && (b.memoizedState = null), b.flags |= 4;
           S(b);
@@ -4823,7 +4758,7 @@ function Ej(a, b, c) {
     case 25:
       return null;
   }
-  throw Error(p(156, b.tag));
+  throw Error(p$1(156, b.tag));
 }
 function Ij(a, b) {
   wg(b);
@@ -4838,7 +4773,7 @@ function Ij(a, b) {
       E(L);
       a = b.memoizedState;
       if (null !== a && null !== a.dehydrated) {
-        if (null === b.alternate) throw Error(p(340));
+        if (null === b.alternate) throw Error(p$1(340));
         Ig();
       }
       a = b.flags;
@@ -4947,7 +4882,7 @@ function Oj(a, b) {
         case 17:
           break;
         default:
-          throw Error(p(163));
+          throw Error(p$1(163));
       }
     } catch (F2) {
       W(b, b.return, F2);
@@ -5151,7 +5086,7 @@ function ck(a, b) {
         }
         h = h.return;
       }
-      if (null === X) throw Error(p(160));
+      if (null === X) throw Error(p$1(160));
       Zj(f2, g, e);
       X = null;
       Xj = false;
@@ -5242,7 +5177,7 @@ function dk(a, b) {
       ck(b, a);
       ek(a);
       if (d & 4) {
-        if (null === a.stateNode) throw Error(p(162));
+        if (null === a.stateNode) throw Error(p$1(162));
         e = a.stateNode;
         f2 = a.memoizedProps;
         try {
@@ -5374,7 +5309,7 @@ function ek(a) {
           }
           c = c.return;
         }
-        throw Error(p(160));
+        throw Error(p$1(160));
       }
       switch (d.tag) {
         case 5:
@@ -5389,7 +5324,7 @@ function ek(a) {
           Vj(a, h, g);
           break;
         default:
-          throw Error(p(161));
+          throw Error(p$1(161));
       }
     } catch (k2) {
       W(a, a.return, k2);
@@ -5501,7 +5436,7 @@ function kk(a) {
           case 25:
             break;
           default:
-            throw Error(p(163));
+            throw Error(p$1(163));
         }
         U || b.flags & 512 && Rj(b);
       } catch (r2) {
@@ -5608,7 +5543,7 @@ function yi(a) {
   return a;
 }
 function gi(a, b, c, d) {
-  if (50 < yk) throw yk = 0, zk = null, Error(p(185));
+  if (50 < yk) throw yk = 0, zk = null, Error(p$1(185));
   Ac(a, c, d);
   if (0 === (K & 2) || a !== Q) a === Q && (0 === (K & 2) && (qk |= c), 4 === T && Ck(a, Z)), Dk(a, d), 1 === c && 0 === K && 0 === (b.mode & 1) && (Gj = B() + 500, fg && jg());
 }
@@ -5648,7 +5583,7 @@ function Dk(a, b) {
 function Gk(a, b) {
   Ak = -1;
   Bk = 0;
-  if (0 !== (K & 6)) throw Error(p(327));
+  if (0 !== (K & 6)) throw Error(p$1(327));
   var c = a.callbackNode;
   if (Hk() && a.callbackNode !== c) return null;
   var d = uc(a, a === Q ? Z : 0);
@@ -5685,7 +5620,7 @@ function Gk(a, b) {
       switch (b) {
         case 0:
         case 1:
-          throw Error(p(345));
+          throw Error(p$1(345));
         case 2:
           Pk(a, tk, uk);
           break;
@@ -5728,7 +5663,7 @@ function Gk(a, b) {
           Pk(a, tk, uk);
           break;
         default:
-          throw Error(p(329));
+          throw Error(p$1(329));
       }
     }
   }
@@ -5785,7 +5720,7 @@ function Ck(a, b) {
   }
 }
 function Ek(a) {
-  if (0 !== (K & 6)) throw Error(p(327));
+  if (0 !== (K & 6)) throw Error(p$1(327));
   Hk();
   var b = uc(a, 0);
   if (0 === (b & 1)) return Dk(a, B()), null;
@@ -5795,7 +5730,7 @@ function Ek(a) {
     0 !== d && (b = d, c = Nk(a, d));
   }
   if (1 === c) throw c = pk, Kk(a, 0), Ck(a, b), Dk(a, B()), c;
-  if (6 === c) throw Error(p(345));
+  if (6 === c) throw Error(p$1(345));
   a.finishedWork = a.current.alternate;
   a.finishedLanes = b;
   Pk(a, tk, uk);
@@ -5943,7 +5878,7 @@ function Mk(a, b) {
               tj();
               break a;
             }
-            k2 = Error(p(426));
+            k2 = Error(p$1(426));
           }
         } else if (I && h.mode & 1) {
           var J2 = Ui(g);
@@ -6016,7 +5951,7 @@ function Ik(a, b) {
   $g();
   K = c;
   mk.current = d;
-  if (null !== Y) throw Error(p(261));
+  if (null !== Y) throw Error(p$1(261));
   Q = null;
   Z = 0;
   return T;
@@ -6079,13 +6014,13 @@ function Wk(a, b, c, d) {
   do
     Hk();
   while (null !== wk);
-  if (0 !== (K & 6)) throw Error(p(327));
+  if (0 !== (K & 6)) throw Error(p$1(327));
   c = a.finishedWork;
   var e = a.finishedLanes;
   if (null === c) return null;
   a.finishedWork = null;
   a.finishedLanes = 0;
-  if (c === a.current) throw Error(p(177));
+  if (c === a.current) throw Error(p$1(177));
   a.callbackNode = null;
   a.callbackPriority = 0;
   var f2 = c.lanes | c.childLanes;
@@ -6140,7 +6075,7 @@ function Hk() {
         a = wk;
         wk = null;
         xk = 0;
-        if (0 !== (K & 6)) throw Error(p(331));
+        if (0 !== (K & 6)) throw Error(p$1(331));
         var e = K;
         K |= 4;
         for (V = a.current; null !== V; ) {
@@ -6313,7 +6248,7 @@ function bk(a, b) {
       d = a.stateNode;
       break;
     default:
-      throw Error(p(314));
+      throw Error(p$1(314));
   }
   null !== d && d.delete(b);
   Yk(a, c);
@@ -6363,7 +6298,7 @@ Vk = function(a, b, c) {
             b = $i(null, b, d, Ci(d.type, a), c);
             break a;
         }
-        throw Error(p(
+        throw Error(p$1(
           306,
           d,
           ""
@@ -6377,7 +6312,7 @@ Vk = function(a, b, c) {
     case 3:
       a: {
         kj(b);
-        if (null === a) throw Error(p(387));
+        if (null === a) throw Error(p$1(387));
         d = b.pendingProps;
         f2 = b.memoizedState;
         e = f2.element;
@@ -6386,11 +6321,11 @@ Vk = function(a, b, c) {
         var g = b.memoizedState;
         d = g.element;
         if (f2.isDehydrated) if (f2 = { element: d, isDehydrated: false, cache: g.cache, pendingSuspenseBoundaries: g.pendingSuspenseBoundaries, transitions: g.transitions }, b.updateQueue.baseState = f2, b.memoizedState = f2, b.flags & 256) {
-          e = Ji(Error(p(423)), b);
+          e = Ji(Error(p$1(423)), b);
           b = lj(a, b, d, c, e);
           break a;
         } else if (d !== e) {
-          e = Ji(Error(p(424)), b);
+          e = Ji(Error(p$1(424)), b);
           b = lj(a, b, d, c, e);
           break a;
         } else for (yg = Lf(b.stateNode.containerInfo.firstChild), xg = b, I = true, zg = null, c = Vg(b, null, d, c), b.child = c; c; ) c.flags = c.flags & -3 | 4096, c = c.sibling;
@@ -6467,7 +6402,7 @@ Vk = function(a, b, c) {
           } else if (10 === f2.tag) g = f2.type === b.type ? null : f2.child;
           else if (18 === f2.tag) {
             g = f2.return;
-            if (null === g) throw Error(p(341));
+            if (null === g) throw Error(p$1(341));
             g.lanes |= c;
             h = g.alternate;
             null !== h && (h.lanes |= c);
@@ -6507,7 +6442,7 @@ Vk = function(a, b, c) {
     case 22:
       return dj(a, b, c);
   }
-  throw Error(p(156, b.tag));
+  throw Error(p$1(156, b.tag));
 };
 function Fk(a, b) {
   return ac(a, b);
@@ -6598,7 +6533,7 @@ function Rg(a, b, c, d, e, f2) {
           d = null;
           break a;
       }
-      throw Error(p(130, null == a ? a : typeof a, ""));
+      throw Error(p$1(130, null == a ? a : typeof a, ""));
   }
   b = Bg(g, c, b, e);
   b.elementType = a;
@@ -6662,7 +6597,7 @@ function dl(a) {
   if (!a) return Vf;
   a = a._reactInternals;
   a: {
-    if (Vb(a) !== a || 1 !== a.tag) throw Error(p(170));
+    if (Vb(a) !== a || 1 !== a.tag) throw Error(p$1(170));
     var b = a;
     do {
       switch (b.tag) {
@@ -6677,7 +6612,7 @@ function dl(a) {
       }
       b = b.return;
     } while (null !== b);
-    throw Error(p(171));
+    throw Error(p$1(171));
   }
   if (1 === a.tag) {
     var c = a.type;
@@ -6743,7 +6678,7 @@ function ll(a) {
 }
 ml.prototype.render = ll.prototype.render = function(a) {
   var b = this._internalRoot;
-  if (null === b) throw Error(p(409));
+  if (null === b) throw Error(p$1(409));
   fl(a, b, null, null);
 };
 ml.prototype.unmount = ll.prototype.unmount = function() {
@@ -6887,7 +6822,7 @@ yb = function(a, b, c) {
           var d = c[b];
           if (d !== a && d.form === a.form) {
             var e = Db(d);
-            if (!e) throw Error(p(90));
+            if (!e) throw Error(p$1(90));
             Wa(d);
             bb(d, e);
           }
@@ -6918,11 +6853,11 @@ if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
 reactDom_production_min.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = sl;
 reactDom_production_min.createPortal = function(a, b) {
   var c = 2 < arguments.length && void 0 !== arguments[2] ? arguments[2] : null;
-  if (!nl(b)) throw Error(p(200));
+  if (!nl(b)) throw Error(p$1(200));
   return cl(a, b, null, c);
 };
 reactDom_production_min.createRoot = function(a, b) {
-  if (!nl(a)) throw Error(p(299));
+  if (!nl(a)) throw Error(p$1(299));
   var c = false, d = "", e = kl;
   null !== b && void 0 !== b && (true === b.unstable_strictMode && (c = true), void 0 !== b.identifierPrefix && (d = b.identifierPrefix), void 0 !== b.onRecoverableError && (e = b.onRecoverableError));
   b = bl(a, 1, false, null, null, c, false, d, e);
@@ -6935,9 +6870,9 @@ reactDom_production_min.findDOMNode = function(a) {
   if (1 === a.nodeType) return a;
   var b = a._reactInternals;
   if (void 0 === b) {
-    if ("function" === typeof a.render) throw Error(p(188));
+    if ("function" === typeof a.render) throw Error(p$1(188));
     a = Object.keys(a).join(",");
-    throw Error(p(268, a));
+    throw Error(p$1(268, a));
   }
   a = Zb(b);
   a = null === a ? null : a.stateNode;
@@ -6947,11 +6882,11 @@ reactDom_production_min.flushSync = function(a) {
   return Rk(a);
 };
 reactDom_production_min.hydrate = function(a, b, c) {
-  if (!ol(b)) throw Error(p(200));
+  if (!ol(b)) throw Error(p$1(200));
   return rl(null, a, b, true, c);
 };
 reactDom_production_min.hydrateRoot = function(a, b, c) {
-  if (!nl(a)) throw Error(p(405));
+  if (!nl(a)) throw Error(p$1(405));
   var d = null != c && c.hydratedSources || null, e = false, f2 = "", g = kl;
   null !== c && void 0 !== c && (true === c.unstable_strictMode && (e = true), void 0 !== c.identifierPrefix && (f2 = c.identifierPrefix), void 0 !== c.onRecoverableError && (g = c.onRecoverableError));
   b = el(b, null, a, 1, null != c ? c : null, e, false, f2, g);
@@ -6964,11 +6899,11 @@ reactDom_production_min.hydrateRoot = function(a, b, c) {
   return new ml(b);
 };
 reactDom_production_min.render = function(a, b, c) {
-  if (!ol(b)) throw Error(p(200));
+  if (!ol(b)) throw Error(p$1(200));
   return rl(null, a, b, false, c);
 };
 reactDom_production_min.unmountComponentAtNode = function(a) {
-  if (!ol(a)) throw Error(p(40));
+  if (!ol(a)) throw Error(p$1(40));
   return a._reactRootContainer ? (Rk(function() {
     rl(null, null, a, false, function() {
       a._reactRootContainer = null;
@@ -6978,8 +6913,8 @@ reactDom_production_min.unmountComponentAtNode = function(a) {
 };
 reactDom_production_min.unstable_batchedUpdates = Qk;
 reactDom_production_min.unstable_renderSubtreeIntoContainer = function(a, b, c, d) {
-  if (!ol(c)) throw Error(p(200));
-  if (null == a || void 0 === a._reactInternals) throw Error(p(38));
+  if (!ol(c)) throw Error(p$1(200));
+  if (null == a || void 0 === a._reactInternals) throw Error(p$1(38));
   return rl(a, b, c, false, d);
 };
 reactDom_production_min.version = "18.3.1-next-f1338f8080-20240426";
@@ -6998,12 +6933,41 @@ function checkDCE() {
   reactDom.exports = reactDom_production_min;
 }
 var reactDomExports = reactDom.exports;
-var m = reactDomExports;
+var m$1 = reactDomExports;
 {
-  client.createRoot = m.createRoot;
-  client.hydrateRoot = m.hydrateRoot;
+  client.createRoot = m$1.createRoot;
+  client.hydrateRoot = m$1.hydrateRoot;
 }
+var jsxRuntime = { exports: {} };
+var reactJsxRuntime_production_min = {};
+/**
+ * @license React
+ * react-jsx-runtime.production.min.js
+ *
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+var f = reactExports, k = Symbol.for("react.element"), l = Symbol.for("react.fragment"), m = Object.prototype.hasOwnProperty, n = f.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentOwner, p = { key: true, ref: true, __self: true, __source: true };
+function q(c, a, g) {
+  var b, d = {}, e = null, h = null;
+  void 0 !== g && (e = "" + g);
+  void 0 !== a.key && (e = "" + a.key);
+  void 0 !== a.ref && (h = a.ref);
+  for (b in a) m.call(a, b) && !p.hasOwnProperty(b) && (d[b] = a[b]);
+  if (c && c.defaultProps) for (b in a = c.defaultProps, a) void 0 === d[b] && (d[b] = a[b]);
+  return { $$typeof: k, type: c, key: e, ref: h, props: d, _owner: n.current };
+}
+reactJsxRuntime_production_min.Fragment = l;
+reactJsxRuntime_production_min.jsx = q;
+reactJsxRuntime_production_min.jsxs = q;
+{
+  jsxRuntime.exports = reactJsxRuntime_production_min;
+}
+var jsxRuntimeExports = jsxRuntime.exports;
 const BASE = "https://kouvadeiros-api.jboikos.workers.dev";
+const SCORES_BASE = "https://kouvadeiros-scores.jboikos.workers.dev";
 function token() {
   return localStorage.getItem("kouv_token") || "";
 }
@@ -7022,7 +6986,22 @@ async function call(method, path, body) {
   if (!res.ok) throw new Error(`${method} ${path} → ${res.status}`);
   return res.json();
 }
+async function publicScoresGet(path) {
+  const res = await fetch(`${SCORES_BASE}${path}`, { headers: { Accept: "application/json" } });
+  if (!res.ok) {
+    const res2 = await fetch(`${BASE}${path}`, { headers: { Accept: "application/json" } });
+    if (!res2.ok) throw new Error(`GET ${path} → ${res.status}/${res2.status}`);
+    return res2.json();
+  }
+  return res.json();
+}
 const api = {
+  getSlStandings: () => call("GET", "/sl-standings"),
+  setLive: (matchId, h, a, min, final) => call("POST", "/set-live", { matchId, h, a, min, final }),
+  getSlFixtures: () => call("GET", "/sl-fixtures"),
+  /** Pipeline scores from R2/KV via scores Worker */
+  getLiveScores: (mode = "live") => publicScoresGet(`/live-scores?mode=${mode}`),
+  getTodayScores: () => publicScoresGet("/live-scores?mode=today"),
   login: (email, password) => call("POST", "/login", { email, password }),
   logout: () => call("POST", "/logout"),
   getState: () => call("GET", "/state"),
@@ -7031,7 +7010,9 @@ const api = {
   fetchScores: (matchId) => call("POST", "/fetch-scores", { matchId }),
   sendChat: (text) => call("PATCH", "/chat", { text }),
   savePhone: (phone) => call("PATCH", "/save-phone", { phone }),
-  addPlayer: (data) => call("POST", "/add-player", data)
+  addPlayer: (data) => call("POST", "/add-player", data),
+  /** Admin: send Ο Κουβάς sample (default adminOnly) */
+  newspaperTest: (opts = {}) => call("POST", "/newspaper-test", opts)
 };
 function getStoredUser() {
   try {
@@ -7053,44 +7034,267 @@ function clearAuth() {
 const PLAYERS = ["boikos", "mavromichalis", "chousiadas"];
 const PLAYER_NAMES = { boikos: "Boikos", mavromichalis: "Mavromichalis", chousiadas: "Chousiadas" };
 const TEAMS = {
-  PAO: { name: "Panathinaikos", abbr: "PAO", color: "#1a7c2a" },
+  PAO: { name: "Παναθηναϊκός", abbr: "PAO", color: "#1a7c2a" },
   KIF: { name: "Kifisia", abbr: "KIF", color: "#1a3c6a" },
-  KAL: { name: "Kalamata", abbr: "KAL", color: "#6a1a1a" },
-  ARI: { name: "Aris", abbr: "ARI", color: "#b8960c" },
-  OLY: { name: "Olympiacos", abbr: "OLY", color: "#c41e1e" },
-  ATR: { name: "Atromitos", abbr: "ATR", color: "#1a3a6a" },
-  PAOK: { name: "PAOK", abbr: "PAO", color: "#2c2c2c" },
-  LEV: { name: "Levadiakos", abbr: "LEV", color: "#1a4a2a" },
-  PNE: { name: "Panetolikos", abbr: "PNE", color: "#5a1a6a" },
+  KAL: { name: "Καλαμάτα", abbr: "KAL", color: "#6a1a1a" },
+  ARI: { name: "Άρης", abbr: "ARI", color: "#b8960c" },
+  OLY: { name: "Ολυμπιακός", abbr: "OLY", color: "#c41e1e" },
+  ATR: { name: "Ατρόμητος", abbr: "ATR", color: "#1a3a6a" },
+  PAOK: { name: "ΠΑΟΚ", abbr: "PAOK", color: "#2c2c2c" },
+  LEV: { name: "Λεβαδειακός", abbr: "LEV", color: "#1a4a2a" },
+  PNE: { name: "Παναιτωλικός", abbr: "PNE", color: "#5a1a6a" },
   AST: { name: "Asteras", abbr: "AST", color: "#b87c0c" },
-  AEK: { name: "AEK Athens", abbr: "AEK", color: "#c49a0c" },
-  IRA: { name: "Iraklis", abbr: "IRA", color: "#1a2a7c" },
-  OFI: { name: "OFI", abbr: "OFI", color: "#6a2c1a" },
-  VOL: { name: "Volos", abbr: "VOL", color: "#1a5a2a" },
+  AEK: { name: "ΑΕΚ", abbr: "AEK", color: "#c49a0c" },
+  IRA: { name: "Ηρακλής", abbr: "IRA", color: "#1a2a7c" },
+  OFI: { name: "ΟΦΗ", abbr: "OFI", color: "#6a2c1a" },
+  VOL: { name: "Βόλος", abbr: "VOL", color: "#1a5a2a" },
   DYN: { name: "Dynamo Kyiv", abbr: "DYN", color: "#003594" },
   NEC: { name: "NEC Nijmegen", abbr: "NEC", color: "#c00000" },
   PKS: { name: "Paksi SE", abbr: "PKS", color: "#006400" },
+  AND: { name: "Anderlecht", abbr: "AND", color: "#6c3" },
+  CSK: { name: "CSKA 1948", abbr: "CSK", color: "#c41e1e" },
   TBD: { name: "TBD", abbr: "TBD", color: "#444444" }
 };
-const SL1 = "2026-08-22T13:00:00Z";
 const SUPER_LEAGUE = [
-  { id: "sl-1-1", t: "SL", md: 1, home: "PAO", away: "KIF", kickoff: SL1, round: "Αγωνιστική 1" },
-  { id: "sl-1-2", t: "SL", md: 1, home: "KAL", away: "ARI", kickoff: SL1, round: "Αγωνιστική 1" },
-  { id: "sl-1-3", t: "SL", md: 1, home: "OLY", away: "ATR", kickoff: SL1, round: "Αγωνιστική 1" },
-  { id: "sl-1-4", t: "SL", md: 1, home: "PAOK", away: "LEV", kickoff: SL1, round: "Αγωνιστική 1" },
-  { id: "sl-1-5", t: "SL", md: 1, home: "PNE", away: "AST", kickoff: SL1, round: "Αγωνιστική 1" },
-  { id: "sl-1-6", t: "SL", md: 1, home: "AEK", away: "IRA", kickoff: SL1, round: "Αγωνιστική 1" },
-  { id: "sl-1-7", t: "SL", md: 1, home: "OFI", away: "VOL", kickoff: SL1, round: "Αγωνιστική 1" }
+  // ── 1η Αγωνιστική ── (ώρες: Super League / Dnews / SportDay, 28/7/2026)
+  { id: "sl-1-1", t: "SL", md: 1, home: "AEK", away: "IRA", kickoff: "2026-08-22T17:00:00Z", round: "Αγωνιστική 1" },
+  // Σάβ 22/8 20:00
+  { id: "sl-1-2", t: "SL", md: 1, home: "KAL", away: "ARI", kickoff: "2026-08-22T17:00:00Z", round: "Αγωνιστική 1" },
+  // Σάβ 22/8 20:00
+  { id: "sl-1-3", t: "SL", md: 1, home: "OLY", away: "ATR", kickoff: "2026-08-22T19:00:00Z", round: "Αγωνιστική 1" },
+  // Σάβ 22/8 22:00
+  { id: "sl-1-4", t: "SL", md: 1, home: "OFI", away: "VOL", kickoff: "2026-08-23T16:30:00Z", round: "Αγωνιστική 1" },
+  // Κυρ 23/8 19:30
+  { id: "sl-1-5", t: "SL", md: 1, home: "PAO", away: "KIF", kickoff: "2026-08-23T18:00:00Z", round: "Αγωνιστική 1" },
+  // Κυρ 23/8 21:00
+  { id: "sl-1-6", t: "SL", md: 1, home: "PNE", away: "AST", kickoff: "2026-08-23T18:30:00Z", round: "Αγωνιστική 1" },
+  // Κυρ 23/8 21:30
+  { id: "sl-1-7", t: "SL", md: 1, home: "PAOK", away: "LEV", kickoff: "2026-08-23T18:00:00Z", round: "Αγωνιστική 1" },
+  // Κυρ 23/8 21:00
+  // ── 2η Αγωνιστική ──
+  { id: "sl-2-1", t: "SL", md: 2, home: "AST", away: "OLY", kickoff: "2026-08-29T17:00:00Z", round: "Αγωνιστική 2", timeTbd: true },
+  { id: "sl-2-2", t: "SL", md: 2, home: "ARI", away: "OFI", kickoff: "2026-08-29T17:00:00Z", round: "Αγωνιστική 2", timeTbd: true },
+  { id: "sl-2-3", t: "SL", md: 2, home: "ATR", away: "PAOK", kickoff: "2026-08-29T17:00:00Z", round: "Αγωνιστική 2", timeTbd: true },
+  { id: "sl-2-4", t: "SL", md: 2, home: "VOL", away: "IRA", kickoff: "2026-08-29T17:00:00Z", round: "Αγωνιστική 2", timeTbd: true },
+  { id: "sl-2-5", t: "SL", md: 2, home: "KIF", away: "AEK", kickoff: "2026-08-29T17:00:00Z", round: "Αγωνιστική 2", timeTbd: true },
+  { id: "sl-2-6", t: "SL", md: 2, home: "LEV", away: "PAO", kickoff: "2026-08-29T17:00:00Z", round: "Αγωνιστική 2", timeTbd: true },
+  { id: "sl-2-7", t: "SL", md: 2, home: "PNE", away: "KAL", kickoff: "2026-08-29T17:00:00Z", round: "Αγωνιστική 2", timeTbd: true },
+  // ── 3η Αγωνιστική ──
+  { id: "sl-3-1", t: "SL", md: 3, home: "AEK", away: "ARI", kickoff: "2026-09-05T17:00:00Z", round: "Αγωνιστική 3", timeTbd: true },
+  { id: "sl-3-2", t: "SL", md: 3, home: "ATR", away: "KAL", kickoff: "2026-09-05T17:00:00Z", round: "Αγωνιστική 3", timeTbd: true },
+  { id: "sl-3-3", t: "SL", md: 3, home: "VOL", away: "OLY", kickoff: "2026-09-05T17:00:00Z", round: "Αγωνιστική 3", timeTbd: true },
+  { id: "sl-3-4", t: "SL", md: 3, home: "LEV", away: "PNE", kickoff: "2026-09-05T17:00:00Z", round: "Αγωνιστική 3", timeTbd: true },
+  { id: "sl-3-5", t: "SL", md: 3, home: "OFI", away: "KIF", kickoff: "2026-09-05T17:00:00Z", round: "Αγωνιστική 3", timeTbd: true },
+  { id: "sl-3-6", t: "SL", md: 3, home: "PAO", away: "PAOK", kickoff: "2026-09-05T17:00:00Z", round: "Αγωνιστική 3", timeTbd: true },
+  { id: "sl-3-7", t: "SL", md: 3, home: "IRA", away: "AST", kickoff: "2026-09-05T17:00:00Z", round: "Αγωνιστική 3", timeTbd: true },
+  // ── 4η Αγωνιστική ──
+  { id: "sl-4-1", t: "SL", md: 4, home: "AST", away: "AEK", kickoff: "2026-09-12T17:00:00Z", round: "Αγωνιστική 4", timeTbd: true },
+  { id: "sl-4-2", t: "SL", md: 4, home: "KAL", away: "VOL", kickoff: "2026-09-12T17:00:00Z", round: "Αγωνιστική 4", timeTbd: true },
+  { id: "sl-4-3", t: "SL", md: 4, home: "KIF", away: "LEV", kickoff: "2026-09-12T17:00:00Z", round: "Αγωνιστική 4", timeTbd: true },
+  { id: "sl-4-4", t: "SL", md: 4, home: "OLY", away: "OFI", kickoff: "2026-09-12T17:00:00Z", round: "Αγωνιστική 4", timeTbd: true },
+  { id: "sl-4-5", t: "SL", md: 4, home: "PAO", away: "PNE", kickoff: "2026-09-12T17:00:00Z", round: "Αγωνιστική 4", timeTbd: true },
+  { id: "sl-4-6", t: "SL", md: 4, home: "PAOK", away: "ARI", kickoff: "2026-09-12T17:00:00Z", round: "Αγωνιστική 4", timeTbd: true },
+  { id: "sl-4-7", t: "SL", md: 4, home: "IRA", away: "ATR", kickoff: "2026-09-12T17:00:00Z", round: "Αγωνιστική 4", timeTbd: true },
+  // ── 5η Αγωνιστική ──
+  { id: "sl-5-1", t: "SL", md: 5, home: "ARI", away: "IRA", kickoff: "2026-09-19T17:00:00Z", round: "Αγωνιστική 5", timeTbd: true },
+  { id: "sl-5-2", t: "SL", md: 5, home: "ATR", away: "KIF", kickoff: "2026-09-19T17:00:00Z", round: "Αγωνιστική 5", timeTbd: true },
+  { id: "sl-5-3", t: "SL", md: 5, home: "VOL", away: "AEK", kickoff: "2026-09-19T17:00:00Z", round: "Αγωνιστική 5", timeTbd: true },
+  { id: "sl-5-4", t: "SL", md: 5, home: "KAL", away: "PAO", kickoff: "2026-09-19T17:00:00Z", round: "Αγωνιστική 5", timeTbd: true },
+  { id: "sl-5-5", t: "SL", md: 5, home: "LEV", away: "OLY", kickoff: "2026-09-19T17:00:00Z", round: "Αγωνιστική 5", timeTbd: true },
+  { id: "sl-5-6", t: "SL", md: 5, home: "OFI", away: "AST", kickoff: "2026-09-19T17:00:00Z", round: "Αγωνιστική 5", timeTbd: true },
+  { id: "sl-5-7", t: "SL", md: 5, home: "PNE", away: "PAOK", kickoff: "2026-09-19T17:00:00Z", round: "Αγωνιστική 5", timeTbd: true },
+  // ── 6η Αγωνιστική ──
+  { id: "sl-6-1", t: "SL", md: 6, home: "AEK", away: "OFI", kickoff: "2026-10-10T17:00:00Z", round: "Αγωνιστική 6", timeTbd: true },
+  { id: "sl-6-2", t: "SL", md: 6, home: "AST", away: "ATR", kickoff: "2026-10-10T17:00:00Z", round: "Αγωνιστική 6", timeTbd: true },
+  { id: "sl-6-3", t: "SL", md: 6, home: "ARI", away: "VOL", kickoff: "2026-10-10T17:00:00Z", round: "Αγωνιστική 6", timeTbd: true },
+  { id: "sl-6-4", t: "SL", md: 6, home: "KIF", away: "PNE", kickoff: "2026-10-10T17:00:00Z", round: "Αγωνιστική 6", timeTbd: true },
+  { id: "sl-6-5", t: "SL", md: 6, home: "OLY", away: "PAO", kickoff: "2026-10-10T17:00:00Z", round: "Αγωνιστική 6", timeTbd: true },
+  { id: "sl-6-6", t: "SL", md: 6, home: "PAOK", away: "KAL", kickoff: "2026-10-10T17:00:00Z", round: "Αγωνιστική 6", timeTbd: true },
+  { id: "sl-6-7", t: "SL", md: 6, home: "IRA", away: "LEV", kickoff: "2026-10-10T17:00:00Z", round: "Αγωνιστική 6", timeTbd: true },
+  // ── 7η Αγωνιστική ──
+  { id: "sl-7-1", t: "SL", md: 7, home: "ATR", away: "AEK", kickoff: "2026-10-17T17:00:00Z", round: "Αγωνιστική 7", timeTbd: true },
+  { id: "sl-7-2", t: "SL", md: 7, home: "KAL", away: "OFI", kickoff: "2026-10-17T17:00:00Z", round: "Αγωνιστική 7", timeTbd: true },
+  { id: "sl-7-3", t: "SL", md: 7, home: "KIF", away: "ARI", kickoff: "2026-10-17T17:00:00Z", round: "Αγωνιστική 7", timeTbd: true },
+  { id: "sl-7-4", t: "SL", md: 7, home: "LEV", away: "VOL", kickoff: "2026-10-17T17:00:00Z", round: "Αγωνιστική 7", timeTbd: true },
+  { id: "sl-7-5", t: "SL", md: 7, home: "PAO", away: "AST", kickoff: "2026-10-17T17:00:00Z", round: "Αγωνιστική 7", timeTbd: true },
+  { id: "sl-7-6", t: "SL", md: 7, home: "PNE", away: "OLY", kickoff: "2026-10-17T17:00:00Z", round: "Αγωνιστική 7", timeTbd: true },
+  { id: "sl-7-7", t: "SL", md: 7, home: "PAOK", away: "IRA", kickoff: "2026-10-17T17:00:00Z", round: "Αγωνιστική 7", timeTbd: true },
+  // ── 8η Αγωνιστική ──
+  { id: "sl-8-1", t: "SL", md: 8, home: "AEK", away: "PNE", kickoff: "2026-10-24T17:00:00Z", round: "Αγωνιστική 8", timeTbd: true },
+  { id: "sl-8-2", t: "SL", md: 8, home: "AST", away: "LEV", kickoff: "2026-10-24T17:00:00Z", round: "Αγωνιστική 8", timeTbd: true },
+  { id: "sl-8-3", t: "SL", md: 8, home: "ARI", away: "ATR", kickoff: "2026-10-24T17:00:00Z", round: "Αγωνιστική 8", timeTbd: true },
+  { id: "sl-8-4", t: "SL", md: 8, home: "VOL", away: "PAO", kickoff: "2026-10-24T17:00:00Z", round: "Αγωνιστική 8", timeTbd: true },
+  { id: "sl-8-5", t: "SL", md: 8, home: "OLY", away: "KAL", kickoff: "2026-10-24T17:00:00Z", round: "Αγωνιστική 8", timeTbd: true },
+  { id: "sl-8-6", t: "SL", md: 8, home: "OFI", away: "PAOK", kickoff: "2026-10-24T17:00:00Z", round: "Αγωνιστική 8", timeTbd: true },
+  { id: "sl-8-7", t: "SL", md: 8, home: "IRA", away: "KIF", kickoff: "2026-10-24T17:00:00Z", round: "Αγωνιστική 8", timeTbd: true },
+  // ── 9η Αγωνιστική ──
+  { id: "sl-9-1", t: "SL", md: 9, home: "ATR", away: "VOL", kickoff: "2026-10-31T17:00:00Z", round: "Αγωνιστική 9", timeTbd: true },
+  { id: "sl-9-2", t: "SL", md: 9, home: "KAL", away: "IRA", kickoff: "2026-10-31T17:00:00Z", round: "Αγωνιστική 9", timeTbd: true },
+  { id: "sl-9-3", t: "SL", md: 9, home: "KIF", away: "OLY", kickoff: "2026-10-31T17:00:00Z", round: "Αγωνιστική 9", timeTbd: true },
+  { id: "sl-9-4", t: "SL", md: 9, home: "LEV", away: "ARI", kickoff: "2026-10-31T17:00:00Z", round: "Αγωνιστική 9", timeTbd: true },
+  { id: "sl-9-5", t: "SL", md: 9, home: "PAO", away: "AEK", kickoff: "2026-10-31T17:00:00Z", round: "Αγωνιστική 9", timeTbd: true },
+  { id: "sl-9-6", t: "SL", md: 9, home: "PNE", away: "OFI", kickoff: "2026-10-31T17:00:00Z", round: "Αγωνιστική 9", timeTbd: true },
+  { id: "sl-9-7", t: "SL", md: 9, home: "PAOK", away: "AST", kickoff: "2026-10-31T17:00:00Z", round: "Αγωνιστική 9", timeTbd: true },
+  // ── 10η Αγωνιστική ──
+  { id: "sl-10-1", t: "SL", md: 10, home: "AEK", away: "LEV", kickoff: "2026-11-07T17:00:00Z", round: "Αγωνιστική 10", timeTbd: true },
+  { id: "sl-10-2", t: "SL", md: 10, home: "AST", away: "KAL", kickoff: "2026-11-07T17:00:00Z", round: "Αγωνιστική 10", timeTbd: true },
+  { id: "sl-10-3", t: "SL", md: 10, home: "ARI", away: "PNE", kickoff: "2026-11-07T17:00:00Z", round: "Αγωνιστική 10", timeTbd: true },
+  { id: "sl-10-4", t: "SL", md: 10, home: "VOL", away: "KIF", kickoff: "2026-11-07T17:00:00Z", round: "Αγωνιστική 10", timeTbd: true },
+  { id: "sl-10-5", t: "SL", md: 10, home: "OLY", away: "PAOK", kickoff: "2026-11-07T17:00:00Z", round: "Αγωνιστική 10", timeTbd: true },
+  { id: "sl-10-6", t: "SL", md: 10, home: "OFI", away: "ATR", kickoff: "2026-11-07T17:00:00Z", round: "Αγωνιστική 10", timeTbd: true },
+  { id: "sl-10-7", t: "SL", md: 10, home: "IRA", away: "PAO", kickoff: "2026-11-07T17:00:00Z", round: "Αγωνιστική 10", timeTbd: true },
+  // ── 11η Αγωνιστική ──
+  { id: "sl-11-1", t: "SL", md: 11, home: "AST", away: "ARI", kickoff: "2026-11-21T17:00:00Z", round: "Αγωνιστική 11", timeTbd: true },
+  { id: "sl-11-2", t: "SL", md: 11, home: "KAL", away: "AEK", kickoff: "2026-11-21T17:00:00Z", round: "Αγωνιστική 11", timeTbd: true },
+  { id: "sl-11-3", t: "SL", md: 11, home: "LEV", away: "ATR", kickoff: "2026-11-21T17:00:00Z", round: "Αγωνιστική 11", timeTbd: true },
+  { id: "sl-11-4", t: "SL", md: 11, home: "OLY", away: "IRA", kickoff: "2026-11-21T17:00:00Z", round: "Αγωνιστική 11", timeTbd: true },
+  { id: "sl-11-5", t: "SL", md: 11, home: "PAO", away: "OFI", kickoff: "2026-11-21T17:00:00Z", round: "Αγωνιστική 11", timeTbd: true },
+  { id: "sl-11-6", t: "SL", md: 11, home: "PNE", away: "VOL", kickoff: "2026-11-21T17:00:00Z", round: "Αγωνιστική 11", timeTbd: true },
+  { id: "sl-11-7", t: "SL", md: 11, home: "PAOK", away: "KIF", kickoff: "2026-11-21T17:00:00Z", round: "Αγωνιστική 11", timeTbd: true },
+  // ── 12η Αγωνιστική ──
+  { id: "sl-12-1", t: "SL", md: 12, home: "AEK", away: "PAOK", kickoff: "2026-11-28T17:00:00Z", round: "Αγωνιστική 12", timeTbd: true },
+  { id: "sl-12-2", t: "SL", md: 12, home: "ARI", away: "OLY", kickoff: "2026-11-28T17:00:00Z", round: "Αγωνιστική 12", timeTbd: true },
+  { id: "sl-12-3", t: "SL", md: 12, home: "ATR", away: "PAO", kickoff: "2026-11-28T17:00:00Z", round: "Αγωνιστική 12", timeTbd: true },
+  { id: "sl-12-4", t: "SL", md: 12, home: "VOL", away: "AST", kickoff: "2026-11-28T17:00:00Z", round: "Αγωνιστική 12", timeTbd: true },
+  { id: "sl-12-5", t: "SL", md: 12, home: "KIF", away: "KAL", kickoff: "2026-11-28T17:00:00Z", round: "Αγωνιστική 12", timeTbd: true },
+  { id: "sl-12-6", t: "SL", md: 12, home: "OFI", away: "LEV", kickoff: "2026-11-28T17:00:00Z", round: "Αγωνιστική 12", timeTbd: true },
+  { id: "sl-12-7", t: "SL", md: 12, home: "IRA", away: "PNE", kickoff: "2026-11-28T17:00:00Z", round: "Αγωνιστική 12", timeTbd: true },
+  // ── 13η Αγωνιστική ──
+  { id: "sl-13-1", t: "SL", md: 13, home: "AST", away: "KIF", kickoff: "2026-12-05T17:00:00Z", round: "Αγωνιστική 13", timeTbd: true },
+  { id: "sl-13-2", t: "SL", md: 13, home: "KAL", away: "LEV", kickoff: "2026-12-05T17:00:00Z", round: "Αγωνιστική 13", timeTbd: true },
+  { id: "sl-13-3", t: "SL", md: 13, home: "OLY", away: "AEK", kickoff: "2026-12-05T17:00:00Z", round: "Αγωνιστική 13", timeTbd: true },
+  { id: "sl-13-4", t: "SL", md: 13, home: "OFI", away: "IRA", kickoff: "2026-12-05T17:00:00Z", round: "Αγωνιστική 13", timeTbd: true },
+  { id: "sl-13-5", t: "SL", md: 13, home: "PAO", away: "ARI", kickoff: "2026-12-05T17:00:00Z", round: "Αγωνιστική 13", timeTbd: true },
+  { id: "sl-13-6", t: "SL", md: 13, home: "PNE", away: "ATR", kickoff: "2026-12-05T17:00:00Z", round: "Αγωνιστική 13", timeTbd: true },
+  { id: "sl-13-7", t: "SL", md: 13, home: "PAOK", away: "VOL", kickoff: "2026-12-05T17:00:00Z", round: "Αγωνιστική 13", timeTbd: true },
+  // ── 14η Αγωνιστική ──
+  { id: "sl-14-1", t: "SL", md: 14, home: "AEK", away: "VOL", kickoff: "2026-12-12T17:00:00Z", round: "Αγωνιστική 14", timeTbd: true },
+  { id: "sl-14-2", t: "SL", md: 14, home: "ATR", away: "OLY", kickoff: "2026-12-12T17:00:00Z", round: "Αγωνιστική 14", timeTbd: true },
+  { id: "sl-14-3", t: "SL", md: 14, home: "KAL", away: "PNE", kickoff: "2026-12-12T17:00:00Z", round: "Αγωνιστική 14", timeTbd: true },
+  { id: "sl-14-4", t: "SL", md: 14, home: "KIF", away: "OFI", kickoff: "2026-12-12T17:00:00Z", round: "Αγωνιστική 14", timeTbd: true },
+  { id: "sl-14-5", t: "SL", md: 14, home: "LEV", away: "AST", kickoff: "2026-12-12T17:00:00Z", round: "Αγωνιστική 14", timeTbd: true },
+  { id: "sl-14-6", t: "SL", md: 14, home: "PAOK", away: "PAO", kickoff: "2026-12-12T17:00:00Z", round: "Αγωνιστική 14", timeTbd: true },
+  { id: "sl-14-7", t: "SL", md: 14, home: "IRA", away: "ARI", kickoff: "2026-12-12T17:00:00Z", round: "Αγωνιστική 14", timeTbd: true },
+  // ── 15η Αγωνιστική ──
+  { id: "sl-15-1", t: "SL", md: 15, home: "AST", away: "PAOK", kickoff: "2026-12-19T17:00:00Z", round: "Αγωνιστική 15", timeTbd: true },
+  { id: "sl-15-2", t: "SL", md: 15, home: "ARI", away: "AEK", kickoff: "2026-12-19T17:00:00Z", round: "Αγωνιστική 15", timeTbd: true },
+  { id: "sl-15-3", t: "SL", md: 15, home: "VOL", away: "LEV", kickoff: "2026-12-19T17:00:00Z", round: "Αγωνιστική 15", timeTbd: true },
+  { id: "sl-15-4", t: "SL", md: 15, home: "KIF", away: "ATR", kickoff: "2026-12-19T17:00:00Z", round: "Αγωνιστική 15", timeTbd: true },
+  { id: "sl-15-5", t: "SL", md: 15, home: "OLY", away: "PNE", kickoff: "2026-12-19T17:00:00Z", round: "Αγωνιστική 15", timeTbd: true },
+  { id: "sl-15-6", t: "SL", md: 15, home: "OFI", away: "KAL", kickoff: "2026-12-19T17:00:00Z", round: "Αγωνιστική 15", timeTbd: true },
+  { id: "sl-15-7", t: "SL", md: 15, home: "PAO", away: "IRA", kickoff: "2026-12-19T17:00:00Z", round: "Αγωνιστική 15", timeTbd: true },
+  // ── 16η Αγωνιστική ──
+  { id: "sl-16-1", t: "SL", md: 16, home: "AEK", away: "ATR", kickoff: "2027-01-09T17:00:00Z", round: "Αγωνιστική 16", timeTbd: true },
+  { id: "sl-16-2", t: "SL", md: 16, home: "AST", away: "PAO", kickoff: "2027-01-09T17:00:00Z", round: "Αγωνιστική 16", timeTbd: true },
+  { id: "sl-16-3", t: "SL", md: 16, home: "ARI", away: "PAOK", kickoff: "2027-01-09T17:00:00Z", round: "Αγωνιστική 16", timeTbd: true },
+  { id: "sl-16-4", t: "SL", md: 16, home: "KAL", away: "OLY", kickoff: "2027-01-09T17:00:00Z", round: "Αγωνιστική 16", timeTbd: true },
+  { id: "sl-16-5", t: "SL", md: 16, home: "LEV", away: "OFI", kickoff: "2027-01-09T17:00:00Z", round: "Αγωνιστική 16", timeTbd: true },
+  { id: "sl-16-6", t: "SL", md: 16, home: "PNE", away: "KIF", kickoff: "2027-01-09T17:00:00Z", round: "Αγωνιστική 16", timeTbd: true },
+  { id: "sl-16-7", t: "SL", md: 16, home: "IRA", away: "VOL", kickoff: "2027-01-09T17:00:00Z", round: "Αγωνιστική 16", timeTbd: true },
+  // ── 17η Αγωνιστική ──
+  { id: "sl-17-1", t: "SL", md: 17, home: "AEK", away: "KAL", kickoff: "2027-01-16T17:00:00Z", round: "Αγωνιστική 17", timeTbd: true },
+  { id: "sl-17-2", t: "SL", md: 17, home: "ATR", away: "PNE", kickoff: "2027-01-16T17:00:00Z", round: "Αγωνιστική 17", timeTbd: true },
+  { id: "sl-17-3", t: "SL", md: 17, home: "VOL", away: "ARI", kickoff: "2027-01-16T17:00:00Z", round: "Αγωνιστική 17", timeTbd: true },
+  { id: "sl-17-4", t: "SL", md: 17, home: "KIF", away: "AST", kickoff: "2027-01-16T17:00:00Z", round: "Αγωνιστική 17", timeTbd: true },
+  { id: "sl-17-5", t: "SL", md: 17, home: "LEV", away: "IRA", kickoff: "2027-01-16T17:00:00Z", round: "Αγωνιστική 17", timeTbd: true },
+  { id: "sl-17-6", t: "SL", md: 17, home: "OFI", away: "PAO", kickoff: "2027-01-16T17:00:00Z", round: "Αγωνιστική 17", timeTbd: true },
+  { id: "sl-17-7", t: "SL", md: 17, home: "PAOK", away: "OLY", kickoff: "2027-01-16T17:00:00Z", round: "Αγωνιστική 17", timeTbd: true },
+  // ── 18η Αγωνιστική ──
+  { id: "sl-18-1", t: "SL", md: 18, home: "ARI", away: "KIF", kickoff: "2027-01-23T17:00:00Z", round: "Αγωνιστική 18", timeTbd: true },
+  { id: "sl-18-2", t: "SL", md: 18, home: "VOL", away: "OFI", kickoff: "2027-01-23T17:00:00Z", round: "Αγωνιστική 18", timeTbd: true },
+  { id: "sl-18-3", t: "SL", md: 18, home: "KAL", away: "AST", kickoff: "2027-01-23T17:00:00Z", round: "Αγωνιστική 18", timeTbd: true },
+  { id: "sl-18-4", t: "SL", md: 18, home: "OLY", away: "LEV", kickoff: "2027-01-23T17:00:00Z", round: "Αγωνιστική 18", timeTbd: true },
+  { id: "sl-18-5", t: "SL", md: 18, home: "PAO", away: "ATR", kickoff: "2027-01-23T17:00:00Z", round: "Αγωνιστική 18", timeTbd: true },
+  { id: "sl-18-6", t: "SL", md: 18, home: "PNE", away: "AEK", kickoff: "2027-01-23T17:00:00Z", round: "Αγωνιστική 18", timeTbd: true },
+  { id: "sl-18-7", t: "SL", md: 18, home: "IRA", away: "PAOK", kickoff: "2027-01-23T17:00:00Z", round: "Αγωνιστική 18", timeTbd: true },
+  // ── 19η Αγωνιστική ──
+  { id: "sl-19-1", t: "SL", md: 19, home: "AST", away: "IRA", kickoff: "2027-01-30T17:00:00Z", round: "Αγωνιστική 19", timeTbd: true },
+  { id: "sl-19-2", t: "SL", md: 19, home: "ATR", away: "ARI", kickoff: "2027-01-30T17:00:00Z", round: "Αγωνιστική 19", timeTbd: true },
+  { id: "sl-19-3", t: "SL", md: 19, home: "KIF", away: "VOL", kickoff: "2027-01-30T17:00:00Z", round: "Αγωνιστική 19", timeTbd: true },
+  { id: "sl-19-4", t: "SL", md: 19, home: "LEV", away: "KAL", kickoff: "2027-01-30T17:00:00Z", round: "Αγωνιστική 19", timeTbd: true },
+  { id: "sl-19-5", t: "SL", md: 19, home: "OFI", away: "AEK", kickoff: "2027-01-30T17:00:00Z", round: "Αγωνιστική 19", timeTbd: true },
+  { id: "sl-19-6", t: "SL", md: 19, home: "PAO", away: "OLY", kickoff: "2027-01-30T17:00:00Z", round: "Αγωνιστική 19", timeTbd: true },
+  { id: "sl-19-7", t: "SL", md: 19, home: "PAOK", away: "PNE", kickoff: "2027-01-30T17:00:00Z", round: "Αγωνιστική 19", timeTbd: true },
+  // ── 20η Αγωνιστική ──
+  { id: "sl-20-1", t: "SL", md: 20, home: "AEK", away: "KIF", kickoff: "2027-02-06T17:00:00Z", round: "Αγωνιστική 20", timeTbd: true },
+  { id: "sl-20-2", t: "SL", md: 20, home: "ARI", away: "PAO", kickoff: "2027-02-06T17:00:00Z", round: "Αγωνιστική 20", timeTbd: true },
+  { id: "sl-20-3", t: "SL", md: 20, home: "VOL", away: "ATR", kickoff: "2027-02-06T17:00:00Z", round: "Αγωνιστική 20", timeTbd: true },
+  { id: "sl-20-4", t: "SL", md: 20, home: "KAL", away: "PAOK", kickoff: "2027-02-06T17:00:00Z", round: "Αγωνιστική 20", timeTbd: true },
+  { id: "sl-20-5", t: "SL", md: 20, home: "OLY", away: "AST", kickoff: "2027-02-06T17:00:00Z", round: "Αγωνιστική 20", timeTbd: true },
+  { id: "sl-20-6", t: "SL", md: 20, home: "PNE", away: "LEV", kickoff: "2027-02-06T17:00:00Z", round: "Αγωνιστική 20", timeTbd: true },
+  { id: "sl-20-7", t: "SL", md: 20, home: "IRA", away: "OFI", kickoff: "2027-02-06T17:00:00Z", round: "Αγωνιστική 20", timeTbd: true },
+  // ── 21η Αγωνιστική ──
+  { id: "sl-21-1", t: "SL", md: 21, home: "AST", away: "PNE", kickoff: "2027-02-13T17:00:00Z", round: "Αγωνιστική 21", timeTbd: true },
+  { id: "sl-21-2", t: "SL", md: 21, home: "ATR", away: "IRA", kickoff: "2027-02-13T17:00:00Z", round: "Αγωνιστική 21", timeTbd: true },
+  { id: "sl-21-3", t: "SL", md: 21, home: "LEV", away: "KIF", kickoff: "2027-02-13T17:00:00Z", round: "Αγωνιστική 21", timeTbd: true },
+  { id: "sl-21-4", t: "SL", md: 21, home: "OLY", away: "VOL", kickoff: "2027-02-13T17:00:00Z", round: "Αγωνιστική 21", timeTbd: true },
+  { id: "sl-21-5", t: "SL", md: 21, home: "OFI", away: "ARI", kickoff: "2027-02-13T17:00:00Z", round: "Αγωνιστική 21", timeTbd: true },
+  { id: "sl-21-6", t: "SL", md: 21, home: "PAO", away: "KAL", kickoff: "2027-02-13T17:00:00Z", round: "Αγωνιστική 21", timeTbd: true },
+  { id: "sl-21-7", t: "SL", md: 21, home: "PAOK", away: "AEK", kickoff: "2027-02-13T17:00:00Z", round: "Αγωνιστική 21", timeTbd: true },
+  // ── 22η Αγωνιστική ──
+  { id: "sl-22-1", t: "SL", md: 22, home: "AEK", away: "AST", kickoff: "2027-02-20T17:00:00Z", round: "Αγωνιστική 22", timeTbd: true },
+  { id: "sl-22-2", t: "SL", md: 22, home: "ARI", away: "LEV", kickoff: "2027-02-20T17:00:00Z", round: "Αγωνιστική 22", timeTbd: true },
+  { id: "sl-22-3", t: "SL", md: 22, home: "ATR", away: "OFI", kickoff: "2027-02-20T17:00:00Z", round: "Αγωνιστική 22", timeTbd: true },
+  { id: "sl-22-4", t: "SL", md: 22, home: "VOL", away: "KAL", kickoff: "2027-02-20T17:00:00Z", round: "Αγωνιστική 22", timeTbd: true },
+  { id: "sl-22-5", t: "SL", md: 22, home: "KIF", away: "PAOK", kickoff: "2027-02-20T17:00:00Z", round: "Αγωνιστική 22", timeTbd: true },
+  { id: "sl-22-6", t: "SL", md: 22, home: "PNE", away: "PAO", kickoff: "2027-02-20T17:00:00Z", round: "Αγωνιστική 22", timeTbd: true },
+  { id: "sl-22-7", t: "SL", md: 22, home: "IRA", away: "OLY", kickoff: "2027-02-20T17:00:00Z", round: "Αγωνιστική 22", timeTbd: true },
+  // ── 23η Αγωνιστική ──
+  { id: "sl-23-1", t: "SL", md: 23, home: "AST", away: "OFI", kickoff: "2027-02-27T17:00:00Z", round: "Αγωνιστική 23", timeTbd: true },
+  { id: "sl-23-2", t: "SL", md: 23, home: "KAL", away: "KIF", kickoff: "2027-02-27T17:00:00Z", round: "Αγωνιστική 23", timeTbd: true },
+  { id: "sl-23-3", t: "SL", md: 23, home: "LEV", away: "AEK", kickoff: "2027-02-27T17:00:00Z", round: "Αγωνιστική 23", timeTbd: true },
+  { id: "sl-23-4", t: "SL", md: 23, home: "OLY", away: "ARI", kickoff: "2027-02-27T17:00:00Z", round: "Αγωνιστική 23", timeTbd: true },
+  { id: "sl-23-5", t: "SL", md: 23, home: "PAO", away: "VOL", kickoff: "2027-02-27T17:00:00Z", round: "Αγωνιστική 23", timeTbd: true },
+  { id: "sl-23-6", t: "SL", md: 23, home: "PNE", away: "IRA", kickoff: "2027-02-27T17:00:00Z", round: "Αγωνιστική 23", timeTbd: true },
+  { id: "sl-23-7", t: "SL", md: 23, home: "PAOK", away: "ATR", kickoff: "2027-02-27T17:00:00Z", round: "Αγωνιστική 23", timeTbd: true },
+  // ── 24η Αγωνιστική ──
+  { id: "sl-24-1", t: "SL", md: 24, home: "AEK", away: "OLY", kickoff: "2027-03-06T17:00:00Z", round: "Αγωνιστική 24", timeTbd: true },
+  { id: "sl-24-2", t: "SL", md: 24, home: "ARI", away: "AST", kickoff: "2027-03-06T17:00:00Z", round: "Αγωνιστική 24", timeTbd: true },
+  { id: "sl-24-3", t: "SL", md: 24, home: "ATR", away: "LEV", kickoff: "2027-03-06T17:00:00Z", round: "Αγωνιστική 24", timeTbd: true },
+  { id: "sl-24-4", t: "SL", md: 24, home: "VOL", away: "PAOK", kickoff: "2027-03-06T17:00:00Z", round: "Αγωνιστική 24", timeTbd: true },
+  { id: "sl-24-5", t: "SL", md: 24, home: "KIF", away: "PAO", kickoff: "2027-03-06T17:00:00Z", round: "Αγωνιστική 24", timeTbd: true },
+  { id: "sl-24-6", t: "SL", md: 24, home: "OFI", away: "PNE", kickoff: "2027-03-06T17:00:00Z", round: "Αγωνιστική 24", timeTbd: true },
+  { id: "sl-24-7", t: "SL", md: 24, home: "IRA", away: "KAL", kickoff: "2027-03-06T17:00:00Z", round: "Αγωνιστική 24", timeTbd: true },
+  // ── 25η Αγωνιστική ──
+  { id: "sl-25-1", t: "SL", md: 25, home: "AST", away: "VOL", kickoff: "2027-03-13T17:00:00Z", round: "Αγωνιστική 25", timeTbd: true },
+  { id: "sl-25-2", t: "SL", md: 25, home: "KAL", away: "ATR", kickoff: "2027-03-13T17:00:00Z", round: "Αγωνιστική 25", timeTbd: true },
+  { id: "sl-25-3", t: "SL", md: 25, home: "OLY", away: "KIF", kickoff: "2027-03-13T17:00:00Z", round: "Αγωνιστική 25", timeTbd: true },
+  { id: "sl-25-4", t: "SL", md: 25, home: "PAO", away: "LEV", kickoff: "2027-03-13T17:00:00Z", round: "Αγωνιστική 25", timeTbd: true },
+  { id: "sl-25-5", t: "SL", md: 25, home: "PNE", away: "ARI", kickoff: "2027-03-13T17:00:00Z", round: "Αγωνιστική 25", timeTbd: true },
+  { id: "sl-25-6", t: "SL", md: 25, home: "PAOK", away: "OFI", kickoff: "2027-03-13T17:00:00Z", round: "Αγωνιστική 25", timeTbd: true },
+  { id: "sl-25-7", t: "SL", md: 25, home: "IRA", away: "AEK", kickoff: "2027-03-13T17:00:00Z", round: "Αγωνιστική 25", timeTbd: true },
+  // ── 26η Αγωνιστική ──
+  { id: "sl-26-1", t: "SL", md: 26, home: "AEK", away: "PAO", kickoff: "2027-03-20T17:00:00Z", round: "Αγωνιστική 26", timeTbd: true },
+  { id: "sl-26-2", t: "SL", md: 26, home: "ARI", away: "KAL", kickoff: "2027-03-20T17:00:00Z", round: "Αγωνιστική 26", timeTbd: true },
+  { id: "sl-26-3", t: "SL", md: 26, home: "ATR", away: "AST", kickoff: "2027-03-20T17:00:00Z", round: "Αγωνιστική 26", timeTbd: true },
+  { id: "sl-26-4", t: "SL", md: 26, home: "VOL", away: "PNE", kickoff: "2027-03-20T17:00:00Z", round: "Αγωνιστική 26", timeTbd: true },
+  { id: "sl-26-5", t: "SL", md: 26, home: "KIF", away: "IRA", kickoff: "2027-03-20T17:00:00Z", round: "Αγωνιστική 26", timeTbd: true },
+  { id: "sl-26-6", t: "SL", md: 26, home: "LEV", away: "PAOK", kickoff: "2027-03-20T17:00:00Z", round: "Αγωνιστική 26", timeTbd: true },
+  { id: "sl-26-7", t: "SL", md: 26, home: "OFI", away: "OLY", kickoff: "2027-03-20T17:00:00Z", round: "Αγωνιστική 26", timeTbd: true }
 ];
 const UEFA_FIXTURES = [
+  // Q2 — completed (times: Greek local → UTC, EEST = UTC+3)
   { id: "uel-paok-1", t: "UEL", greek: "PAOK", home: "DYN", away: "PAOK", kickoff: "2026-07-23T17:00:00Z", round: "Q2 · Leg 1", leg: 1, tie: "uel-paok", venue: "Motor Lublin Arena, Πολωνία" },
-  { id: "uel-paok-2", t: "UEL", greek: "PAOK", home: "PAOK", away: "DYN", kickoff: "2026-07-30T18:30:00Z", round: "Q2 · Leg 2", leg: 2, tie: "uel-paok", venue: "Toumba, Θεσσαλονίκη" },
+  { id: "uel-paok-2", t: "UEL", greek: "PAOK", home: "PAOK", away: "DYN", kickoff: "2026-07-30T17:45:00Z", round: "Q2 · Leg 2", leg: 2, tie: "uel-paok", venue: "Toumba, Θεσσαλονίκη" },
+  // Πέμ 30/7 20:45
   { id: "uecl-pao-1", t: "UECL", greek: "PAO", home: "PKS", away: "PAO", kickoff: "2026-07-23T18:00:00Z", round: "Q2 · Leg 1", leg: 1, tie: "uecl-pao", venue: "Fehérvári úti, Paks" },
   { id: "uecl-pao-2", t: "UECL", greek: "PAO", home: "PAO", away: "PKS", kickoff: "2026-07-30T18:30:00Z", round: "Q2 · Leg 2", leg: 2, tie: "uecl-pao", venue: "ΟΑΚΑ, Αθήνα" },
-  { id: "ucl-oly-1", t: "UCL", greek: "OLY", home: "OLY", away: "NEC", kickoff: "2026-08-04T18:30:00Z", round: "Q3 · Leg 1", leg: 1, tie: "ucl-oly", venue: "Karaiskakis, Πειραιάς" },
-  { id: "ucl-oly-2", t: "UCL", greek: "OLY", home: "NEC", away: "OLY", kickoff: "2026-08-11T18:00:00Z", round: "Q3 · Leg 2", leg: 2, tie: "ucl-oly", venue: "Goffert, Nijmegen" },
-  { id: "ucl-aek-1", t: "UCL", greek: "AEK", home: "AEK", away: "TBD", kickoff: "2026-08-19T18:30:00Z", round: "PO · Leg 1", leg: 1, tie: "ucl-aek", venue: "OPAP Arena, Αθήνα" },
-  { id: "ucl-aek-2", t: "UCL", greek: "AEK", home: "TBD", away: "AEK", kickoff: "2026-08-26T18:30:00Z", round: "PO · Leg 2", leg: 2, tie: "ucl-aek" }
+  // Πέμ 30/7 21:30
+  // Ολυμπιακός–NEC Q3 (olympiacos.org / UEFA): Τρί 4/8 21:00 · Τρί 11/8 20:30 Ελλ.
+  { id: "ucl-oly-1", t: "UCL", greek: "OLY", home: "OLY", away: "NEC", kickoff: "2026-08-04T18:00:00Z", round: "Q3 · Leg 1", leg: 1, tie: "ucl-oly", venue: "Karaiskakis, Πειραιάς" },
+  { id: "ucl-oly-2", t: "UCL", greek: "OLY", home: "NEC", away: "OLY", kickoff: "2026-08-11T17:30:00Z", round: "Q3 · Leg 2", leg: 2, tie: "ucl-oly", venue: "Goffert, Nijmegen" },
+  // Παναθηναϊκός–ΤΣΣΚΑ 1948 Q3 (pao.gr / sport24): Τετ 5/8 21:30 ΟΑΚΑ · Τρί 11/8 Σόφια ώρα TBA
+  { id: "uecl-pao-3", t: "UECL", greek: "PAO", home: "PAO", away: "CSK", kickoff: "2026-08-05T18:30:00Z", round: "Q3 · Leg 1", leg: 1, tie: "uecl-pao-q3", venue: "ΟΑΚΑ, Αθήνα" },
+  { id: "uecl-pao-4", t: "UECL", greek: "PAO", home: "CSK", away: "PAO", kickoff: "2026-08-11T18:00:00Z", round: "Q3 · Leg 2", leg: 2, tie: "uecl-pao-q3", venue: "Σόφια", timeTbd: true },
+  // ΠΑΟΚ–Άντερλεχτ Q3 (UEFA 31/7): Πέμ 6/8 20:45 Τούμπα · Πέμ 13/8 21:30 Βρυξέλλες
+  { id: "uel-paok-3", t: "UEL", greek: "PAOK", home: "PAOK", away: "AND", kickoff: "2026-08-06T17:45:00Z", round: "Q3 · Leg 1", leg: 1, tie: "uel-paok-q3", venue: "Toumba, Θεσσαλονίκη" },
+  { id: "uel-paok-4", t: "UEL", greek: "PAOK", home: "AND", away: "PAOK", kickoff: "2026-08-13T18:30:00Z", round: "Q3 · Leg 2", leg: 2, tie: "uel-paok-q3", venue: "Lotto Park, Βρυξέλλες" },
+  // ΑΕΚ UCL playoffs: παράθυρο 18–19 & 25–26/8 — αντίπαλος+ώρα μετά κλήρωση
+  { id: "ucl-aek-1", t: "UCL", greek: "AEK", home: "AEK", away: "TBD", kickoff: "2026-08-19T18:00:00Z", round: "PO · Leg 1", leg: 1, tie: "ucl-aek", venue: "OPAP Arena, Αθήνα", timeTbd: true },
+  { id: "ucl-aek-2", t: "UCL", greek: "AEK", home: "TBD", away: "AEK", kickoff: "2026-08-26T18:00:00Z", round: "PO · Leg 2", leg: 2, tie: "ucl-aek", timeTbd: true },
+  // ΟΦΗ UEL playoffs — Πέμ 20/8 & 27/8, κλήρωση 3/8, αντίπαλος+ώρα TBD (όχι σήμερα)
+  { id: "uel-ofi-1", t: "UEL", greek: "OFI", home: "OFI", away: "TBD", kickoff: "2026-08-20T18:00:00Z", round: "PO · Leg 1", leg: 1, tie: "uel-ofi", venue: "Πανκρήτιο, Ηράκλειο", timeTbd: true },
+  { id: "uel-ofi-2", t: "UEL", greek: "OFI", home: "TBD", away: "OFI", kickoff: "2026-08-27T18:00:00Z", round: "PO · Leg 2", leg: 2, tie: "uel-ofi", venue: "Έδρα αντιπάλου", timeTbd: true }
 ];
 const ALL_FIXTURES = [...SUPER_LEAGUE, ...UEFA_FIXTURES];
 function matchResult(h, a) {
@@ -7100,7 +7304,33 @@ function scoreMatch(pred, actual) {
   if (!pred || actual == null) return null;
   const exact = pred.h === actual.h && pred.a === actual.a;
   const correct = matchResult(pred.h, pred.a) === matchResult(actual.h, actual.a);
-  return { exact, correct, points: (exact ? 1 : 0) + (correct ? 1 : 0) };
+  const qualCorrect = pred.qual && actual.qual && pred.qual === actual.qual;
+  const basePoints = (exact ? 1 : 0) + (correct ? 1 : 0);
+  const qualBonus = qualCorrect ? 1 : 0;
+  return { exact, correct, qualCorrect, points: basePoints + qualBonus, provisional: !!actual.provisional };
+}
+function scorelineToActual(scoreline) {
+  if (!scoreline || scoreline.h == null || scoreline.a == null) return null;
+  const actual = {
+    h: Number(scoreline.h),
+    a: Number(scoreline.a),
+    provisional: true
+  };
+  if (scoreline.qual) actual.qual = scoreline.qual;
+  return actual;
+}
+function mergeScoringResults(results = {}, liveScores = {}, finishedHints = {}) {
+  const out = { ...results || {} };
+  const fill = (src) => {
+    for (const [id2, scoreline] of Object.entries(src || {})) {
+      if (out[id2] != null) continue;
+      const actual = scorelineToActual(scoreline);
+      if (actual) out[id2] = actual;
+    }
+  };
+  fill(liveScores);
+  fill(finishedHints);
+  return out;
 }
 function computeLeaderboard(fixtures, predictions, results) {
   const t2 = {};
@@ -7118,37 +7348,156 @@ function computeLeaderboard(fixtures, predictions, results) {
       t2[p2].played += 1;
       if (sc2.exact) t2[p2].exact++;
       if (sc2.correct) t2[p2].correct++;
+      if (sc2.qualCorrect) t2[p2].qual = (t2[p2].qual || 0) + 1;
     });
   });
   return PLAYERS.slice().sort((a, b) => t2[b].pts - t2[a].pts).map((p2, i) => ({ player: p2, rank: i + 1, ...t2[p2] }));
 }
 const TZ = "Europe/Athens";
-const grTime = (iso) => new Date(iso).toLocaleTimeString("el-GR", { timeZone: TZ, hour: "2-digit", minute: "2-digit" });
+const timeOpts = { timeZone: TZ, hour: "2-digit", minute: "2-digit", hour12: false };
+const grTime = (iso) => new Date(iso).toLocaleTimeString("el-GR", timeOpts);
+const grKick = (m2) => (m2 == null ? void 0 : m2.timeTbd) ? "Ώρα TBA" : grTime(m2.kickoff);
 const grDate = (iso) => new Date(iso).toLocaleDateString("el-GR", { timeZone: TZ, weekday: "short", day: "numeric", month: "short" });
-const nowGR = () => (/* @__PURE__ */ new Date()).toLocaleTimeString("el-GR", { timeZone: TZ, hour: "2-digit", minute: "2-digit" });
+const nowGR = () => (/* @__PURE__ */ new Date()).toLocaleTimeString("el-GR", timeOpts);
 const isToday = (iso) => {
   const f2 = (d) => d.toLocaleDateString("el-GR", { timeZone: TZ });
   return f2(/* @__PURE__ */ new Date()) === f2(new Date(iso));
 };
-const isLocked = (iso) => Date.now() >= new Date(iso).getTime() - 6e4;
+const LOCK_BEFORE_MS = 15 * 60 * 1e3;
+const isLocked = (iso) => Date.now() >= new Date(iso).getTime() - LOCK_BEFORE_MS;
+const isRevealOpen = (iso) => isLocked(iso);
+const LIVE_AFTER_MIN = 200;
+const LIVE_WARMUP_MIN = 15;
+function inLiveScoreBand(iso, now = Date.now()) {
+  const minsAfter = (now - new Date(iso).getTime()) / 6e4;
+  return minsAfter >= -LIVE_WARMUP_MIN && minsAfter <= LIVE_AFTER_MIN;
+}
+function isSchedulableFixture(m2) {
+  return m2 && m2.home !== "TBD" && m2.away !== "TBD" && !m2.timeTbd && m2.kickoff;
+}
+function anyLiveScoreActivity(fixtures = ALL_FIXTURES, now = Date.now()) {
+  return fixtures.some((m2) => isSchedulableFixture(m2) && inLiveScoreBand(m2.kickoff, now));
+}
+function msUntilNextLiveScoreBand(fixtures = ALL_FIXTURES, now = Date.now()) {
+  if (anyLiveScoreActivity(fixtures, now)) return 0;
+  let best = null;
+  for (const m2 of fixtures) {
+    if (!isSchedulableFixture(m2)) continue;
+    const start = new Date(m2.kickoff).getTime() - LIVE_WARMUP_MIN * 6e4;
+    const delta = start - now;
+    if (delta > 0 && (best == null || delta < best)) best = delta;
+  }
+  return best;
+}
+const NAME_TO_KEY = {
+  aek: "AEK",
+  "aek athens": "AEK",
+  iraklis: "IRA",
+  "iraklis 1908": "IRA",
+  kalamata: "KAL",
+  aris: "ARI",
+  "aris thessaloniki": "ARI",
+  olympiacos: "OLY",
+  olympiakos: "OLY",
+  atromitos: "ATR",
+  panathinaikos: "PAO",
+  kifisia: "KIF",
+  kifissia: "KIF",
+  paok: "PAOK",
+  levadiakos: "LEV",
+  panetolikos: "PNE",
+  panaitolikos: "PNE",
+  asteras: "AST",
+  "asteras tripolis": "AST",
+  "asteras aktor": "AST",
+  ofi: "OFI",
+  "ofi crete": "OFI",
+  volos: "VOL",
+  "volos nfc": "VOL",
+  "dynamo kyiv": "DYN",
+  "dynamo kiev": "DYN",
+  "fc dynamo kyiv": "DYN",
+  "nec nijmegen": "NEC",
+  nec: "NEC",
+  paks: "PKS",
+  paksi: "PKS",
+  "paksi se": "PKS",
+  anderlecht: "AND",
+  "rsc anderlecht": "AND",
+  "cska 1948": "CSK",
+  "cska sofia 1948": "CSK",
+  "cska 1948 sofia": "CSK"
+};
+function norm(s) {
+  return String(s || "").toLowerCase().normalize("NFD").replace(new RegExp("\\p{M}", "gu"), "").replace(/[^a-z0-9 ]+/g, " ").replace(/\s+/g, " ").trim();
+}
+function resolveTeamKey(name, shortName) {
+  const candidates = [name, shortName].filter(Boolean).map(norm);
+  for (const c of candidates) {
+    if (NAME_TO_KEY[c]) return NAME_TO_KEY[c];
+    for (const [alias, key] of Object.entries(NAME_TO_KEY)) {
+      if (c === alias || c.includes(alias) || alias.includes(c)) return key;
+    }
+  }
+  for (const [key, t2] of Object.entries(TEAMS)) {
+    const n2 = norm(t2.name);
+    if (candidates.some((c) => c === n2 || c.includes(n2) || n2.includes(c))) return key;
+  }
+  return null;
+}
+function sameDay(aIso, bIso) {
+  if (!aIso || !bIso) return true;
+  return String(aIso).slice(0, 10) === String(bIso).slice(0, 10);
+}
+function mapPipelineToLiveScores(pipelineMatches = []) {
+  var _a, _b, _c, _d, _e, _f, _g, _h;
+  const out = {};
+  for (const pm of pipelineMatches) {
+    const home = resolveTeamKey((_a = pm.home_team) == null ? void 0 : _a.name, (_b = pm.home_team) == null ? void 0 : _b.short_name);
+    const away = resolveTeamKey((_c = pm.away_team) == null ? void 0 : _c.name, (_d = pm.away_team) == null ? void 0 : _d.short_name);
+    if (!home || !away) continue;
+    if (((_e = pm.score) == null ? void 0 : _e.home) == null || ((_f = pm.score) == null ? void 0 : _f.away) == null) {
+      if (pm.status !== "IN_PROGRESS" && pm.status !== "FINISHED") continue;
+    }
+    const fixture = ALL_FIXTURES.find(
+      (m2) => m2.home === home && m2.away === away && sameDay(m2.kickoff, pm.kickoff_at_utc)
+    ) || ALL_FIXTURES.find((m2) => m2.home === home && m2.away === away);
+    if (!fixture) continue;
+    const inPlay = pm.status === "IN_PROGRESS";
+    const finished = pm.status === "FINISHED";
+    if (!inPlay && !finished) continue;
+    out[fixture.id] = {
+      h: Number(((_g = pm.score) == null ? void 0 : _g.home) ?? 0),
+      a: Number(((_h = pm.score) == null ? void 0 : _h.away) ?? 0),
+      min: inPlay ? pm.minute ?? 1 : 90,
+      status: pm.status,
+      provider: pm.provider || "pipeline",
+      external_id: pm.external_id,
+      final: finished
+    };
+  }
+  return out;
+}
 const LOGOS = {
   OLY: "/logos/OLY.svg",
   AEK: "/logos/AEK.svg",
   PAOK: "/logos/PAOK.svg",
   PAO: "/logos/PAO.svg",
-  ARI: "/logos/ARI.png",
+  ARI: "/logos/ARI.svg",
   ATR: "/logos/ATR.svg",
-  AST: "/logos/AST.png",
+  AST: "/logos/AST.svg",
   KIF: "/logos/KIF.svg",
-  LEV: "/logos/LEV.png",
+  LEV: "/logos/LEV.svg",
   OFI: "/logos/OFI.svg",
-  PNE: "/logos/PNE.png",
+  PNE: "/logos/PNE.svg",
   VOL: "/logos/VOL.svg",
-  KAL: "/logos/KAL.png",
-  IRA: "/logos/IRA.png",
-  DYN: null,
-  NEC: null,
-  PKS: null,
+  KAL: "/logos/KAL.svg",
+  IRA: "/logos/IRA.svg",
+  DYN: "/logos/DYN.svg",
+  NEC: "/logos/NEC.svg",
+  PKS: "/logos/PKS.svg",
+  AND: "/logos/AND.svg",
+  CSK: "/logos/CSK.svg",
   TBD: null
 };
 const TEAM_COLORS = {
@@ -7169,12 +7518,19 @@ const TEAM_COLORS = {
   DYN: "#003F87",
   NEC: "#CC0000",
   PKS: "#006400",
+  AND: "#6c3",
+  CSK: "#c41e1e",
   TBD: "#444"
 };
+function logoUrl(k2) {
+  if (!k2 || k2 === "TBD") return null;
+  if (LOGOS[k2]) return LOGOS[k2];
+  return `/logos/${k2}.svg`;
+}
 function ShieldFallback({ k: k2, size }) {
   const t2 = TEAMS[k2] || { abbr: k2 };
   const color = TEAM_COLORS[k2] || "#444";
-  const abbr = (t2.abbr || k2).slice(0, 3);
+  const abbr = (t2.abbr || k2 || "?").slice(0, 3);
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: size, height: size, viewBox: "0 0 64 64", style: { flexShrink: 0 }, children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx(
       "path",
@@ -7202,24 +7558,47 @@ function ShieldFallback({ k: k2, size }) {
   ] });
 }
 function TeamLogo({ k: k2, size = 32 }) {
-  const [failed, setFailed] = reactExports.useState(false);
-  const url = LOGOS[k2];
-  if (!url || failed) return /* @__PURE__ */ jsxRuntimeExports.jsx(ShieldFallback, { k: k2, size });
+  var _a;
+  const [tryIdx, setTryIdx] = reactExports.useState(0);
+  const primary = logoUrl(k2) || LOGOS[k2];
+  const candidates = primary ? [primary, primary.endsWith(".svg") ? primary.replace(/\.svg$/i, ".png") : primary.replace(/\.png$/i, ".svg"), `/logos/${k2}.svg`, `/logos/${k2}.png`] : [`/logos/${k2}.svg`, `/logos/${k2}.png`];
+  const uniq = [...new Set(candidates.filter(Boolean))];
+  const url = uniq[tryIdx];
+  if (!k2 || k2 === "TBD" || tryIdx >= uniq.length) return /* @__PURE__ */ jsxRuntimeExports.jsx(ShieldFallback, { k: k2, size });
   return /* @__PURE__ */ jsxRuntimeExports.jsx(
-    "img",
+    "span",
     {
-      src: url,
-      alt: k2,
-      width: size,
-      height: size,
-      onError: () => setFailed(true),
       style: {
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
         width: size,
         height: size,
-        objectFit: "contain",
         flexShrink: 0,
-        filter: "drop-shadow(0 1px 3px rgba(0,0,0,0.5))"
-      }
+        borderRadius: Math.max(4, Math.round(size * 0.18)),
+        background: "rgba(255,255,255,0.92)",
+        padding: Math.max(1, Math.round(size * 0.06)),
+        boxSizing: "border-box"
+      },
+      children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "img",
+        {
+          src: url,
+          alt: ((_a = TEAMS[k2]) == null ? void 0 : _a.name) || k2,
+          width: size,
+          height: size,
+          loading: "lazy",
+          decoding: "async",
+          onError: () => setTryIdx((i) => i + 1),
+          style: {
+            width: "100%",
+            height: "100%",
+            objectFit: "contain",
+            display: "block"
+          }
+        },
+        url
+      )
     }
   );
 }
@@ -7784,13 +8163,17 @@ function Guide({ onBack }) {
         ] }),
         /* @__PURE__ */ jsxRuntimeExports.jsxs(Section, { emoji: "🔒", title: "Προθεσμία Πρόβλεψης", accent: RED$2, children: [
           /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { background: "rgba(255,34,68,.08)", border: `1px solid rgba(255,34,68,.2)`, borderRadius: 10, padding: "12px 14px", marginBottom: 10 }, children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 13, fontWeight: 700, color: RED$2, marginBottom: 6 }, children: "⚠️ Κλείδωμα 1 λεπτό πριν την εκκίνηση" }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 12, color: MUTED$2, lineHeight: 1.6 }, children: "Μόλις ξεκινήσει ο αγώνας, δεν μπορείς να αλλάξεις ή να εισάγεις πρόβλεψη. Κάνε τις προβλέψεις σου εγκαίρως!" })
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 13, fontWeight: 700, color: RED$2, marginBottom: 6 }, children: "⚠️ Κλείδωμα 15 λεπτά πριν την εκκίνηση" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 12, color: MUTED$2, lineHeight: 1.6 }, children: "15 λεπτά πριν τη σέντρα οι προβλέψεις κλειδώνουν και εμφανίζονται σε όλους. Δεν μπορείς να αλλάξεις ή να εισάγεις πρόβλεψη μετά από αυτό το σημείο." })
           ] }),
           /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { fontSize: 12, color: MUTED$2, lineHeight: 1.6 }, children: [
             "💡 ",
             /* @__PURE__ */ jsxRuntimeExports.jsx("strong", { style: { color: TEXT$1 }, children: "Tip:" }),
-            " Θα λάβεις WhatsApp υπενθύμιση 10 λεπτά πριν κάθε αγώνα για τον οποίο δεν έχεις κάνει πρόβλεψη."
+            " Θα λάβεις WhatsApp υπενθυμίσεις ",
+            /* @__PURE__ */ jsxRuntimeExports.jsx("strong", { style: { color: TEXT$1 }, children: "1 ώρα" }),
+            " και ",
+            /* @__PURE__ */ jsxRuntimeExports.jsx("strong", { style: { color: TEXT$1 }, children: "30 λεπτά" }),
+            " πριν κάθε αγώνα για τον οποίο δεν έχεις κάνει πρόβλεψη."
           ] })
         ] })
       ] }),
@@ -7858,7 +8241,7 @@ function Guide({ onBack }) {
           /* @__PURE__ */ jsxRuntimeExports.jsx(Rule, { n: "2", text: "Επίλεξε το σκορ που προβλέπεις", sub: "Χρησιμοποίησε τα +/– κουμπιά για γκολ Γηπεδούχου και Φιλοξενούμενου" }),
           /* @__PURE__ */ jsxRuntimeExports.jsx(Rule, { n: "3", text: "UEFA: επίλεξε ποιος προκρίνεται", sub: "Εμφανίζεται μπλε κουτί με dropdown — +1 πόντος εάν βρεις σωστά" }),
           /* @__PURE__ */ jsxRuntimeExports.jsx(Rule, { n: "4", text: "UEFA Leg 2: πρόβλεψη παράτασης/πέναλτι", sub: "Τσέκαρε τα κουτάκια ΑΕΤ & Pen αν πιστεύεις ότι θα χρειαστούν" }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(Rule, { n: "5", text: 'Πάτα "Αποθήκευσε πρόβλεψη"', sub: "Πράσινο κουμπί στο κάτω μέρος. Μπορείς να αλλάξεις μέχρι 1 λεπτό πριν τον αγώνα" })
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Rule, { n: "5", text: 'Πάτα "Αποθήκευσε πρόβλεψη"', sub: "Πράσινο κουμπί στο κάτω μέρος. Μπορείς να αλλάξεις μέχρι 15 λεπτά πριν τον αγώνα" })
         ] }),
         /* @__PURE__ */ jsxRuntimeExports.jsxs(Section, { emoji: "🏆", title: "Πώς βλέπω την κατάταξη;", accent: GOLD$1, children: [
           /* @__PURE__ */ jsxRuntimeExports.jsx(Rule, { n: "1", text: 'Καρτέλα "League" → "Standings"', sub: "Βλέπεις τη συνολική κατάταξη και τους πόντους ανά τουρνουά" }),
@@ -7879,8 +8262,18 @@ function Guide({ onBack }) {
               "Αν ",
               /* @__PURE__ */ jsxRuntimeExports.jsx("strong", { style: { color: TEXT$1 }, children: "δεν έχεις κάνει πρόβλεψη" }),
               " για κάποιον αγώνα, λαμβάνεις αυτόματο WhatsApp μήνυμα ",
-              /* @__PURE__ */ jsxRuntimeExports.jsx("strong", { style: { color: TEXT$1 }, children: "10 λεπτά πριν" }),
-              " την εκκίνηση."
+              /* @__PURE__ */ jsxRuntimeExports.jsx("strong", { style: { color: TEXT$1 }, children: "1 ώρα" }),
+              " και ξανά ",
+              /* @__PURE__ */ jsxRuntimeExports.jsx("strong", { style: { color: TEXT$1 }, children: "30 λεπτά" }),
+              " πριν την εκκίνηση."
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { background: "rgba(255,77,109,.06)", border: `1px solid rgba(255,77,109,.25)`, borderRadius: 10, padding: "14px", marginBottom: 14 }, children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 13, fontWeight: 700, color: RED$2, marginBottom: 8 }, children: "📰 Ο Κουβάς" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { fontSize: 12, color: MUTED$2, lineHeight: 1.7 }, children: [
+              "Μετά το τελευταίο ματς της ημέρας (~2½ ώρες μετά τη σέντρα), στέλνουμε σε ",
+              /* @__PURE__ */ jsxRuntimeExports.jsx("strong", { style: { color: TEXT$1 }, children: "όλους τους παίκτες" }),
+              " το πρωτοσέλιδο «Ο Κουβάς»: αποτελέσματα, πόντοι ημέρας και ισότιμο δηλητήριο για τον καθένα. Link + φωτο μέσα στο WhatsApp."
             ] })
           ] }),
           /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 12, fontWeight: 700, color: MUTED$2, letterSpacing: ".06em", textTransform: "uppercase", marginBottom: 10 }, children: "Μορφή μηνύματος" }),
@@ -7920,7 +8313,7 @@ function Guide({ onBack }) {
         ] }),
         /* @__PURE__ */ jsxRuntimeExports.jsxs(Section, { emoji: "📲", title: "Ενεργοποίηση WhatsApp", accent: BLUE$1, children: [
           /* @__PURE__ */ jsxRuntimeExports.jsx(Rule, { n: "1", text: "Αποθήκευσε τον αριθμό σου", sub: "Κατά τη σύνδεση ζητήθηκε ο αριθμός κινητού σου. Αν τον παρέλειψες, μπορείς να τον εισάγεις από τις Ρυθμίσεις." }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(Rule, { n: "2", text: "Αποδέξου το πρώτο μήνυμα", sub: "Πρέπει να στείλεις 'join kouv' στο Twilio sandbox αριθμό για να ενεργοποιηθείς (sandbox mode)" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Rule, { n: "2", text: "JOIN στο Twilio Sandbox (ΥΠΟΧΡΕΩΤΙΚΟ)", sub: "Άνοιξε WhatsApp → νέο chat στο +1 415 523 8886 → στείλε ακριβώς το μήνυμα join από Twilio Console (Messaging → Try it out → Send a WhatsApp message), π.χ. join <δύο-λέξεις>. Χωρίς αυτό, τα μηνύματα αποτυγχάνουν με error 63015." }),
           /* @__PURE__ */ jsxRuntimeExports.jsx(Rule, { n: "3", text: "Απαντήσεις μέσω WhatsApp", sub: "Μπορείς να κάνεις πρόβλεψη απαντώντας απευθείας στο μήνυμα — αποθηκεύεται αυτόματα στην εφαρμογή" })
         ] })
       ] })
@@ -7935,7 +8328,6 @@ const PC = {
   mavromichalis: { p: "#4d9fff", bg: "rgba(77,159,255,.12)", b: "rgba(77,159,255,.3)" },
   chousiadas: { p: "#ff6b35", bg: "rgba(255,107,53,.12)", b: "rgba(255,107,53,.3)" }
 };
-const MEDALS = ["🥇", "🥈", "🥉"];
 const ODDS = {
   "uel-paok-1": { h: 3.1, d: 3.3, a: 2.1 },
   "uel-paok-2": { h: 2, d: 3.4, a: 3.5 },
@@ -7957,7 +8349,7 @@ const SEEDED_PREDS = {
   "uel-paok-1": { boikos: { h: 2, a: 1, qual: "DYN" }, mavromichalis: { h: 0, a: 0, qual: "DYN" }, chousiadas: { h: 2, a: 1, qual: "DYN" } },
   "uecl-pao-1": { boikos: { h: 0, a: 3, qual: "PAO" }, mavromichalis: { h: 0, a: 1, qual: "PAO" }, chousiadas: { h: 1, a: 2, qual: "PAO" } }
 };
-const SEEDED_RES = { "uel-paok-1": { h: 2, a: 3 }, "uecl-pao-1": { h: 1, a: 2 } };
+const SEEDED_RES = { "uel-paok-1": { h: 2, a: 3 }, "uecl-pao-1": { h: 1, a: 2 }, "uel-paok-2": { h: 2, a: 0, qual: "PAOK" }, "uecl-pao-2": { h: 2, a: 2, qual: "PAO" } };
 function isUEFATie(id2) {
   return UEFA_FIXTURES.some((f2) => f2.id === id2);
 }
@@ -7967,8 +8359,10 @@ function FetchBtn({ matchId, onFetched }) {
     setSt("loading");
     try {
       const r2 = await api.fetchScores(matchId);
-      setSt(r2.ok ? "done" : "pending");
-      if (r2.ok) onFetched == null ? void 0 : onFetched();
+      if (r2.ok) {
+        setSt(r2.final === false ? "live" : "done");
+        onFetched == null ? void 0 : onFetched();
+      } else setSt("pending");
     } catch {
       setSt("error");
     }
@@ -7978,67 +8372,109 @@ function FetchBtn({ matchId, onFetched }) {
     loading: { bg: "rgba(255,255,255,.06)", c: MUTED$1, b: LINE$1, i: "ti-loader-2", l: "..." },
     done: { bg: "rgba(0,255,136,.12)", c: GREEN$1, b: "rgba(0,255,136,.3)", i: "ti-check", l: "Updated ✓" },
     pending: { bg: "rgba(255,221,0,.12)", c: GOLD, b: "rgba(255,221,0,.3)", i: "ti-clock", l: "Not yet" },
+    live: { bg: "rgba(0,255,136,.08)", c: GREEN$1, b: "rgba(0,255,136,.25)", i: "ti-live-photo", l: "Live ✓" },
     error: { bg: "rgba(255,77,109,.12)", c: RED$1, b: "rgba(255,77,109,.3)", i: "ti-alert-circle", l: "Error" }
-  }[st];
+  }[st] || { bg: "rgba(255,255,255,.06)", c: MUTED$1, b: LINE$1, i: "ti-check", l: "OK" };
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("button", { onClick: go, disabled: st === "loading" || st === "done", style: { flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 5, padding: "8px 10px", borderRadius: 8, border: `1px solid ${cfg.b}`, background: cfg.bg, color: cfg.c, fontSize: 11, fontWeight: 700, cursor: "pointer", letterSpacing: ".02em" }, children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx("i", { className: `ti ${cfg.i}`, style: { fontSize: 13, animation: st === "loading" ? "spin .7s linear infinite" : void 0 } }),
     cfg.l
   ] });
 }
-function PushPanel({ match, result, onSaved }) {
-  const [h, setH] = reactExports.useState((result == null ? void 0 : result.h) ?? 0), [a, setA] = reactExports.useState((result == null ? void 0 : result.a) ?? 0);
+function PushPanel({ match, result, onSaved, pipelineHint }) {
+  var _a, _b;
+  const [h, setH] = reactExports.useState((result == null ? void 0 : result.h) ?? (pipelineHint == null ? void 0 : pipelineHint.h) ?? 0), [a, setA] = reactExports.useState((result == null ? void 0 : result.a) ?? (pipelineHint == null ? void 0 : pipelineHint.a) ?? 0);
+  const [mn, setMn] = reactExports.useState((pipelineHint == null ? void 0 : pipelineHint.min) && !(pipelineHint == null ? void 0 : pipelineHint.final) ? pipelineHint.min : 0);
   const [ot, setOt] = reactExports.useState(false), [otH, setOtH] = reactExports.useState(0), [otA, setOtA] = reactExports.useState(0);
   const [pen, setPen] = reactExports.useState(false), [penH, setPenH] = reactExports.useState(0), [penA, setPenA] = reactExports.useState(0);
-  const [saving, setSaving] = reactExports.useState(false), [saved, setSaved] = reactExports.useState(false);
-  const adj = (v2, set, d) => set(Math.max(0, Math.min(9, v2 + d)));
-  const nb2 = { background: SURF2, border: `1px solid ${LINE$1}`, borderRadius: 9, width: 42, height: 42, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, fontWeight: 800, fontVariantNumeric: "tabular-nums" };
-  const ab2 = (w2 = 30) => ({ width: w2, height: w2, borderRadius: 7, border: `1px solid ${LINE$1}`, background: "rgba(255,255,255,.06)", color: TEXT, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" });
-  const NumRow = ({ label, hv, setHv, av, setAv }) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { marginBottom: 10 }, children: [
-    label && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 10, fontWeight: 700, color: MUTED$1, letterSpacing: ".06em", textTransform: "uppercase", marginBottom: 6 }, children: label }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center", gap: 6 }, children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", alignItems: "center", gap: 5, justifyContent: "center" }, children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("button", { style: ab2(), onClick: () => adj(hv, setHv, -1), children: "–" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: nb2, children: hv }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("button", { style: ab2(), onClick: () => adj(hv, setHv, 1), children: "+" })
-      ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontSize: 16, color: DIM, textAlign: "center" }, children: "–" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", alignItems: "center", gap: 5, justifyContent: "center" }, children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("button", { style: ab2(), onClick: () => adj(av, setAv, -1), children: "–" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: nb2, children: av }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("button", { style: ab2(), onClick: () => adj(av, setAv, 1), children: "+" })
-      ] })
-    ] })
-  ] });
-  async function save() {
-    setSaving(true);
+  const [busy, setBusy] = reactExports.useState(false), [msg, setMsg] = reactExports.useState("");
+  const isuefa = isUEFATie(match.id);
+  const imported = (pipelineHint == null ? void 0 : pipelineHint.final) && result == null;
+  async function doLive() {
+    setBusy(true);
+    setMsg("");
     try {
-      await api.saveResult(match.id, h, a, ot, otH, otA, pen, penH, penA);
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2e3);
-      onSaved == null ? void 0 : onSaved();
-    } catch {
-    } finally {
-      setSaving(false);
+      const r2 = await api.setLive(match.id, h, a, mn, false);
+      setMsg(r2.ok ? `✅ Live ${h}–${a} (${mn}')!` : "❌ " + JSON.stringify(r2));
+      if (r2.ok) {
+        onSaved == null ? void 0 : onSaved();
+        setTimeout(() => setMsg(""), 3e3);
+      }
+    } catch (e) {
+      setMsg("❌ " + e.message);
     }
+    setBusy(false);
   }
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { background: SURF2, borderRadius: 10, padding: "14px", marginTop: 8, border: `1px solid ${LINE$1}` }, children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 10, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: MUTED$1, marginBottom: 12 }, children: "Εισαγωγή Αποτελέσματος" }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(NumRow, { label: "90'", hv: h, setHv: setH, av: a, setAv: setA }),
-    match.leg === 2 && /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("label", { style: { display: "flex", alignItems: "center", gap: 8, fontSize: 12, fontWeight: 600, cursor: "pointer", color: GOLD, marginBottom: ot ? 10 : 0, marginTop: 6 }, children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("input", { type: "checkbox", checked: ot, onChange: (e) => setOt(e.target.checked), style: { width: 15, height: 15, accentColor: GOLD } }),
-        "⏱ Παρατάσεις (AET)"
-      ] }),
-      ot && /* @__PURE__ */ jsxRuntimeExports.jsx(NumRow, { label: "Σκορ AET", hv: otH, setHv: setOtH, av: otA, setAv: setOtA }),
-      ot && /* @__PURE__ */ jsxRuntimeExports.jsxs("label", { style: { display: "flex", alignItems: "center", gap: 8, fontSize: 12, fontWeight: 600, cursor: "pointer", color: GREEN$1, marginTop: 4, marginBottom: pen ? 10 : 0 }, children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("input", { type: "checkbox", checked: pen, onChange: (e) => setPen(e.target.checked), style: { width: 15, height: 15, accentColor: GREEN$1 } }),
-        "⚽ Πέναλτι"
-      ] }),
-      ot && pen && /* @__PURE__ */ jsxRuntimeExports.jsx(NumRow, { label: "Σκορ Pen", hv: penH, setHv: setPenH, av: penA, setAv: setPenA })
+  async function doFinal() {
+    setBusy(true);
+    setMsg("");
+    try {
+      const r2 = await api.saveResult(match.id, h, a, ot, otH, otA, pen, penH, penA);
+      setMsg(r2.ok ? `✅ Τελικό ${h}–${a}!` : "❌ " + JSON.stringify(r2));
+      if (r2.ok) setTimeout(() => {
+        setMsg("");
+        onSaved == null ? void 0 : onSaved();
+      }, 1500);
+    } catch (e) {
+      setMsg("❌ " + e.message);
+    }
+    setBusy(false);
+  }
+  const N2 = ({ v: v2, s }) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", alignItems: "center", gap: 4 }, children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("button", { onClick: () => s(Math.max(0, v2 - 1)), style: { width: 28, height: 28, borderRadius: 6, border: "1px solid rgba(255,255,255,.15)", background: "rgba(255,255,255,.07)", color: "#e8e9ef", cursor: "pointer", fontSize: 15 }, children: "−" }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { width: 38, height: 38, borderRadius: 8, background: "rgba(255,255,255,.12)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, fontWeight: 900, color: "#e8e9ef" }, children: v2 }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("button", { onClick: () => s(v2 + 1), style: { width: 28, height: 28, borderRadius: 6, border: "1px solid rgba(255,255,255,.15)", background: "rgba(255,255,255,.07)", color: "#e8e9ef", cursor: "pointer", fontSize: 15 }, children: "+" })
+  ] });
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { marginTop: 10, background: "rgba(255,221,0,.05)", border: "1px solid rgba(255,221,0,.3)", borderRadius: 12, padding: 14 }, children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 12, fontWeight: 700, color: "#f0c040", marginBottom: 12 }, children: "📋 ΕΙΣΑΓΩΓΗ ΣΚΟΡ" }),
+    imported && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { fontSize: 10, fontWeight: 600, color: GREEN$1, marginBottom: 10, padding: "6px 8px", borderRadius: 7, background: "rgba(0,255,136,.08)", border: "1px solid rgba(0,255,136,.25)" }, children: [
+      "Imported from ",
+      pipelineHint.provider || "pipeline",
+      " — confirm with ΤΕΛΙΚΟ"
     ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("button", { onClick: save, disabled: saving || saved, style: { width: "100%", padding: "10px", borderRadius: 9, border: "none", background: saved ? GREEN$1 : "rgba(26,92,56,.9)", color: saved ? SURF$1 : "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 7, marginTop: 10, transition: "all .2s" }, children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("i", { className: `ti ${saved ? "ti-check" : saving ? "ti-loader-2" : "ti-send"}`, style: { fontSize: 15, animation: saving ? "spin .7s linear infinite" : void 0 } }),
-      saved ? "Αποθηκεύτηκε!" : saving ? "Αποστολή…" : "Push Result"
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "end", gap: 8, marginBottom: 10 }, children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }, children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 10, color: "rgba(255,255,255,.4)" }, children: ((_a = TEAMS[match.home]) == null ? void 0 : _a.abbr) || match.home }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(N2, { v: h, s: setH })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }, children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 10, color: "rgba(255,255,255,.4)" }, children: "ΛΕΠ" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "input",
+          {
+            value: mn,
+            onChange: (e) => setMn(+e.target.value || 0),
+            type: "number",
+            style: { width: 44, padding: "5px 2px", borderRadius: 7, border: "1px solid rgba(255,255,255,.15)", background: "rgba(255,255,255,.07)", color: "#e8e9ef", fontSize: 13, fontWeight: 700, textAlign: "center" }
+          }
+        )
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }, children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 10, color: "rgba(255,255,255,.4)" }, children: ((_b = TEAMS[match.away]) == null ? void 0 : _b.abbr) || match.away }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(N2, { v: a, s: setA })
+      ] })
+    ] }),
+    isuefa && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", gap: 6, marginBottom: 8 }, children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("button", { onClick: () => {
+        setOt((v2) => !v2);
+        if (ot) setPen(false);
+      }, style: { flex: 1, padding: "5px", borderRadius: 7, border: "1px solid " + (ot ? "rgba(255,221,0,.4)" : "rgba(255,255,255,.1)"), background: ot ? "rgba(255,221,0,.12)" : "transparent", color: ot ? "#f0c040" : "rgba(255,255,255,.4)", fontSize: 11, fontWeight: 700, cursor: "pointer" }, children: [
+        ot ? "✓ " : "",
+        "ΠΑΡ"
+      ] }),
+      ot && /* @__PURE__ */ jsxRuntimeExports.jsxs("button", { onClick: () => setPen((v2) => !v2), style: { flex: 1, padding: "5px", borderRadius: 7, border: "1px solid " + (pen ? "rgba(255,77,109,.4)" : "rgba(255,255,255,.1)"), background: pen ? "rgba(255,77,109,.12)" : "transparent", color: pen ? "#ff4d6d" : "rgba(255,255,255,.4)", fontSize: 11, fontWeight: 700, cursor: "pointer" }, children: [
+        pen ? "✓ " : "",
+        "ΠΕΝ"
+      ] })
+    ] }),
+    ot && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "grid", gridTemplateColumns: "1fr auto 1fr", gap: 8, alignItems: "center", marginBottom: 10 }, children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(N2, { v: pen ? penH : otH, s: pen ? setPenH : setOtH }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { color: "rgba(255,255,255,.4)", fontSize: 11, textAlign: "center" }, children: pen ? "Πέν" : "Παρ" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(N2, { v: pen ? penA : otA, s: pen ? setPenA : setOtA })
+    ] }),
+    msg && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 11, fontWeight: 700, color: msg.startsWith("✅") ? "#00ff88" : "#ff4d6d", textAlign: "center", marginBottom: 8, padding: "6px", borderRadius: 7, background: msg.startsWith("✅") ? "rgba(0,255,136,.1)" : "rgba(255,77,109,.1)" }, children: msg }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", gap: 8 }, children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("button", { onClick: doLive, disabled: busy, style: { flex: 1, padding: "9px", borderRadius: 9, border: "1px solid rgba(0,255,136,.4)", background: "rgba(0,255,136,.12)", color: "#00ff88", fontSize: 12, fontWeight: 700, cursor: "pointer" }, children: busy ? "..." : "📡 LIVE" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("button", { onClick: doFinal, disabled: busy, style: { flex: 1, padding: "9px", borderRadius: 9, border: "1px solid rgba(255,221,0,.4)", background: "rgba(255,221,0,.12)", color: "#f0c040", fontSize: 12, fontWeight: 700, cursor: "pointer" }, children: busy ? "..." : "🏁 ΤΕΛΙΚΟ" })
     ] })
   ] });
 }
@@ -8062,177 +8498,27 @@ function OddsRow({ matchId }) {
     ] })
   ] });
 }
-function MatchCard({ match, result, predictions, onRefresh, allResults, currentUser, revealed }) {
-  var _a, _b, _c, _d, _e, _f, _g;
-  const [showPush, setShowPush] = reactExports.useState(false);
-  const isRevealed = (revealed == null ? void 0 : revealed[match.id]) || false;
-  const minsUntil = (new Date(match.kickoff).getTime() - Date.now()) / 6e4;
-  const isPreKickoff = minsUntil >= -1 && minsUntil <= 1;
-  const showAllPreds = hasRes || (isRevealed || isPreKickoff);
-  const myPred = currentUser ? predictions == null ? void 0 : predictions[currentUser.id] : null;
-  const leg1Res = match.leg === 2 && match.tie && allResults ? allResults[match.tie + "-1"] : null;
-  const leg1Fix = match.leg === 2 && match.tie ? UEFA_FIXTURES.find((f2) => f2.id === match.tie + "-1") : null;
-  const leg1Agg = leg1Res && leg1Fix ? (() => {
-    const greek = match.greek;
-    const wasHome = leg1Fix.home === greek;
-    const gG = wasHome ? leg1Res.h : leg1Res.a;
-    const oG = wasHome ? leg1Res.a : leg1Res.h;
-    const diff = gG - oG;
-    return {
-      h1: leg1Res.h,
-      a1: leg1Res.a,
-      diff,
-      leg1Fix,
-      situation: diff > 0 ? "+" + diff + " προβάδισμα" : diff < 0 ? diff + " πίσω" : "Ισόπαλη · Παρ/Πέν αν ισόπαλη"
-    };
-  })() : null;
-  const today = isToday(match.kickoff);
-  const hasRes = result != null;
-  const hn = ((_a = TEAMS[match.home]) == null ? void 0 : _a.name) || match.home;
-  const an = ((_b = TEAMS[match.away]) == null ? void 0 : _b.name) || match.away;
-  const tC = { SL: "#f0c040", UCL: BLUE, UEL: "#f5733a", UECL: GREEN$1 }[match.t] || GOLD;
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { background: SURF$1, border: `1px solid ${today ? GREEN$1 + "55" : LINE$1}`, borderRadius: 14, marginBottom: 10, overflow: "hidden", boxShadow: today ? `0 0 20px ${GREEN$1}12` : void 0 }, children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { height: 2, background: `linear-gradient(90deg,${tC}cc,transparent)` } }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { padding: "9px 14px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: `1px solid ${LINE$1}` }, children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", alignItems: "center", gap: 7 }, children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(TPill, { id: match.t }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontSize: 10, fontWeight: 600, color: MUTED$1 }, children: match.round || "" }),
-        today && /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { style: { display: "flex", alignItems: "center", gap: 4, fontSize: 10, fontWeight: 700, color: GREEN$1 }, children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { width: 6, height: 6, borderRadius: "50%", background: GREEN$1, animation: "pulse-dot 1.2s infinite", display: "inline-block" } }),
-          "ΣΗΜΕΡΑ"
-        ] })
-      ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { textAlign: "right" }, children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 11, fontWeight: 600, color: today ? GREEN$1 : MUTED$1 }, children: grDate(match.kickoff) }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 11, fontWeight: 700, color: today ? GREEN$1 : GOLD }, children: grTime(match.kickoff) })
-      ] })
-    ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { padding: "14px 14px 12px" }, children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center", gap: 10, marginBottom: 8 }, children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }, children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(TeamLogo, { k: match.home, size: 36 }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontSize: 11, fontWeight: 600, textAlign: "right", color: TEXT, lineHeight: 1.2 }, children: hn })
-        ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", gap: 5 }, children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(ScorePill, { h: result == null ? void 0 : result.h, a: result == null ? void 0 : result.a, pending: today && !hasRes }),
-          (result == null ? void 0 : result.overtime) && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 9, fontWeight: 700, color: GOLD, letterSpacing: ".03em", textAlign: "center" }, children: result.penalties ? `PEN ${result.penH}–${result.penA}` : `AET ${result.otH}–${result.otA}` }),
-          !hasRes && !today && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 10, color: DIM, fontWeight: 600 }, children: "vs" })
-        ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 6 }, children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(TeamLogo, { k: match.away, size: 36 }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontSize: 11, fontWeight: 600, color: TEXT, lineHeight: 1.2 }, children: an })
-        ] })
-      ] }),
-      leg1Agg && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: {
-        background: "rgba(255,255,255,.04)",
-        border: `1px solid ${LINE$1}`,
-        borderRadius: 9,
-        padding: "8px 12px",
-        marginBottom: 10,
-        marginTop: 2
-      }, children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 6 }, children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", alignItems: "center", gap: 6 }, children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontSize: 10, fontWeight: 700, color: MUTED$1, letterSpacing: ".06em", textTransform: "uppercase" }, children: "Leg 1" }),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { style: { fontSize: 14, fontWeight: 900, color: TEXT, fontVariantNumeric: "tabular-nums" }, children: [
-            ((_c = TEAMS[leg1Agg.leg1Fix.home]) == null ? void 0 : _c.abbr) || leg1Agg.leg1Fix.home,
-            " ",
-            leg1Agg.h1,
-            "–",
-            leg1Agg.a1,
-            " ",
-            ((_d = TEAMS[leg1Agg.leg1Fix.away]) == null ? void 0 : _d.abbr) || leg1Agg.leg1Fix.away
-          ] })
-        ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", alignItems: "center", gap: 5 }, children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontSize: 10, fontWeight: 700, color: MUTED$1 }, children: "Αθρ:" }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: {
-            fontSize: 12,
-            fontWeight: 800,
-            color: leg1Agg.diff > 0 ? GREEN$1 : leg1Agg.diff < 0 ? RED$1 : GOLD
-          }, children: leg1Agg.situation }),
-          leg1Agg.diff === 0 && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontSize: 10, color: MUTED$1 }, children: "· παρ/πέν αν ισόπαλη" })
-        ] })
-      ] }) }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(OddsRow, { matchId: match.id }),
-      !showAllPreds && myPred && currentUser && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { marginTop: 10, background: "rgba(255,255,255,.04)", border: `1px solid ${((_e = PC[currentUser.id]) == null ? void 0 : _e.b) || LINE$1}`, borderRadius: 9, padding: "8px 10px", display: "flex", alignItems: "center", gap: 8 }, children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { width: 7, height: 7, borderRadius: "50%", background: ((_f = PC[currentUser.id]) == null ? void 0 : _f.p) || MUTED$1, flexShrink: 0 } }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontSize: 11, fontWeight: 600, color: MUTED$1 }, children: "Η πρόβλεψή μου:" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { style: { fontSize: 14, fontWeight: 900, color: ((_g = PC[currentUser.id]) == null ? void 0 : _g.p) || TEXT, fontVariantNumeric: "tabular-nums" }, children: [
-          myPred.h,
-          "–",
-          myPred.a
-        ] }),
-        myPred.qual && /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { style: { fontSize: 10, color: MUTED$1 }, children: [
-          "→ ",
-          myPred.qual
-        ] }),
-        isPreKickoff && /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { style: { fontSize: 10, color: GOLD, fontWeight: 700, marginLeft: "auto" }, children: [
-          "🔒 Σε ",
-          Math.abs(Math.round(minsUntil)),
-          " λεπτά!"
-        ] })
-      ] }),
-      showAllPreds && predictions && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { marginTop: 10 }, children: [
-        (isPreKickoff || isRevealed) && !hasRes && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 10, fontWeight: 700, color: GOLD, textAlign: "center", marginBottom: 6, letterSpacing: ".06em" }, children: "🔒 ΑΠΟΚΑΛΥΨΗ ΠΡΟΒΛΕΨΕΩΝ" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { display: "flex", gap: 5 }, children: PLAYERS.map((p2) => {
-          const pred = predictions[p2], sc2 = pred ? scoreMatch(pred, result) : null, pc2 = PC[p2];
-          return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { flex: 1, background: (sc2 == null ? void 0 : sc2.exact) ? `${GREEN$1}15` : (sc2 == null ? void 0 : sc2.correct) ? `${GOLD}0a` : "rgba(255,255,255,.04)", border: `1px solid ${(sc2 == null ? void 0 : sc2.exact) ? GREEN$1 + "44" : (sc2 == null ? void 0 : sc2.correct) ? GOLD + "22" : LINE$1}`, borderRadius: 9, padding: "7px 6px", textAlign: "center" }, children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 9, fontWeight: 700, color: pc2.p, marginBottom: 3, letterSpacing: ".04em" }, children: PLAYER_NAMES[p2].substring(0, 4).toUpperCase() }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 13, fontWeight: 800, color: TEXT, fontVariantNumeric: "tabular-nums" }, children: pred ? `${pred.h}–${pred.a}` : "–" }),
-            sc2 && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { fontSize: 10, fontWeight: 700, color: sc2.points === 2 ? GREEN$1 : sc2.points === 1 ? GOLD : DIM, marginTop: 2 }, children: [
-              sc2.points === 2 ? "🎯" : sc2.points === 1 ? "✓" : "✗",
-              sc2.points,
-              "p"
-            ] })
-          ] }, p2);
-        }) })
-      ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", gap: 8, marginTop: 12 }, children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(FetchBtn, { matchId: match.id, onFetched: onRefresh }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("button", { onClick: () => setShowPush((v2) => !v2), style: { flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 5, padding: "8px 10px", borderRadius: 8, border: `1px solid ${showPush ? GOLD + "55" : GOLD + "25"}`, background: showPush ? `${GOLD}20` : `${GOLD}08`, color: GOLD, fontSize: 11, fontWeight: 700, cursor: "pointer" }, children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("i", { className: "ti ti-cloud-upload", style: { fontSize: 13 } }),
-          "Push"
-        ] })
-      ] }),
-      showPush && /* @__PURE__ */ jsxRuntimeExports.jsx(PushPanel, { match, result, onSaved: () => {
-        setShowPush(false);
-        onRefresh();
-      } })
-    ] })
-  ] });
-}
 function RivalryStats({ predictions, results, thavmaStats }) {
-  var _a;
   try {
     const played = ALL_FIXTURES.filter((m2) => (results == null ? void 0 : results[m2.id]) != null);
-    if (!played.length) return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { padding: 24, background: SURF$1, borderRadius: 12, border: `1px solid ${LINE$1}` }, children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { color: MUTED$1, fontSize: 13, marginBottom: 8 }, children: "Δεν υπάρχουν αγώνες για ανάλυση ακόμα" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { fontSize: 10, color: "#ffffff30" }, children: [
-        "results: ",
-        Object.keys(results || {}).join(", ") || "κενό"
-      ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { fontSize: 10, color: "#ffffff30" }, children: [
-        "preds: ",
-        Object.keys(predictions || {}).join(", ") || "κενό"
-      ] })
-    ] });
+    if (!played.length) return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { padding: 24, background: SURF$1, borderRadius: 12, border: "1px solid " + LINE$1, textAlign: "center", color: MUTED$1, fontSize: 13 }, children: "Δεν υπάρχουν δεδομένα ακόμα — παίξτε μερικούς αγώνες! 🍔" });
     const oracle = { boikos: 0, mavromichalis: 0, chousiadas: 0 };
     const contrarian = { boikos: 0, mavromichalis: 0, chousiadas: 0 };
+    const oneVsTwo = {
+      boikos: { wins: 0, losses: 0, draws: 0, battles: 0 },
+      mavromichalis: { wins: 0, losses: 0, draws: 0, battles: 0 },
+      chousiadas: { wins: 0, losses: 0, draws: 0, battles: 0 }
+    };
     let allSame = 0, allSameRight = 0, allDiff = 0;
     const allDiffWins = [0, 0, 0];
     const h2h = {};
     for (let i = 0; i < PLAYERS.length; i++) for (let j = i + 1; j < PLAYERS.length; j++)
-      h2h[i + "_" + j] = {
-        wins: [0, 0, 0],
-        diff: 0,
-        names: [PLAYER_NAMES[PLAYERS[i]], PLAYER_NAMES[PLAYERS[j]]],
-        colors: [PC[PLAYERS[i]].p, PC[PLAYERS[j]].p]
-      };
+      h2h[i + "_" + j] = { wins: [0, 0, 0], diff: 0, names: [PLAYER_NAMES[PLAYERS[i]], PLAYER_NAMES[PLAYERS[j]]], colors: [PC[PLAYERS[i]].p, PC[PLAYERS[j]].p] };
     played.forEach((m2) => {
       const actual = results[m2.id];
       const preds = PLAYERS.map((p2) => {
-        var _a2;
-        return (_a2 = predictions == null ? void 0 : predictions[m2.id]) == null ? void 0 : _a2[p2];
+        var _a;
+        return (_a = predictions == null ? void 0 : predictions[m2.id]) == null ? void 0 : _a[p2];
       });
       if (preds.some((p2) => !p2)) return;
       const scores = PLAYERS.map((p2, i) => scoreMatch(preds[i], actual));
@@ -8258,18 +8544,26 @@ function RivalryStats({ predictions, results, thavmaStats }) {
         }
       }
       const exactPs = PLAYERS.filter((_, i) => {
-        var _a2;
-        return (_a2 = scores[i]) == null ? void 0 : _a2.exact;
+        var _a;
+        return (_a = scores[i]) == null ? void 0 : _a.exact;
       });
       if (exactPs.length === 1) oracle[exactPs[0]]++;
       PLAYERS.forEach((p2, i) => {
         const others = PLAYERS.filter((_, j) => j !== i);
-        const otherRes = others.map((o) => {
-          var _a2;
-          const op = (_a2 = predictions == null ? void 0 : predictions[m2.id]) == null ? void 0 : _a2[o];
-          return op ? op.h > op.a ? "H" : op.h < op.a ? "A" : "D" : null;
+        const otherPreds = others.map((o) => {
+          var _a;
+          return (_a = predictions == null ? void 0 : predictions[m2.id]) == null ? void 0 : _a[o];
         });
-        if (otherRes[0] && otherRes.every((r2) => r2 === otherRes[0]) && res3[i] !== otherRes[0] && pts[i] > 0) contrarian[p2]++;
+        const otherRes = otherPreds.map((op) => op ? op.h > op.a ? "H" : op.h < op.a ? "A" : "D" : null);
+        if (otherRes[0] && otherRes.every((r2) => r2 === otherRes[0]) && res3[i] !== otherRes[0]) {
+          contrarian[p2]++;
+          const myPts = pts[i];
+          const theirPts = Math.max(...others.map((_, k2) => pts[PLAYERS.indexOf(others[k2])]));
+          oneVsTwo[p2].battles++;
+          if (myPts > theirPts) oneVsTwo[p2].wins++;
+          else if (myPts < theirPts) oneVsTwo[p2].losses++;
+          else oneVsTwo[p2].draws++;
+        }
       });
     });
     const oLdr = PLAYERS.reduce((a, b) => oracle[a] >= oracle[b] ? a : b);
@@ -8288,14 +8582,85 @@ function RivalryStats({ predictions, results, thavmaStats }) {
       ] }),
       /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { height: 5, background: "rgba(255,255,255,.08)", borderRadius: 3 }, children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { height: "100%", width: max > 0 ? Math.round(val / max * 100) + "%" : "0%", background: color, borderRadius: 3 } }) })
     ] });
-    const Block = ({ title, emoji, children }) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { background: SURF$1, border: `1px solid ${LINE$1}`, borderRadius: 12, padding: "14px 16px", marginBottom: 10 }, children: [
+    const Block = ({ title, emoji, children, accent }) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { background: SURF$1, border: "1px solid " + (accent || LINE$1), borderRadius: 12, padding: "14px 16px", marginBottom: 10 }, children: [
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { fontSize: 13, fontWeight: 700, marginBottom: 12, display: "flex", alignItems: "center", gap: 7 }, children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontSize: 18 }, children: emoji }),
         /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { color: TEXT }, children: title })
       ] }),
       children
     ] });
+    const oneVsTwoConfig = [
+      { player: "boikos", title: "Μπόικος vs. Συνεταιράκια", subtitle: "Όταν ο Μπόικος διαφωνεί με Μαυρομιχάλη & Χουσιάδα" },
+      { player: "mavromichalis", title: "Μαύρος - Ενάντια στην Λογική", subtitle: "Όταν ο Μαυρομιχάλης διαφωνεί με Μπόικο & Χουσιάδα" },
+      { player: "chousiadas", title: "Χουσιάδας vs. Μπαρμπάδες", subtitle: "Όταν ο Χουσιάδας διαφωνεί με Μπόικο & Μαυρομιχάλη" }
+    ];
     return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(Block, { title: "⚡ Θαύματα & Ωσάννα — Late Goal Drama", emoji: "🙏", accent: "rgba(255,221,0,.2)", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 11, color: MUTED$1, marginBottom: 12 }, children: "Πόντοι που χαρίστηκαν από γκολ μετά το 85'" }),
+        PLAYERS.map((p2) => {
+          const ts = thavmaStats && thavmaStats[p2] || { benefited: 0, pts_gained: 0, pts_lost: {} };
+          const totalLost = Object.values(ts.pts_lost || {}).reduce((a, b) => a + b, 0);
+          const pc2 = PC[p2];
+          return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { marginBottom: 8, background: "rgba(255,255,255,.03)", borderRadius: 10, padding: "10px 12px", border: "1px solid " + LINE$1 }, children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }, children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { width: 8, height: 8, borderRadius: "50%", background: pc2.p } }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontSize: 12, fontWeight: 700, color: TEXT, flex: 1 }, children: PLAYER_NAMES[p2] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { style: { fontSize: 11, color: GREEN$1, fontWeight: 700 }, children: [
+                "🍀 ",
+                ts.benefited || 0,
+                "x +",
+                ts.pts_gained || 0,
+                "p"
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { style: { fontSize: 11, color: RED$1, fontWeight: 700 }, children: [
+                "😤 -",
+                totalLost,
+                "p"
+              ] })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { height: 4, background: "rgba(255,255,255,.06)", borderRadius: 2 }, children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { height: "100%", width: Math.min(100, (ts.pts_gained || 0) * 25) + "%", background: pc2.p, borderRadius: 2 } }) })
+          ] }, p2);
+        })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(Block, { title: "1 vs 2 — Ο Μοναχικός Λύκος", emoji: "🐺", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 11, color: MUTED$1, marginBottom: 12 }, children: "Όταν ένας διαφωνεί με τους άλλους δύο που συμφωνούν μεταξύ τους — ποιος κερδίζει;" }),
+        oneVsTwoConfig.map((cfg) => {
+          const st = oneVsTwo[cfg.player];
+          const pc2 = PC[cfg.player];
+          const winPct = st.battles > 0 ? Math.round(st.wins / st.battles * 100) : 0;
+          return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { background: "rgba(255,255,255,.04)", borderRadius: 12, padding: "12px 14px", marginBottom: 10, border: "1px solid " + pc2.b }, children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }, children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { width: 32, height: 32, borderRadius: "50%", background: pc2.p, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 900, color: "#08090d" }, children: PLAYER_NAMES[cfg.player][0] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { flex: 1 }, children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 13, fontWeight: 800, color: pc2.p }, children: cfg.title }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 9, color: MUTED$1, marginTop: 1 }, children: cfg.subtitle })
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { textAlign: "right" }, children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { fontSize: 22, fontWeight: 900, color: winPct >= 50 ? GREEN$1 : RED$1 }, children: [
+                  winPct,
+                  "%"
+                ] }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { fontSize: 9, color: MUTED$1 }, children: [
+                  st.battles,
+                  " battles"
+                ] })
+              ] })
+            ] }),
+            st.battles > 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6, marginBottom: 8 }, children: [
+                { lbl: "Νίκες", val: st.wins, color: GREEN$1 },
+                { lbl: "Ισοπαλίες", val: st.draws, color: GOLD },
+                { lbl: "Ήττες", val: st.losses, color: RED$1 }
+              ].map((s) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { background: "rgba(255,255,255,.04)", borderRadius: 8, padding: "6px", textAlign: "center" }, children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 18, fontWeight: 900, color: s.color }, children: s.val }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 9, color: MUTED$1, marginTop: 1 }, children: s.lbl })
+              ] }, s.lbl)) }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { height: 5, background: "rgba(255,255,255,.06)", borderRadius: 3, overflow: "hidden" }, children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { height: "100%", width: winPct + "%", background: winPct >= 50 ? GREEN$1 : RED$1, borderRadius: 3, transition: "width 1s" } }) })
+            ] }),
+            st.battles === 0 && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 11, color: MUTED$1, textAlign: "center", padding: "8px 0" }, children: "Δεν υπάρχουν battles ακόμα" })
+          ] }, cfg.player);
+        })
+      ] }),
       /* @__PURE__ */ jsxRuntimeExports.jsx(Block, { title: "Head to Head — Όταν διαφωνούν", emoji: "⚔️", children: Object.entries(h2h).map(([key, data]) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { marginBottom: 14 }, children: [
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { fontSize: 10, fontWeight: 700, color: MUTED$1, marginBottom: 7, textTransform: "uppercase" }, children: [
           data.names[0],
@@ -8307,7 +8672,7 @@ function RivalryStats({ predictions, results, thavmaStats }) {
         ] }),
         /* @__PURE__ */ jsxRuntimeExports.jsx(MiniBar, { val: data.wins[0], max: data.diff, color: data.colors[0], label: data.names[0] }),
         /* @__PURE__ */ jsxRuntimeExports.jsx(MiniBar, { val: data.wins[1], max: data.diff, color: data.colors[1], label: data.names[1] }),
-        data.wins[2] > 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { fontSize: 10, color: DIM }, children: [
+        data.wins[2] > 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { fontSize: 10, color: DIM, marginTop: 3 }, children: [
           "Ισόπαλα: ",
           data.wins[2]
         ] })
@@ -8331,13 +8696,13 @@ function RivalryStats({ predictions, results, thavmaStats }) {
       /* @__PURE__ */ jsxRuntimeExports.jsxs(Block, { title: "Free For All — Όλοι διαφωνούν", emoji: "🔀", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { fontSize: 12, color: MUTED$1, marginBottom: 10 }, children: [
           allDiff,
-          " αγώνες"
+          " αγώνες · ποιος κερδίζει;"
         ] }),
         PLAYERS.map((p2, i) => /* @__PURE__ */ jsxRuntimeExports.jsx(MiniBar, { val: allDiffWins[i], max: allDiff, color: PC[p2].p, label: PLAYER_NAMES[p2] }, p2))
       ] }),
       /* @__PURE__ */ jsxRuntimeExports.jsx(Block, { title: "The Oracle — Μοναδικό exact score", emoji: "🔮", children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { display: "flex", gap: 6 }, children: PLAYERS.map((p2) => {
         const isL = oracle[p2] > 0 && p2 === oLdr, pc2 = PC[p2];
-        return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { flex: 1, background: isL ? pc2.bg : "rgba(255,255,255,.04)", border: `1px solid ${isL ? pc2.b : LINE$1}`, borderRadius: 10, padding: "12px 8px", textAlign: "center" }, children: [
+        return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { flex: 1, background: isL ? pc2.bg : "rgba(255,255,255,.04)", border: "1px solid " + (isL ? pc2.b : LINE$1), borderRadius: 10, padding: "12px 8px", textAlign: "center" }, children: [
           /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 10, fontWeight: 700, color: isL ? pc2.p : MUTED$1, marginBottom: 4 }, children: PLAYER_NAMES[p2].substring(0, 4).toUpperCase() }),
           /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 26, fontWeight: 900, color: isL ? pc2.p : MUTED$1 }, children: oracle[p2] }),
           isL && oracle[p2] > 0 && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 11, marginTop: 4 }, children: "🔮" })
@@ -8345,344 +8710,19 @@ function RivalryStats({ predictions, results, thavmaStats }) {
       }) }) }),
       /* @__PURE__ */ jsxRuntimeExports.jsx(Block, { title: "The Maverick — Διαφώνησε & είχε δίκιο", emoji: "🌶️", children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { display: "flex", gap: 6 }, children: PLAYERS.map((p2) => {
         const isL = contrarian[p2] > 0 && p2 === cLdr, pc2 = PC[p2];
-        return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { flex: 1, background: isL ? pc2.bg : "rgba(255,255,255,.04)", border: `1px solid ${isL ? pc2.b : LINE$1}`, borderRadius: 10, padding: "12px 8px", textAlign: "center" }, children: [
+        return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { flex: 1, background: isL ? pc2.bg : "rgba(255,255,255,.04)", border: "1px solid " + (isL ? pc2.b : LINE$1), borderRadius: 10, padding: "12px 8px", textAlign: "center" }, children: [
           /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 10, fontWeight: 700, color: isL ? pc2.p : MUTED$1, marginBottom: 4 }, children: PLAYER_NAMES[p2].substring(0, 4).toUpperCase() }),
           /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 26, fontWeight: 900, color: isL ? pc2.p : MUTED$1 }, children: contrarian[p2] }),
           isL && contrarian[p2] > 0 && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 11, marginTop: 4 }, children: "🌶️" })
         ] }, p2);
-      }) }) }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(Block, { title: "⚡ Θαύματα & Ωσάννα", emoji: "🙏", children: PLAYERS.map((p2) => {
-        const ts = thavmaStats && thavmaStats[p2] || { benefited: 0, pts_gained: 0, pts_lost: {} };
-        const totalLost = Object.values(ts.pts_lost || {}).reduce((a, b) => a + b, 0);
-        const pc2 = PC[p2];
-        return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", alignItems: "center", gap: 8, marginBottom: 8, background: "rgba(255,255,255,.03)", borderRadius: 8, padding: "8px 10px" }, children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { width: 8, height: 8, borderRadius: "50%", background: pc2.p, flexShrink: 0 } }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontSize: 12, fontWeight: 700, color: TEXT, flex: 1 }, children: PLAYER_NAMES[p2] }),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { style: { fontSize: 11, color: GREEN$1, fontWeight: 700 }, children: [
-            "🍀",
-            ts.benefited || 0,
-            " +",
-            ts.pts_gained || 0,
-            "p"
-          ] }),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { style: { fontSize: 11, color: RED$1, fontWeight: 700 }, children: [
-            "😤-",
-            totalLost,
-            "p"
-          ] })
-        ] }, p2);
-      }) })
+      }) }) })
     ] });
   } catch (e) {
-    return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { padding: 24, background: "rgba(255,77,109,.1)", border: "1px solid rgba(255,77,109,.3)", borderRadius: 12, color: "#ff4d6d", fontSize: 12, fontWeight: 600 }, children: [
-      "❌ Rivalry Error: ",
-      e.message,
-      /* @__PURE__ */ jsxRuntimeExports.jsx("br", {}),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontSize: 10, color: MUTED$1, fontWeight: 400 }, children: (_a = e.stack) == null ? void 0 : _a.split("\n")[0] })
+    return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { padding: 24, background: "rgba(255,77,109,.1)", border: "1px solid rgba(255,77,109,.3)", borderRadius: 12, color: RED$1, fontSize: 12, fontWeight: 600 }, children: [
+      "❌ Σφάλμα: ",
+      e.message
     ] });
   }
-}
-function PredictCard({ match, myPred, onSave, results }) {
-  var _a, _b, _c, _d;
-  const locked = isLocked(match.kickoff), isUEFA = isUEFATie(match.id);
-  const leg1Res = match.leg === 2 && match.tie && results ? results[match.tie + "-1"] : null;
-  const leg1Fix = match.leg === 2 && match.tie ? UEFA_FIXTURES.find((f2) => f2.id === match.tie + "-1") : null;
-  const [h, setH] = reactExports.useState((myPred == null ? void 0 : myPred.h) ?? 0), [a, setA] = reactExports.useState((myPred == null ? void 0 : myPred.a) ?? 0);
-  const [qual, setQual] = reactExports.useState((myPred == null ? void 0 : myPred.qual) ?? match.home);
-  const [predOT, setPredOT] = reactExports.useState((myPred == null ? void 0 : myPred.predOT) ?? false), [otH, setOtH] = reactExports.useState((myPred == null ? void 0 : myPred.otH) ?? 0), [otA, setOtA] = reactExports.useState((myPred == null ? void 0 : myPred.otA) ?? 0);
-  const [predPen, setPredPen] = reactExports.useState((myPred == null ? void 0 : myPred.predPen) ?? false), [penH, setPenH] = reactExports.useState((myPred == null ? void 0 : myPred.penH) ?? 0), [penA, setPenA] = reactExports.useState((myPred == null ? void 0 : myPred.penA) ?? 0);
-  const [saving, setSaving] = reactExports.useState(false), [saved, setSaved] = reactExports.useState(false), [error, setError] = reactExports.useState("");
-  reactExports.useEffect(() => {
-    if (myPred) {
-      setH(myPred.h ?? 0);
-      setA(myPred.a ?? 0);
-      setQual(myPred.qual ?? match.home);
-      setPredOT(myPred.predOT ?? false);
-      setOtH(myPred.otH ?? 0);
-      setOtA(myPred.otA ?? 0);
-    }
-  }, [myPred == null ? void 0 : myPred.h, myPred == null ? void 0 : myPred.a, myPred == null ? void 0 : myPred.qual]);
-  const adj = (v2, set, d) => {
-    if (!locked) {
-      set(Math.max(0, Math.min(9, v2 + d)));
-      setSaved(false);
-    }
-  };
-  const hn = ((_a = TEAMS[match.home]) == null ? void 0 : _a.name) || match.home, an = ((_b = TEAMS[match.away]) == null ? void 0 : _b.name) || match.away;
-  const tC = { SL: "#f0c040", UCL: BLUE, UEL: "#f5733a", UECL: GREEN$1 }[match.t] || GOLD;
-  const nb2 = { width: 50, height: 50, background: SURF2, border: `1px solid ${locked ? LINE$1 : tC + "55"}`, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, fontWeight: 800, color: locked ? MUTED$1 : TEXT, fontVariantNumeric: "tabular-nums" };
-  const ab2 = { width: 34, height: 34, borderRadius: 8, border: `1px solid ${LINE$1}`, background: "rgba(255,255,255,.06)", color: TEXT, cursor: locked ? "not-allowed" : "pointer", fontSize: 17, display: "flex", alignItems: "center", justifyContent: "center" };
-  const ARow = ({ lbl, hv, setHv, av, setAv, sm }) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { marginBottom: sm ? 8 : 0 }, children: [
-    lbl && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 10, fontWeight: 700, color: tC, letterSpacing: ".05em", marginBottom: 6, textTransform: "uppercase" }, children: lbl }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center", gap: 8 }, children: [["h", hv, setHv], ["a", av, setAv]].map(([s, v2, set], i) => /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-      i === 1 && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontSize: sm ? 16 : 20, color: DIM, textAlign: "center" }, children: "–" }, "sep"),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", alignItems: "center", gap: sm ? 5 : 7, justifyContent: "center" }, children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("button", { style: sm ? { ...ab2, width: 26, height: 26, fontSize: 14 } : ab2, onClick: () => adj(v2, set, -1), children: "–" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: sm ? { ...nb2, width: 38, height: 38, fontSize: 18 } : nb2, children: v2 }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("button", { style: sm ? { ...ab2, width: 26, height: 26, fontSize: 14 } : ab2, onClick: () => adj(v2, set, 1), children: "+" })
-      ] }, s)
-    ] })) })
-  ] });
-  async function save() {
-    if (locked) return;
-    setSaving(true);
-    setError("");
-    try {
-      await onSave(match.id, h, a, qual, predOT, otH, otA, predPen, penH, penA);
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2500);
-    } catch (e) {
-      const msg = (e == null ? void 0 : e.message) || "Σφάλμα";
-      setError("❌ " + msg + " — έλεγξε σύνδεση & ξανά");
-      console.error("Save failed:", e);
-    } finally {
-      setSaving(false);
-    }
-  }
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { background: SURF$1, border: `1px solid ${locked ? LINE$1 : tC + "33"}`, borderRadius: 14, marginBottom: 12, overflow: "hidden" }, children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { height: 2, background: `linear-gradient(90deg,${tC}cc,transparent)` } }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { padding: "10px 14px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: `1px solid ${LINE$1}` }, children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", alignItems: "center", gap: 7 }, children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(TPill, { id: match.t }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontSize: 10, fontWeight: 600, color: MUTED$1 }, children: match.round })
-      ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { textAlign: "right" }, children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 11, fontWeight: 700, color: locked ? RED$1 : GREEN$1 }, children: locked ? "🔒 Κλειδωμένο" : `Κλείνει ${grTime(match.kickoff)}` }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 10, color: MUTED$1 }, children: grDate(match.kickoff) })
-      ] })
-    ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { padding: "16px 14px" }, children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", alignItems: "center", justifyContent: "center", gap: 14, marginBottom: 16, paddingBottom: 14, borderBottom: `1px solid ${LINE$1}` }, children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", alignItems: "center", gap: 8 }, children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(TeamLogo, { k: match.home, size: 30 }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontSize: 13, fontWeight: 700 }, children: hn })
-        ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { color: DIM, fontSize: 14, fontWeight: 700 }, children: "vs" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", alignItems: "center", gap: 8 }, children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontSize: 13, fontWeight: 700 }, children: an }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(TeamLogo, { k: match.away, size: 30 })
-        ] })
-      ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(OddsRow, { matchId: match.id }),
-      leg1Res && leg1Fix && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { background: "rgba(255,255,255,.04)", border: `1px solid ${LINE$1}`, borderRadius: 8, padding: "7px 12px", margin: "8px 0", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6 }, children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", alignItems: "center", gap: 6 }, children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontSize: 9, fontWeight: 700, color: MUTED$1, letterSpacing: ".06em", textTransform: "uppercase" }, children: "Leg 1" }),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { style: { fontSize: 13, fontWeight: 900, color: TEXT, fontVariantNumeric: "tabular-nums" }, children: [
-            (_c = TEAMS[leg1Fix.home]) == null ? void 0 : _c.abbr,
-            " ",
-            leg1Res.h,
-            "–",
-            leg1Res.a,
-            " ",
-            (_d = TEAMS[leg1Fix.away]) == null ? void 0 : _d.abbr
-          ] })
-        ] }),
-        (() => {
-          const g = match.greek, wH = leg1Fix.home === g, gG = wH ? leg1Res.h : leg1Res.a, oG = wH ? leg1Res.a : leg1Res.h, d = gG - oG;
-          return /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontSize: 11, fontWeight: 800, color: d > 0 ? GREEN$1 : d < 0 ? RED$1 : GOLD }, children: d > 0 ? `+${d} προβ.` : d < 0 ? `${d} πίσω` : "Ισόπαλη·Παρ/Πέν" });
-        })()
-      ] }),
-      myPred && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { fontSize: 11, fontWeight: 600, color: MUTED$1, textAlign: "center", marginBottom: 12, marginTop: 10 }, children: [
-        "Αποθ: ",
-        myPred.h,
-        "–",
-        myPred.a
-      ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { marginTop: 12, marginBottom: 16 }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(ARow, { hv: h, setHv: setH, av: a, setAv: setA }) }),
-      isUEFA && match.leg === 2 && !locked && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { background: `${GOLD}0a`, border: `1px solid ${GOLD}25`, borderRadius: 10, padding: "12px", marginBottom: 12 }, children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("label", { style: { display: "flex", alignItems: "center", gap: 8, fontSize: 12, fontWeight: 700, cursor: "pointer", color: GOLD, marginBottom: predOT ? 12 : 0 }, children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("input", { type: "checkbox", checked: predOT, onChange: (e) => {
-            setPredOT(e.target.checked);
-            setSaved(false);
-          }, style: { width: 15, height: 15, accentColor: GOLD } }),
-          "⏱ Παρατάσεις +1pt αποτ. +1pt σκορ"
-        ] }),
-        predOT && /* @__PURE__ */ jsxRuntimeExports.jsx(ARow, { lbl: "Σκορ AET", hv: otH, setHv: setOtH, av: otA, setAv: setOtA, sm: true }),
-        predOT && /* @__PURE__ */ jsxRuntimeExports.jsxs("label", { style: { display: "flex", alignItems: "center", gap: 8, fontSize: 12, fontWeight: 700, cursor: "pointer", color: GREEN$1, marginTop: 8, marginBottom: predPen ? 12 : 0 }, children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("input", { type: "checkbox", checked: predPen, onChange: (e) => {
-            setPredPen(e.target.checked);
-            setSaved(false);
-          }, style: { width: 15, height: 15, accentColor: GREEN$1 } }),
-          "⚽ Πέναλτι +1pt αποτ. +1pt σκορ"
-        ] }),
-        predOT && predPen && /* @__PURE__ */ jsxRuntimeExports.jsx(ARow, { lbl: "Σκορ Pen", hv: penH, setHv: setPenH, av: penA, setAv: setPenA, sm: true })
-      ] }),
-      isUEFA && !locked && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { background: `${BLUE}0a`, border: `1px solid ${BLUE}25`, borderRadius: 10, padding: "10px 12px", marginBottom: 14 }, children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 10, fontWeight: 700, color: BLUE, letterSpacing: ".06em", textTransform: "uppercase", marginBottom: 7 }, children: "🔑 Ποιος προκρίνεται; +1pt" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("select", { value: qual, onChange: (e) => {
-          setQual(e.target.value);
-          setSaved(false);
-        }, style: { width: "100%", fontSize: 13, fontWeight: 600, padding: "8px 11px", borderRadius: 8, border: `1px solid ${BLUE}35`, background: SURF2, color: TEXT, outline: "none" }, children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("option", { value: match.home, children: hn }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("option", { value: match.away, children: an })
-        ] })
-      ] }),
-      error && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 11, color: "#ff4d6d", background: "rgba(255,77,109,.1)", border: "1px solid rgba(255,77,109,.25)", borderRadius: 8, padding: "7px 10px", marginBottom: 8, textAlign: "center", fontWeight: 600 }, children: error }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("button", { onClick: save, disabled: locked || saving || saved, style: { width: "100%", padding: "12px", borderRadius: 10, border: "none", fontWeight: 700, fontSize: 14, cursor: locked ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, letterSpacing: ".03em", transition: "all .2s", background: locked ? "rgba(255,255,255,.06)" : saved ? GREEN$1 : `${tC}ee`, color: locked ? DIM : SURF$1 }, children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontSize: 16 }, children: saved ? "✓" : locked ? "🔒" : saving ? "⏳" : "💾" }),
-        saved ? "✓ Αποθηκεύτηκε!" : locked ? "🔒 Κλειδωμένο" : saving ? "Αποθήκευση…" : myPred ? "Άλλαξε Πρόβλεψη ✏️" : "Κάνε την πρόβλεψή σου ⚽"
-      ] })
-    ] })
-  ] });
-}
-function MatchdayPage({ predictions, results, onRefresh, currentUser, revealed }) {
-  const [tab, setTab] = reactExports.useState("all");
-  const board = computeLeaderboard(ALL_FIXTURES, predictions, results);
-  const now = Date.now();
-  const sorted = [...ALL_FIXTURES].sort((a, b) => {
-    const aLocked = now >= new Date(a.kickoff).getTime() - 6e4;
-    const bLocked = now >= new Date(b.kickoff).getTime() - 6e4;
-    if (aLocked !== bLocked) return aLocked ? 1 : -1;
-    return new Date(a.kickoff) - new Date(b.kickoff);
-  });
-  const fx = {
-    all: sorted,
-    sl: [...SUPER_LEAGUE].sort((a, b) => new Date(a.kickoff) - new Date(b.kickoff)),
-    ucl: UEFA_FIXTURES.filter((f2) => f2.t === "UCL"),
-    uel: UEFA_FIXTURES.filter((f2) => f2.t === "UEL"),
-    uecl: UEFA_FIXTURES.filter((f2) => f2.t === "UECL")
-  }[tab] || [];
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { background: "#0a0b0f", borderBottom: `1px solid ${LINE$1}`, padding: "10px 16px", display: "flex", gap: 8, overflowX: "auto", scrollbarWidth: "none" }, children: board.map((row, i) => {
-      const pc2 = PC[row.player];
-      return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", alignItems: "center", gap: 8, padding: "6px 12px", background: i === 0 ? pc2.bg : "rgba(255,255,255,.04)", borderRadius: 20, border: `1px solid ${i === 0 ? pc2.b : LINE$1}`, flexShrink: 0 }, children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontSize: 14 }, children: MEDALS[i] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontSize: 12, fontWeight: 700, color: i === 0 ? pc2.p : TEXT }, children: PLAYER_NAMES[row.player] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { style: { fontSize: 14, fontWeight: 900, color: i === 0 ? pc2.p : MUTED$1, fontVariantNumeric: "tabular-nums" }, children: [
-          row.pts,
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontSize: 10, fontWeight: 600, color: MUTED$1 }, children: "p" })
-        ] })
-      ] }, row.player);
-    }) }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { display: "flex", gap: 5, padding: "10px 16px 8px", overflowX: "auto", scrollbarWidth: "none" }, children: [{ id: "all", l: "All" }, { id: "sl", l: "SL" }, { id: "ucl", l: "UCL" }, { id: "uel", l: "UEL" }, { id: "uecl", l: "UECL" }].map((tabItem) => /* @__PURE__ */ jsxRuntimeExports.jsx("button", { onClick: () => setTab(tabItem.id), style: { fontSize: 11, fontWeight: 700, padding: "5px 13px", borderRadius: 7, border: `1px solid ${tab === tabItem.id ? "rgba(255,255,255,.3)" : LINE$1}`, background: tab === tabItem.id ? "rgba(255,255,255,.12)" : "transparent", color: tab === tabItem.id ? TEXT : MUTED$1, cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0, letterSpacing: ".03em" }, children: tabItem.l }, tabItem.id)) }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { padding: "0 16px 80px" }, children: fx.map((m2) => /* @__PURE__ */ jsxRuntimeExports.jsx(MatchCard, { match: m2, result: results == null ? void 0 : results[m2.id], predictions: predictions == null ? void 0 : predictions[m2.id], onRefresh, allResults: results, currentUser, revealed }, m2.id)) })
-  ] });
-}
-function LeaguePage({ predictions, results, thavmaStats }) {
-  const board = computeLeaderboard(ALL_FIXTURES, predictions, results);
-  ALL_FIXTURES.filter((m2) => (results == null ? void 0 : results[m2.id]) != null).length * 2;
-  const [tab, setTab] = reactExports.useState("standings");
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { padding: "16px 16px 80px" }, children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { display: "flex", gap: 6, marginBottom: 16, overflowX: "auto", scrollbarWidth: "none" }, children: [{ id: "standings", l: "Standings" }, { id: "rivalry", l: "🌶️ Rivalry" }, { id: "analytics", l: "Analytics" }, { id: "campaigns", l: "Campaigns" }].map((tabItem) => /* @__PURE__ */ jsxRuntimeExports.jsx("button", { onClick: () => setTab(tabItem.id), style: { fontSize: 11, fontWeight: 700, padding: "6px 13px", borderRadius: 7, border: `1px solid ${tab === tabItem.id ? "rgba(255,255,255,.3)" : LINE$1}`, background: tab === tabItem.id ? "rgba(255,255,255,.12)" : "transparent", color: tab === tabItem.id ? TEXT : MUTED$1, cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0, letterSpacing: ".03em" }, children: tabItem.l }, tabItem.id)) }),
-    tab === "standings" && /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 10, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: "rgba(255,255,255,.4)", marginBottom: 10 }, children: "Ανάλυση ανά τουρνουά" }),
-      board.map((row) => {
-        const bd2 = {};
-        ["SL", "UCL", "UEL", "UECL"].forEach((t2) => {
-          let pts = 0, played = 0;
-          ALL_FIXTURES.filter((m2) => m2.t === t2).forEach((m2) => {
-            var _a;
-            const ac2 = results == null ? void 0 : results[m2.id];
-            if (!ac2) return;
-            const sc2 = scoreMatch((_a = predictions == null ? void 0 : predictions[m2.id]) == null ? void 0 : _a[row.player], ac2);
-            if (!sc2) return;
-            pts += sc2.points;
-            played++;
-          });
-          bd2[t2] = { pts, played };
-        });
-        const pc2 = PC[row.player];
-        return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { background: SURF$1, border: `1px solid ${LINE$1}`, borderRadius: 12, padding: "14px 16px", marginBottom: 8 }, children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }, children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { width: 36, height: 36, borderRadius: "50%", background: pc2.p, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, fontWeight: 900, color: SURF$1 }, children: PLAYER_NAMES[row.player].substring(0, 1) }),
-            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { flex: 1 }, children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 14, fontWeight: 700, color: TEXT }, children: PLAYER_NAMES[row.player] }),
-              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { fontSize: 10, color: MUTED$1, marginTop: 1 }, children: [
-                row.exact,
-                " exact · ",
-                row.correct,
-                " correct · ",
-                row.played,
-                " games"
-              ] })
-            ] }),
-            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { fontSize: 22, fontWeight: 900, color: pc2.p, fontVariantNumeric: "tabular-nums" }, children: [
-              row.pts,
-              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontSize: 12, color: MUTED$1, fontWeight: 500 }, children: "p" })
-            ] })
-          ] }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 5 }, children: Object.entries(bd2).map(([t2, d]) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { background: "rgba(255,255,255,.05)", borderRadius: 8, padding: "8px 5px", textAlign: "center" }, children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx(TPill, { id: t2 }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 15, fontWeight: 800, marginTop: 5, color: d.pts > 0 ? pc2.p : MUTED$1, fontVariantNumeric: "tabular-nums" }, children: d.pts }),
-            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { fontSize: 9, color: MUTED$1, marginTop: 1 }, children: [
-              d.played,
-              "αγ"
-            ] })
-          ] }, t2)) })
-        ] }, row.player);
-      })
-    ] }),
-    tab === "rivalry" && /* @__PURE__ */ jsxRuntimeExports.jsx(RivalryStats, { predictions, results, thavmaStats }),
-    tab === "analytics" && board.map((row) => {
-      const n2 = row.played, ea2 = n2 > 0 ? Math.round(row.exact / n2 * 100) : 0, ca2 = n2 > 0 ? Math.round(row.correct / n2 * 100) : 0, pc2 = PC[row.player];
-      return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { background: SURF$1, border: `1px solid ${LINE$1}`, borderRadius: 12, padding: "16px", marginBottom: 10 }, children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }, children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { width: 40, height: 40, borderRadius: "50%", background: pc2.p, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 17, fontWeight: 900, color: SURF$1 }, children: PLAYER_NAMES[row.player].substring(0, 1) }),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { flex: 1 }, children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 15, fontWeight: 700 }, children: PLAYER_NAMES[row.player] }),
-            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { fontSize: 11, color: MUTED$1, fontWeight: 600 }, children: [
-              "Rank #",
-              row.rank
-            ] })
-          ] }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 28, fontWeight: 900, color: pc2.p, fontVariantNumeric: "tabular-nums" }, children: row.pts })
-        ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 14 }, children: [{ l: "Exact", v: row.exact, c: GREEN$1 }, { l: "Correct", v: row.correct, c: GOLD }, { l: "Pts/αγ", v: n2 > 0 ? (row.pts / n2).toFixed(1) : "–", c: BLUE }].map((s) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { background: SURF2, borderRadius: 9, padding: "10px 8px", textAlign: "center" }, children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 20, fontWeight: 900, color: s.c, fontVariantNumeric: "tabular-nums" }, children: s.v }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 10, color: MUTED$1, marginTop: 2, fontWeight: 600, letterSpacing: ".04em" }, children: s.l })
-        ] }, s.l)) }),
-        [{ l: "Exact accuracy", pct: ea2, c: GREEN$1 }, { l: "Result accuracy", pct: ca2, c: GOLD }].map((bar) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { marginBottom: 10 }, children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", justifyContent: "space-between", fontSize: 11, fontWeight: 600, marginBottom: 4 }, children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { color: MUTED$1 }, children: bar.l }),
-            /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { style: { color: bar.c }, children: [
-              bar.pct,
-              "%"
-            ] })
-          ] }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { height: 6, background: "rgba(255,255,255,.08)", borderRadius: 3 }, children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { height: "100%", width: `${bar.pct}%`, background: bar.c, borderRadius: 3 } }) })
-        ] }, bar.l))
-      ] }, row.player);
-    }),
-    tab === "campaigns" && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(SLbl, { children: "Ελληνικοί Σύλλογοι · 2026/27" }),
-      [{ t: "AEK", c: "UCL", s: "Play-offs · 18/19 Αυγ", n: "Κλήρωση 3 Αυγ", live: false }, { t: "OLY", c: "UCL", s: "Q3 · 4 Αυγ vs NEC", n: "Karaiskakis", live: false }, { t: "PAOK", c: "UEL", s: "Q2 L1 ✅ 2–3 · L2: 30 Ιουλ", n: "Toumba · 21:30", live: true }, { t: "PAO", c: "UECL", s: "Q2 L1 ✅ 1–2 · L2: 30 Ιουλ", n: "ΟΑΚΑ · 21:30", live: true }].map((c) => {
-        var _a;
-        return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { background: SURF$1, border: `1px solid ${c.live ? GREEN$1 + "44" : LINE$1}`, borderRadius: 12, padding: "14px 16px", marginBottom: 8, boxShadow: c.live ? `0 0 16px ${GREEN$1}10` : void 0 }, children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }, children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx(TeamLogo, { k: c.t, size: 38 }),
-            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { flex: 1 }, children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 14, fontWeight: 700 }, children: (_a = TEAMS[c.t]) == null ? void 0 : _a.name }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx(TPill, { id: c.c, size: "lg" })
-            ] }),
-            c.live && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 700, color: GREEN$1 }, children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { width: 7, height: 7, borderRadius: "50%", background: GREEN$1, animation: "pulse-dot 1.2s infinite", display: "inline-block" } }),
-              "ACTIVE"
-            ] })
-          ] }),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { borderTop: `1px solid ${LINE$1}`, paddingTop: 8 }, children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 12, fontWeight: 700, color: c.live ? TEXT : MUTED$1 }, children: c.s }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 11, color: MUTED$1, marginTop: 2 }, children: c.n })
-          ] })
-        ] }, c.t);
-      })
-    ] })
-  ] });
-}
-function PredictPage({ predictions, currentUser, onSave, results }) {
-  const now = Date.now();
-  const sorted = [...ALL_FIXTURES].sort((a, b) => {
-    const aLocked = now >= new Date(a.kickoff).getTime() - 6e4;
-    const bLocked = now >= new Date(b.kickoff).getTime() - 6e4;
-    if (aLocked !== bLocked) return aLocked ? 1 : -1;
-    return new Date(a.kickoff) - new Date(b.kickoff);
-  });
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { padding: "12px 16px 80px" }, children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 10, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: MUTED$1, marginBottom: 14 }, children: "Χρονολογική σειρά · Παλιότερα πρώτα" }),
-    sorted.map((m2) => {
-      var _a;
-      return /* @__PURE__ */ jsxRuntimeExports.jsx(PredictCard, { match: m2, myPred: (_a = predictions == null ? void 0 : predictions[m2.id]) == null ? void 0 : _a[currentUser.id], onSave, results }, m2.id);
-    })
-  ] });
 }
 function HistoryPage({ predictions, results }) {
   const played = [...ALL_FIXTURES].filter((m2) => (results == null ? void 0 : results[m2.id]) != null).sort((a, b) => new Date(b.kickoff) - new Date(a.kickoff));
@@ -8839,12 +8879,31 @@ function AddPlayerModal({ onClose, onAdded }) {
     }, children: done ? "✓ Προστέθηκε!" : saving ? "Αποθήκευση…" : "Προσθήκη Παίκτη" })
   ] }) });
 }
-function LeaderSidebar({ predictions, results }) {
+function LeaderSidebar({ predictions, results, compact }) {
   const board = computeLeaderboard(ALL_FIXTURES, predictions, results);
   const maxPts = ALL_FIXTURES.filter((m2) => (results == null ? void 0 : results[m2.id]) != null).length * 2;
+  const hasLivePts = Object.values(results || {}).some((r2) => r2 == null ? void 0 : r2.provisional);
+  if (compact) return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+    hasLivePts && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 9, fontWeight: 700, color: GREEN$1, letterSpacing: ".06em", marginBottom: 6 }, children: "⚡ ΖΩΝΤΑΝΟΙ ΠΟΝΤΟΙ" }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { display: "flex", gap: 8, marginBottom: 8 }, children: board.map((row, i) => {
+      const pc2 = PC[row.player];
+      return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { flex: 1, background: SURF$1, border: `1px solid ${pc2.b}`, borderRadius: 10, padding: "8px 10px", display: "flex", alignItems: "center", gap: 8 }, children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontSize: 13, fontWeight: 700 }, children: i === 0 ? "🥇" : i === 1 ? "🥈" : "🥉" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { flex: 1, minWidth: 0 }, children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 10, fontWeight: 700, color: pc2.p, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }, children: PLAYER_NAMES[row.player].substring(0, 5) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { fontSize: 11, fontWeight: 900, color: TEXT }, children: [
+            row.pts,
+            "p",
+            hasLivePts ? "~" : ""
+          ] })
+        ] })
+      ] }, row.player);
+    }) })
+  ] });
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { background: SURF$1, border: `1px solid ${LINE$1}`, borderRadius: 14, padding: "14px 16px", marginBottom: 16 }, children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 10, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: MUTED$1, marginBottom: 12 }, children: "Κατάταξη" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 10, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: MUTED$1, marginBottom: hasLivePts ? 6 : 12 }, children: "Κατάταξη" }),
+      hasLivePts && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 9, fontWeight: 700, color: GREEN$1, marginBottom: 10, letterSpacing: ".04em" }, children: "⚡ Περιλαμβάνει ζωντανούς πόντους" }),
       board.map((row, i) => {
         const p2 = PC[row.player];
         return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", alignItems: "center", gap: 10, marginBottom: i < board.length - 1 ? 10 : 0 }, children: [
@@ -8860,7 +8919,10 @@ function LeaderSidebar({ predictions, results }) {
             ] })
           ] }),
           /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { textAlign: "right" }, children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 20, fontWeight: 900, color: p2.p, fontVariantNumeric: "tabular-nums" }, children: row.pts }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { fontSize: 20, fontWeight: 900, color: p2.p, fontVariantNumeric: "tabular-nums" }, children: [
+              row.pts,
+              hasLivePts ? /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontSize: 12, opacity: 0.7 }, children: "~" }) : null
+            ] }),
             /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { fontSize: 9, color: MUTED$1 }, children: [
               "pts",
               maxPts > 0 ? `/${maxPts}` : ""
@@ -8873,10 +8935,10 @@ function LeaderSidebar({ predictions, results }) {
   ] });
 }
 const NAV = [
-  { id: "matchday", l: "Αγώνες", icon: "⚽" },
-  { id: "league", l: "League", icon: "🏆" },
-  { id: "predict", l: "Predict", icon: "✏️" },
-  { id: "history", l: "History", icon: "📋" },
+  { id: "matchday", l: "ΠΡΟΒΛΕΨΕΙΣ", icon: "⚽" },
+  { id: "schedule", l: "ΠΡΟΓΡΑΜΜΑ", icon: "📅" },
+  { id: "league", l: "Διαγωνισμός", icon: "🏆" },
+  { id: "history", l: "Ιστορικό", icon: "📋" },
   { id: "banter", l: "ΙΕΡΑ ΕΞΕΤΑΣΗ", icon: "🔥" }
 ];
 function useBreakpoint() {
@@ -8893,20 +8955,81 @@ function useBreakpoint() {
 }
 function App({ user, onLogout }) {
   const [screen, setScreen] = reactExports.useState("matchday");
-  const [state, setState] = reactExports.useState({ predictions: { ...SEEDED_PREDS }, results: { ...SEEDED_RES }, chat: [] });
+  const [state, setState] = reactExports.useState({ predictions: { ...SEEDED_PREDS }, results: { ...SEEDED_RES }, chat: [], slStandings: [] });
+  const [liveScores, setLiveScores] = reactExports.useState({});
+  const [pipelineHints, setPipelineHints] = reactExports.useState({});
   const [loading, setLoading] = reactExports.useState(true);
   const [syncing, setSyncing] = reactExports.useState(false);
   const [syncOk, setSyncOk] = reactExports.useState(true);
   const [showGuide, setShowGuide] = reactExports.useState(false);
   const [showAddPlayer, setShowAddPlayer] = reactExports.useState(false);
-  const poll = reactExports.useRef();
+  const chatReadKey = `kouv_chat_read_${(user == null ? void 0 : user.id) || "anon"}`;
+  const [chatReadIdx, setChatReadIdx] = reactExports.useState(() => {
+    try {
+      return parseInt(localStorage.getItem(chatReadKey) || "-1", 10);
+    } catch {
+      return -1;
+    }
+  });
   const bp = useBreakpoint();
   const isDesktop = bp === "desktop";
   const isTablet = bp === "tablet";
   const isMobile = bp === "mobile";
-  const load = reactExports.useCallback(async () => {
+  const markChatRead = reactExports.useCallback(() => {
+    const idx = (state.chat || []).length - 1;
+    try {
+      localStorage.setItem(chatReadKey, String(idx));
+    } catch {
+    }
+    setChatReadIdx(idx);
+  }, [state.chat, chatReadKey]);
+  reactExports.useEffect(() => {
+    if (screen === "banter") markChatRead();
+  }, [screen, state.chat, markChatRead]);
+  const banterUnread = reactExports.useMemo(() => {
+    const chat = state.chat || [];
+    if (!chat.length || screen === "banter") return false;
+    for (let i = chatReadIdx + 1; i < chat.length; i++) {
+      const m2 = chat[i];
+      if (!m2) continue;
+      const fromMe = (m2.p || "").toLowerCase() === ((user == null ? void 0 : user.name) || "").toLowerCase() || (m2.p || "").toLowerCase() === ((user == null ? void 0 : user.id) || "").toLowerCase();
+      if (!fromMe) return true;
+    }
+    return false;
+  }, [state.chat, chatReadIdx, screen, user == null ? void 0 : user.name, user == null ? void 0 : user.id]);
+  const pullPipelineScores = reactExports.useCallback(async () => {
+    if (!anyLiveScoreActivity(ALL_FIXTURES)) return { live: {}, hints: {} };
+    try {
+      const [livePayload, todayPayload] = await Promise.all([
+        api.getLiveScores("live").catch(() => ({ matches: [] })),
+        api.getTodayScores().catch(() => ({ matches: [] }))
+      ]);
+      const byExt = {};
+      [...livePayload.matches || [], ...todayPayload.matches || []].forEach((m2) => {
+        if (m2 == null ? void 0 : m2.external_id) byExt[m2.external_id] = m2;
+      });
+      const mapped = mapPipelineToLiveScores(Object.values(byExt));
+      const live = {}, hints = {};
+      Object.entries(mapped).forEach(([id2, v2]) => {
+        if (v2.final) hints[id2] = v2;
+        else live[id2] = v2;
+      });
+      return { live, hints };
+    } catch {
+      return { live: {}, hints: {} };
+    }
+  }, []);
+  const load = reactExports.useCallback(async (opts = {}) => {
+    const wantLive = opts.live !== false && anyLiveScoreActivity(ALL_FIXTURES);
     try {
       const s = await api.getState();
+      const fromKv = {};
+      Object.entries(s).forEach(([k2, v2]) => {
+        if (k2.startsWith("live_") && v2) fromKv[k2.replace("live_", "")] = v2;
+      });
+      const pipe = wantLive ? await pullPipelineScores() : { live: {}, hints: {} };
+      setLiveScores(wantLive ? { ...pipe.live, ...fromKv } : { ...fromKv });
+      setPipelineHints(wantLive ? pipe.hints : {});
       setState({
         ...s,
         predictions: {
@@ -8917,17 +9040,56 @@ function App({ user, onLogout }) {
         results: { ...SEEDED_RES, ...s.results }
       });
       setSyncOk(true);
+      api.getSlStandings().then((d) => {
+        var _a;
+        if ((_a = d == null ? void 0 : d.teams) == null ? void 0 : _a.length) setState((prev) => ({ ...prev, slStandings: d.teams }));
+      }).catch(() => {
+      });
     } catch {
       setSyncOk(false);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [pullPipelineScores]);
   reactExports.useEffect(() => {
-    load();
-    poll.current = setInterval(load, 15e3);
-    return () => clearInterval(poll.current);
-  }, [load]);
+    let cancelled = false;
+    let timer;
+    const clear = () => {
+      if (timer) clearTimeout(timer);
+    };
+    const schedule = (ms) => {
+      clear();
+      timer = setTimeout(run, ms);
+    };
+    const run = async () => {
+      if (cancelled) return;
+      const liveNow = anyLiveScoreActivity(ALL_FIXTURES);
+      const due = ALL_FIXTURES.filter((m2) => {
+        if (m2.home === "TBD" || m2.away === "TBD" || m2.timeTbd) return false;
+        return inLiveScoreBand(m2.kickoff);
+      });
+      if (liveNow) {
+        if ((user == null ? void 0 : user.role) === "admin" && due.length) {
+          await Promise.allSettled(due.map((m2) => api.fetchScores(m2.id).catch(() => null)));
+        }
+        if (!cancelled) await load({ live: true });
+        if (!cancelled) schedule(8e3);
+        return;
+      }
+      if (!cancelled) await load({ live: false });
+      if (cancelled) return;
+      const until = msUntilNextLiveScoreBand(ALL_FIXTURES);
+      const wait = until == null ? 5 * 60 * 1e3 : Math.min(Math.max(until, 15e3), 5 * 60 * 1e3);
+      schedule(wait);
+    };
+    load({ live: anyLiveScoreActivity(ALL_FIXTURES) }).then(() => {
+      if (!cancelled) run();
+    });
+    return () => {
+      cancelled = true;
+      clear();
+    };
+  }, [load, user == null ? void 0 : user.role]);
   async function savePrediction(matchId, h, a, qual, predOT, otH, otA, predPen, penH, penA) {
     setSyncing(true);
     try {
@@ -8943,7 +9105,15 @@ function App({ user, onLogout }) {
   }
   async function sendChat(text) {
     const msg = { p: user.name, t: text, ts: nowGR(), a: user.id === "boikos" };
-    setState((prev) => ({ ...prev, chat: [...prev.chat || [], msg] }));
+    setState((prev) => {
+      const chat = [...prev.chat || [], msg];
+      try {
+        localStorage.setItem(chatReadKey, String(chat.length - 1));
+      } catch {
+      }
+      setChatReadIdx(chat.length - 1);
+      return { ...prev, chat };
+    });
     try {
       await api.sendChat(text);
     } catch {
@@ -8954,19 +9124,27 @@ function App({ user, onLogout }) {
     clearAuth();
     onLogout();
   }
+  const scoringResults = reactExports.useMemo(
+    () => mergeScoringResults(state.results, liveScores, pipelineHints),
+    [state.results, liveScores, pipelineHints]
+  );
   if (showGuide) return /* @__PURE__ */ jsxRuntimeExports.jsx(Guide, { onBack: () => setShowGuide(false) });
-  if (loading) return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { minHeight: "100dvh", background: BG$1, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16 }, children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 24, fontWeight: 800, letterSpacing: ".06em", color: GREEN$1 }, children: "ΚΟΥΒΑΔΕΙΡΟΣ" }),
+  if (loading) return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { minHeight: "100vh", background: BG$1, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16 }, children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 24, fontWeight: 800, letterSpacing: ".06em", color: GREEN$1 }, children: "ΚΟΥΒΑΔΕΪΡΟΣ" }),
     /* @__PURE__ */ jsxRuntimeExports.jsx(Spinner, { size: 28 })
   ] });
   const pc2 = PC[user.id] || PC.boikos;
   const pages = {
-    matchday: /* @__PURE__ */ jsxRuntimeExports.jsx(MatchdayPage, { predictions: state.predictions, results: state.results, onRefresh: load, currentUser: user, revealed: state.revealed }),
-    league: /* @__PURE__ */ jsxRuntimeExports.jsx(LeaguePage, { predictions: state.predictions, results: state.results, thavmaStats: state.thavmaStats }),
-    predict: /* @__PURE__ */ jsxRuntimeExports.jsx(PredictPage, { predictions: state.predictions, currentUser: user, onSave: savePrediction, results: state.results }),
-    history: /* @__PURE__ */ jsxRuntimeExports.jsx(HistoryPage, { predictions: state.predictions, results: state.results }),
-    banter: /* @__PURE__ */ jsxRuntimeExports.jsx(BanterPage, { chat: state.chat, onSend: sendChat })
+    matchday: /* @__PURE__ */ jsxRuntimeExports.jsx(MatchdayPage, { predictions: state.predictions, results: state.results, scoringResults, onRefresh: load, currentUser: user, revealed: state.revealed, onSave: savePrediction, liveScores, pipelineHints, slStandings: state.slStandings }),
+    league: /* @__PURE__ */ jsxRuntimeExports.jsx(LeaguePage, { predictions: state.predictions, results: scoringResults, thavmaStats: state.thavmaStats }),
+    schedule: /* @__PURE__ */ jsxRuntimeExports.jsx(SchedulePage, { slStandings: state.slStandings }),
+    history: /* @__PURE__ */ jsxRuntimeExports.jsx(HistoryPage, { predictions: state.predictions, results: scoringResults }),
+    banter: /* @__PURE__ */ jsxRuntimeExports.jsx(BanterPage, { chat: state.chat, onSend: sendChat, onRead: markChatRead })
   };
+  function navIcon(navItem) {
+    if (navItem.id === "banter" && banterUnread) return "🔔";
+    return navItem.icon;
+  }
   const Header = () => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: {
     background: "#0a0b0f",
     borderBottom: `1px solid ${LINE$1}`,
@@ -8981,7 +9159,7 @@ function App({ user, onLogout }) {
     flexShrink: 0
   }, children: [
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", alignItems: "center", gap: 10 }, children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: isDesktop ? 18 : 15, fontWeight: 800, letterSpacing: "-.01em", color: TEXT }, children: "ΚΟΥΒΑΔΕΙΡΟΣ" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: isDesktop ? 18 : 15, fontWeight: 800, letterSpacing: "-.01em", color: TEXT }, children: "ΚΟΥΒΑΔΕΪΡΟΣ" }),
       /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 9, fontWeight: 700, letterSpacing: ".08em", color: GREEN$1, background: `${GREEN$1}18`, border: `1px solid ${GREEN$1}35`, borderRadius: 4, padding: "2px 6px" }, children: "26/27" })
     ] }),
     isDesktop && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { display: "flex", gap: 4 }, children: NAV.map((navItem) => /* @__PURE__ */ jsxRuntimeExports.jsxs("button", { onClick: () => setScreen(navItem.id), style: {
@@ -8997,9 +9175,13 @@ function App({ user, onLogout }) {
       fontSize: 13,
       fontWeight: 600,
       borderBottom: screen === navItem.id ? `2px solid ${GREEN$1}` : "2px solid transparent",
-      transition: "all .15s"
+      transition: "all .15s",
+      position: "relative"
     }, children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: navItem.icon }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { style: { position: "relative" }, children: [
+        navIcon(navItem),
+        navItem.id === "banter" && banterUnread && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { position: "absolute", top: -4, right: -8, width: 8, height: 8, borderRadius: "50%", background: RED$1, boxShadow: `0 0 0 2px #0a0b0f` } })
+      ] }),
       navItem.l
     ] }, navItem.id)) }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", alignItems: "center", gap: isDesktop ? 12 : 8 }, children: [
@@ -9069,11 +9251,15 @@ function App({ user, onLogout }) {
           border: "none",
           cursor: "pointer",
           minWidth: 44,
-          flex: 1
+          flex: 1,
+          position: "relative"
         },
         children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontSize: isTablet ? 22 : 19, filter: screen === navItem.id ? void 0 : "grayscale(.6) opacity(.5)" }, children: navItem.icon }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontSize: isTablet ? 10 : 9, fontWeight: 700, letterSpacing: ".04em", color: screen === navItem.id ? GREEN$1 : MUTED$1, textTransform: "uppercase" }, children: navItem.l }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { style: { fontSize: isTablet ? 22 : 19, filter: screen === navItem.id || navItem.id === "banter" && banterUnread ? void 0 : "grayscale(.6) opacity(.5)", position: "relative" }, children: [
+            navIcon(navItem),
+            navItem.id === "banter" && banterUnread && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { position: "absolute", top: -2, right: -6, width: 8, height: 8, borderRadius: "50%", background: RED$1, boxShadow: `0 0 0 2px #0a0b0f` } })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontSize: isTablet ? 10 : 9, fontWeight: 700, letterSpacing: ".04em", color: screen === navItem.id ? GREEN$1 : navItem.id === "banter" && banterUnread ? GOLD : MUTED$1, textTransform: "uppercase" }, children: navItem.l }),
           screen === navItem.id && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { width: 16, height: 2, background: GREEN$1, borderRadius: 1 } })
         ]
       },
@@ -9103,18 +9289,18 @@ function App({ user, onLogout }) {
     )
   ] });
   if (isDesktop) {
-    return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", flexDirection: "column", minHeight: "100dvh", background: BG$1, fontFamily: "'Space Grotesk',system-ui,sans-serif", color: TEXT }, children: [
+    return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", flexDirection: "column", minHeight: "100vh", background: BG$1, fontFamily: "'Space Grotesk',system-ui,sans-serif", color: TEXT }, children: [
       showAddPlayer && (user == null ? void 0 : user.role) === "admin" && /* @__PURE__ */ jsxRuntimeExports.jsx(AddPlayerModal, { onClose: () => setShowAddPlayer(false), onAdded: load }),
       /* @__PURE__ */ jsxRuntimeExports.jsx(Header, {}),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { flex: 1, display: "grid", gridTemplateColumns: "var(--sidebar-w,300px) 1fr", maxWidth: 1280, width: "100%", margin: "0 auto", padding: "24px 32px", gap: 24, alignItems: "start" }, children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { position: "sticky", top: 80 }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(LeaderSidebar, { predictions: state.predictions, results: state.results }) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { flex: 1, display: "grid", gridTemplateColumns: "300px 1fr", maxWidth: 1280, width: "100%", margin: "0 auto", padding: "24px 32px", gap: 24, alignItems: "start" }, children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { position: "sticky", top: 80 }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(LeaderSidebar, { predictions: state.predictions, results: scoringResults }) }),
         /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { minWidth: 0 }, children: pages[screen] })
       ] })
     ] });
   }
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: {
     background: BG$1,
-    minHeight: "100dvh",
+    minHeight: "100vh",
     display: "flex",
     flexDirection: "column",
     maxWidth: isTablet ? 768 : "100%",
@@ -9124,8 +9310,1063 @@ function App({ user, onLogout }) {
   }, children: [
     showAddPlayer && (user == null ? void 0 : user.role) === "admin" && /* @__PURE__ */ jsxRuntimeExports.jsx(AddPlayerModal, { onClose: () => setShowAddPlayer(false), onAdded: load }),
     /* @__PURE__ */ jsxRuntimeExports.jsx(Header, {}),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { padding: "8px 16px 0" }, children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(LeaderSidebar, { predictions: state.predictions, results: scoringResults, compact: true }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { background: "rgba(255,255,255,.03)", borderRadius: 12, padding: "10px 12px", marginTop: 6, border: "1px solid rgba(255,255,255,.08)" }, children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 10, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: "rgba(255,255,255,.4)", marginBottom: 6 }, children: "📈 Εξέλιξη Διαγωνισμού" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(H2HGraph, { predictions: state.predictions, results: scoringResults })
+      ] })
+    ] }),
     /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { flex: 1, overflowY: "auto", paddingBottom: isTablet ? 72 : 64 }, children: pages[screen] }),
     /* @__PURE__ */ jsxRuntimeExports.jsx(BottomNav, {})
+  ] });
+}
+function LeaguePage({ predictions, results, thavmaStats }) {
+  const board = computeLeaderboard(ALL_FIXTURES, predictions, results);
+  const [tab, setTab] = reactExports.useState("standings");
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { padding: "16px 16px 80px" }, children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { display: "flex", gap: 6, marginBottom: 16, overflowX: "auto", scrollbarWidth: "none", msOverflowStyle: "none" }, children: [{ id: "standings", l: "Συγκομιδή" }, { id: "rivalry", l: "🌶️ Διαγκωνισμοί" }, { id: "analytics", l: "Αναλυτικά" }, { id: "campaigns", l: "Ενεργές Διοργανώσεις" }].map((tabItem) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "button",
+      {
+        onClick: () => setTab(tabItem.id),
+        style: {
+          fontSize: 11,
+          fontWeight: 700,
+          padding: "6px 13px",
+          borderRadius: 7,
+          whiteSpace: "nowrap",
+          border: "1px solid " + (tab === tabItem.id ? "rgba(255,255,255,.3)" : LINE$1),
+          background: tab === tabItem.id ? "rgba(255,255,255,.12)" : "transparent",
+          color: tab === tabItem.id ? TEXT : MUTED$1,
+          cursor: "pointer"
+        },
+        children: tabItem.l
+      },
+      tabItem.id
+    )) }),
+    tab === "standings" && /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 10, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: "rgba(255,255,255,.4)", marginBottom: 10 }, children: "Ανάλυση ανά τουρνουά" }),
+      board.map((row) => {
+        const bd2 = {};
+        ["SL", "UCL", "UEL", "UECL"].forEach((t2) => {
+          let pts = 0, played = 0;
+          ALL_FIXTURES.filter((m2) => m2.t === t2).forEach((m2) => {
+            var _a;
+            const ac2 = results == null ? void 0 : results[m2.id];
+            if (!ac2) return;
+            const sc2 = scoreMatch((_a = predictions == null ? void 0 : predictions[m2.id]) == null ? void 0 : _a[row.player], ac2);
+            if (!sc2) return;
+            pts += sc2.points;
+            played++;
+          });
+          bd2[t2] = { pts, played };
+        });
+        const pcr = PC[row.player];
+        return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { background: SURF$1, border: "1px solid " + LINE$1, borderRadius: 12, padding: "14px 16px", marginBottom: 8 }, children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }, children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { width: 36, height: 36, borderRadius: "50%", background: pcr.p, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, fontWeight: 900, color: SURF$1 }, children: PLAYER_NAMES[row.player].substring(0, 1) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { flex: 1 }, children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 14, fontWeight: 700, color: TEXT }, children: PLAYER_NAMES[row.player] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { fontSize: 10, color: MUTED$1, marginTop: 1 }, children: [
+                row.exact,
+                " exact · ",
+                row.correct,
+                " correct · ",
+                row.played,
+                " games"
+              ] })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { fontSize: 22, fontWeight: 900, color: pcr.p }, children: [
+              row.pts,
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontSize: 12, color: MUTED$1, fontWeight: 500 }, children: "p" })
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 5 }, children: Object.entries(bd2).map(([t2, d]) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { background: "rgba(255,255,255,.05)", borderRadius: 8, padding: "8px 5px", textAlign: "center" }, children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(TPill, { id: t2 }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 15, fontWeight: 800, marginTop: 5, color: d.pts > 0 ? pcr.p : MUTED$1 }, children: d.pts }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { fontSize: 9, color: MUTED$1, marginTop: 1 }, children: [
+              d.played,
+              "αγ"
+            ] })
+          ] }, t2)) })
+        ] }, row.player);
+      })
+    ] }),
+    tab === "rivalry" && /* @__PURE__ */ jsxRuntimeExports.jsx(RivalryStats, { predictions, results, thavmaStats }),
+    tab === "analytics" && (() => {
+      const played = ALL_FIXTURES.filter((m2) => (results == null ? void 0 : results[m2.id]) != null);
+      if (!played.length) return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { padding: 24, textAlign: "center", color: MUTED$1, fontSize: 13 }, children: "Δεν υπάρχουν δεδομένα ακόμα" });
+      return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { children: PLAYERS.map((p2) => {
+        const pc2 = PC[p2];
+        let exact = 0, correct = 0, total = 0, maxStreak = 0, curStreak = 0, pts = 0;
+        played.forEach((m2) => {
+          var _a;
+          const pred = (_a = predictions == null ? void 0 : predictions[m2.id]) == null ? void 0 : _a[p2];
+          const res = results[m2.id];
+          if (!pred) return;
+          const sc2 = scoreMatch(pred, res);
+          if (!sc2) return;
+          total++;
+          pts += sc2.points;
+          if (sc2.exact) {
+            exact++;
+            correct++;
+          } else if (sc2.correct) {
+            correct++;
+          }
+          curStreak = sc2.points > 0 ? curStreak + 1 : 0;
+          maxStreak = Math.max(maxStreak, curStreak);
+        });
+        const accPct = total ? Math.round(correct / total * 100) : 0;
+        const exactPct = total ? Math.round(exact / total * 100) : 0;
+        const avgPts = total ? (pts / total).toFixed(1) : 0;
+        return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { background: SURF$1, border: "1px solid " + LINE$1, borderRadius: 12, padding: "14px 16px", marginBottom: 10 }, children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }, children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { width: 38, height: 38, borderRadius: "50%", background: pc2.p, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 900, color: "#08090d" }, children: PLAYER_NAMES[p2][0] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { flex: 1 }, children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 14, fontWeight: 700, color: TEXT }, children: PLAYER_NAMES[p2] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { fontSize: 10, color: MUTED$1 }, children: [
+                total,
+                " αγώνες · ",
+                pts,
+                " πόντοι"
+              ] })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { fontSize: 26, fontWeight: 900, color: pc2.p }, children: [
+              avgPts,
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontSize: 11, color: MUTED$1 }, children: "p/αγ" })
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8, marginBottom: 10 }, children: [
+            { lbl: "Ακρίβεια", val: accPct + "%", sub: correct + "/" + total + " σωστά", color: accPct >= 60 ? GREEN$1 : accPct >= 40 ? GOLD : RED$1 },
+            { lbl: "Exact Score", val: exactPct + "%", sub: exact + "/" + total + " ακριβή", color: exactPct >= 30 ? GREEN$1 : exactPct >= 15 ? GOLD : RED$1 },
+            { lbl: "Max Σερί", val: maxStreak, sub: "σερί πόντοι", color: maxStreak >= 3 ? GREEN$1 : maxStreak >= 2 ? GOLD : MUTED$1 }
+          ].map((stat) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { background: "rgba(255,255,255,.04)", borderRadius: 10, padding: "10px 8px", textAlign: "center" }, children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 9, fontWeight: 700, color: MUTED$1, letterSpacing: ".06em", textTransform: "uppercase", marginBottom: 4 }, children: stat.lbl }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 22, fontWeight: 900, color: stat.color }, children: stat.val }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 9, color: MUTED$1, marginTop: 2 }, children: stat.sub })
+          ] }, stat.lbl)) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { height: 4, background: "rgba(255,255,255,.06)", borderRadius: 2 }, children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { height: "100%", width: accPct + "%", background: pc2.p, borderRadius: 2, transition: "width 1s ease" } }) })
+        ] }, p2);
+      }) });
+    })(),
+    tab === "campaigns" && (() => {
+      const comps = [
+        { id: "UEL", name: "UEFA Europa League", color: "#f5733a", teams: ["PAOK"], emoji: "🟠" },
+        { id: "UECL", name: "UEFA Conference League", color: "#00c853", teams: ["PAO"], emoji: "🟢" },
+        { id: "UCL", name: "UEFA Champions League", color: "#4d9fff", teams: ["OLY", "AEK"], emoji: "🔵" },
+        { id: "SL", name: "Super League 2026/27", color: "#f0c040", teams: ["OLY", "AEK", "PAOK", "PAO", "ARI", "ATR", "AST", "KIF", "LEV", "OFI", "PNE", "VOL", "IRA", "KAL"], emoji: "🟡" }
+      ];
+      return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { children: comps.map((comp) => {
+        var _a, _b;
+        const compMatches = ALL_FIXTURES.filter((m2) => m2.t === comp.id);
+        const played = compMatches.filter((m2) => (results == null ? void 0 : results[m2.id]) != null);
+        const upcoming = compMatches.filter((m2) => !(results == null ? void 0 : results[m2.id]));
+        const nextMatch = upcoming.sort((a, b) => new Date(a.kickoff) - new Date(b.kickoff))[0];
+        const totalPts = PLAYERS.reduce((acc, p2) => {
+          let pts = 0;
+          played.forEach((m2) => {
+            var _a2;
+            const sc2 = scoreMatch((_a2 = predictions == null ? void 0 : predictions[m2.id]) == null ? void 0 : _a2[p2], results[m2.id]);
+            if (sc2) pts += sc2.points;
+          });
+          acc[p2] = pts;
+          return acc;
+        }, {});
+        return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { background: SURF$1, border: "1px solid " + LINE$1, borderRadius: 12, padding: "14px 16px", marginBottom: 10, borderLeft: "3px solid " + comp.color }, children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }, children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontSize: 18 }, children: comp.emoji }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { flex: 1 }, children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 13, fontWeight: 700, color: TEXT }, children: comp.name }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { fontSize: 10, color: MUTED$1, marginTop: 1 }, children: [
+                played.length,
+                "/",
+                compMatches.length,
+                " αγώνες · ",
+                upcoming.length,
+                " εναπομένουν"
+              ] })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(TPill, { id: comp.id })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { display: "flex", gap: 5, marginBottom: 10, flexWrap: "wrap" }, children: comp.teams.map((t2) => {
+            var _a2;
+            return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", alignItems: "center", gap: 5, background: "rgba(255,255,255,.05)", borderRadius: 8, padding: "4px 8px" }, children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(TeamLogo, { k: t2, size: 18 }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontSize: 10, fontWeight: 600, color: TEXT }, children: ((_a2 = TEAMS[t2]) == null ? void 0 : _a2.name) || t2 })
+            ] }, t2);
+          }) }),
+          nextMatch && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { fontSize: 10, color: MUTED$1, marginBottom: 10 }, children: [
+            "⏭ Επόμενος: ",
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { style: { color: GOLD, fontWeight: 700 }, children: [
+              (_a = TEAMS[nextMatch.home]) == null ? void 0 : _a.abbr,
+              " vs ",
+              (_b = TEAMS[nextMatch.away]) == null ? void 0 : _b.abbr
+            ] }),
+            " · ",
+            grDate(nextMatch.kickoff),
+            " ",
+            grKick(nextMatch)
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { display: "flex", gap: 6 }, children: PLAYERS.map((p2) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { flex: 1, background: PC[p2].bg, border: "1px solid " + PC[p2].b, borderRadius: 8, padding: "6px", textAlign: "center" }, children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 9, fontWeight: 700, color: PC[p2].p, marginBottom: 2 }, children: PLAYER_NAMES[p2].substring(0, 4).toUpperCase() }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { fontSize: 18, fontWeight: 900, color: PC[p2].p }, children: [
+              totalPts[p2] || 0,
+              "p"
+            ] })
+          ] }, p2)) })
+        ] }, comp.id);
+      }) });
+    })()
+  ] });
+}
+function MatchdayPage({ predictions, results, scoringResults, onRefresh, currentUser, revealed, onSave, liveScores, pipelineHints, slStandings }) {
+  const now = Date.now();
+  const ONE_HOUR = 36e5;
+  const isLive = (m2, res) => {
+    if (res) return false;
+    if (liveScores == null ? void 0 : liveScores[m2.id]) return true;
+    const ko = new Date(m2.kickoff).getTime();
+    return now >= ko && now < ko + 72e5;
+  };
+  const sorted = [...ALL_FIXTURES].filter((m2) => {
+    const ko = new Date(m2.kickoff).getTime();
+    const res = results == null ? void 0 : results[m2.id];
+    if (res && now > ko + ONE_HOUR) return false;
+    return true;
+  }).sort((a, b) => {
+    const aRes = results == null ? void 0 : results[a.id], bRes = results == null ? void 0 : results[b.id];
+    const aLive = isLive(a, aRes), bLive = isLive(b, bRes);
+    if (aLive && !bLive) return -1;
+    if (bLive && !aLive) return 1;
+    return new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime();
+  });
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { padding: "12px 16px 80px" }, children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 10, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: MUTED$1, marginBottom: 14 }, children: "Χρονολογικά · Ζωντανοί αγώνες επάνω · πόντοι live" }),
+    sorted.map((m2) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+      MatchPredictCard,
+      {
+        match: m2,
+        result: results == null ? void 0 : results[m2.id],
+        scoringActual: scoringResults == null ? void 0 : scoringResults[m2.id],
+        predictions: predictions == null ? void 0 : predictions[m2.id],
+        onRefresh,
+        allResults: results,
+        currentUser,
+        revealed,
+        onSave,
+        liveScore: liveScores == null ? void 0 : liveScores[m2.id],
+        pipelineHint: pipelineHints == null ? void 0 : pipelineHints[m2.id],
+        slStandings
+      },
+      m2.id
+    ))
+  ] });
+}
+function FormStrip({ form }) {
+  if (!form || !form.length) return null;
+  const col = { W: GREEN$1, L: RED$1, D: GOLD };
+  return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { display: "flex", gap: 3, alignItems: "center" }, children: form.map((r2, i) => /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: {
+    width: 18,
+    height: 18,
+    borderRadius: "50%",
+    background: col[r2] || MUTED$1,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: 9,
+    fontWeight: 800,
+    color: "#08090d"
+  }, children: r2 }, i)) });
+}
+function MatchPredictCard({ match, result, scoringActual, predictions, onRefresh, allResults, currentUser, revealed, onSave, liveScore, pipelineHint, slStandings }) {
+  var _a, _b, _c, _d, _e, _f, _g, _h, _i;
+  const [showPush, setShowPush] = reactExports.useState(false);
+  const myPred = currentUser ? predictions == null ? void 0 : predictions[currentUser.id] : null;
+  const [h, setH] = reactExports.useState((myPred == null ? void 0 : myPred.h) ?? 0), [a, setA] = reactExports.useState((myPred == null ? void 0 : myPred.a) ?? 0);
+  const [qual, setQual] = reactExports.useState((myPred == null ? void 0 : myPred.qual) ?? match.home);
+  const [predOT, setPredOT] = reactExports.useState((myPred == null ? void 0 : myPred.predOT) ?? false);
+  const [otH, setOtH] = reactExports.useState((myPred == null ? void 0 : myPred.otH) ?? 0), [otA, setOtA] = reactExports.useState((myPred == null ? void 0 : myPred.otA) ?? 0);
+  const [predPen, setPredPen] = reactExports.useState((myPred == null ? void 0 : myPred.predPen) ?? false);
+  const [penH, setPenH] = reactExports.useState((myPred == null ? void 0 : myPred.penH) ?? 0), [penA, setPenA] = reactExports.useState((myPred == null ? void 0 : myPred.penA) ?? 0);
+  const [saving, setSaving] = reactExports.useState(false), [saved, setSaved] = reactExports.useState(false), [error, setError] = reactExports.useState("");
+  reactExports.useEffect(() => {
+    if (myPred) {
+      setH(myPred.h ?? 0);
+      setA(myPred.a ?? 0);
+      setQual(myPred.qual ?? match.home);
+      setPredOT(myPred.predOT ?? false);
+      setOtH(myPred.otH ?? 0);
+      setOtA(myPred.otA ?? 0);
+    }
+  }, [myPred == null ? void 0 : myPred.h, myPred == null ? void 0 : myPred.a, myPred == null ? void 0 : myPred.qual]);
+  const hasRes = result != null;
+  const locked = isLocked(match.kickoff);
+  const isUEFA = isUEFATie(match.id);
+  const isRevealed = (revealed == null ? void 0 : revealed[match.id]) || false;
+  const revealOpen = isRevealOpen(match.kickoff) || isRevealed;
+  const actualForScore = scoringActual ?? result ?? scorelineToActual(liveScore) ?? scorelineToActual(pipelineHint);
+  const isProvisional = !hasRes && !!(actualForScore == null ? void 0 : actualForScore.provisional);
+  const showAllPreds = hasRes || revealOpen || !!liveScore || !!pipelineHint || locked && !!actualForScore;
+  const today = isToday(match.kickoff);
+  const isSL = match.t === "SL";
+  const findSLTeam = (key) => {
+    var _a2, _b2;
+    if (!key || (slStandings || []).length === 0) return null;
+    const name = (((_a2 = TEAMS[key]) == null ? void 0 : _a2.name) || key).toLowerCase();
+    const abbr = (((_b2 = TEAMS[key]) == null ? void 0 : _b2.abbr) || key).toLowerCase();
+    return (slStandings || []).find(
+      (t2) => {
+        var _a3, _b3, _c2, _d2;
+        return ((_a3 = t2.team) == null ? void 0 : _a3.toLowerCase()) === abbr || ((_b3 = t2.team) == null ? void 0 : _b3.toLowerCase()) === key.toLowerCase() || ((_c2 = t2.name) == null ? void 0 : _c2.toLowerCase().includes(name)) || name.includes(((_d2 = t2.name) == null ? void 0 : _d2.toLowerCase()) || "__");
+      }
+    ) || null;
+  };
+  const slHome = isSL ? findSLTeam(match.home) : null;
+  const slAway = isSL ? findSLTeam(match.away) : null;
+  const hn = ((_a = TEAMS[match.home]) == null ? void 0 : _a.name) || match.home;
+  const an = ((_b = TEAMS[match.away]) == null ? void 0 : _b.name) || match.away;
+  const tC = { SL: "#f0c040", UCL: BLUE, UEL: "#f5733a", UECL: GREEN$1 }[match.t] || GOLD;
+  const leg1Fix = match.leg === 2 && match.tie ? UEFA_FIXTURES.find((f2) => f2.tie === match.tie && f2.leg === 1) : null;
+  const leg1Res = leg1Fix && allResults ? allResults[leg1Fix.id] : null;
+  const leg1Agg = leg1Res && leg1Fix ? (() => {
+    const greek = match.greek;
+    const wasHome = leg1Fix.home === greek;
+    const gG = wasHome ? leg1Res.h : leg1Res.a;
+    const oG = wasHome ? leg1Res.a : leg1Res.h;
+    const diff = gG - oG;
+    return {
+      h1: leg1Res.h,
+      a1: leg1Res.a,
+      diff,
+      leg1Fix,
+      situation: diff > 0 ? "+" + diff + " προβάδισμα" : diff < 0 ? diff + " πίσω" : "Ισόπαλη · Παρ/Πέν αν ισόπαλη"
+    };
+  })() : null;
+  const adj = (v2, set, d) => {
+    if (!locked) {
+      set(Math.max(0, Math.min(9, v2 + d)));
+      setSaved(false);
+    }
+  };
+  const nb2 = {
+    width: 50,
+    height: 50,
+    background: SURF2,
+    border: `1px solid ${locked ? LINE$1 : tC + "55"}`,
+    borderRadius: 10,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: 24,
+    fontWeight: 800,
+    color: locked ? MUTED$1 : TEXT,
+    fontVariantNumeric: "tabular-nums"
+  };
+  const ab2 = {
+    width: 34,
+    height: 34,
+    borderRadius: 8,
+    border: `1px solid ${LINE$1}`,
+    background: "rgba(255,255,255,.06)",
+    color: TEXT,
+    cursor: locked ? "not-allowed" : "pointer",
+    fontSize: 17,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center"
+  };
+  const ScoreRow = ({ lbl, hv, setHv, av, setAv, sm }) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { marginBottom: sm ? 6 : 0 }, children: [
+    lbl && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 10, fontWeight: 700, color: tC, letterSpacing: ".05em", marginBottom: 5, textTransform: "uppercase", textAlign: "center" }, children: lbl }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center", gap: 8 }, children: [["h", hv, setHv], ["a", av, setAv]].map(([side, v2, set], i) => /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+      i === 1 && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontSize: sm ? 16 : 20, color: DIM, textAlign: "center" }, children: "–" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", alignItems: "center", gap: sm ? 4 : 7, justifyContent: "center" }, children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("button", { style: sm ? { ...ab2, width: 26, height: 26, fontSize: 14 } : ab2, onClick: () => adj(v2, set, -1), children: "–" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: sm ? { ...nb2, width: 38, height: 38, fontSize: 18 } : nb2, children: v2 }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("button", { style: sm ? { ...ab2, width: 26, height: 26, fontSize: 14 } : ab2, onClick: () => adj(v2, set, 1), children: "+" })
+      ] })
+    ] })) })
+  ] });
+  async function save() {
+    if (locked) return;
+    setSaving(true);
+    setError("");
+    try {
+      await onSave(match.id, h, a, qual, predOT, otH, otA, predPen, penH, penA);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2500);
+    } catch (e) {
+      setError("❌ " + ((e == null ? void 0 : e.message) || "Σφάλμα") + " — έλεγξε σύνδεση & ξανά");
+    } finally {
+      setSaving(false);
+    }
+  }
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: {
+    background: SURF$1,
+    border: `1px solid ${today ? GREEN$1 + "55" : LINE$1}`,
+    borderRadius: 14,
+    marginBottom: 10,
+    overflow: "hidden",
+    boxShadow: today ? `0 0 20px ${GREEN$1}12` : void 0
+  }, children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { height: 2, background: `linear-gradient(90deg,${tC}cc,transparent)` } }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { padding: "9px 14px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: `1px solid ${LINE$1}` }, children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", alignItems: "center", gap: 7 }, children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(TPill, { id: match.t }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontSize: 10, fontWeight: 600, color: MUTED$1 }, children: match.round || "" }),
+        today && /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { style: { display: "flex", alignItems: "center", gap: 4, fontSize: 10, fontWeight: 700, color: GREEN$1 }, children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { width: 6, height: 6, borderRadius: "50%", background: GREEN$1, animation: "pulse-dot 1.2s infinite", display: "inline-block" } }),
+          "ΣΗΜΕΡΑ"
+        ] })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { textAlign: "right" }, children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 11, fontWeight: 700, color: locked ? RED$1 : GREEN$1 }, children: locked ? "🔒 Κλειδωμένο" : match.timeTbd ? `Κλείνει TBA` : `Κλείνει ${grKick(match)}` }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { fontSize: 10, color: MUTED$1 }, children: [
+          grDate(match.kickoff),
+          " · ",
+          grKick(match)
+        ] })
+      ] })
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { padding: "14px 14px 12px" }, children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center", gap: 10, marginBottom: 8 }, children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }, children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(TeamLogo, { k: match.home, size: 36 }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontSize: 11, fontWeight: 600, textAlign: "right", color: TEXT, lineHeight: 1.2 }, children: hn }),
+          slHome && /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { style: { fontSize: 9, fontWeight: 700, color: GOLD, background: GOLD + "18", borderRadius: 4, padding: "1px 5px" }, children: [
+            "#",
+            slHome.rank
+          ] }),
+          ((_c = slHome == null ? void 0 : slHome.form) == null ? void 0 : _c.length) > 0 && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { display: "flex", justifyContent: "flex-end" }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(FormStrip, { form: slHome.form.slice(-5) }) })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", gap: 5 }, children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(ScorePill, { h: liveScore ? liveScore.h : result == null ? void 0 : result.h, a: liveScore ? liveScore.a : result == null ? void 0 : result.a, pending: today && !hasRes && !liveScore }),
+          liveScore && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { fontSize: 9, fontWeight: 700, color: GREEN$1, letterSpacing: ".06em", display: "flex", alignItems: "center", gap: 3 }, children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { width: 5, height: 5, borderRadius: "50%", background: GREEN$1, animation: "pulse-dot 1s infinite", display: "inline-block" } }),
+            liveScore.min,
+            "'"
+          ] }),
+          (result == null ? void 0 : result.overtime) && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 9, fontWeight: 700, color: GOLD, letterSpacing: ".03em", textAlign: "center" }, children: result.penalties ? `Μπενάλντιζ ${result.penH}–${result.penA}` : `ΠΑΡΑΤΑΣΗ ${result.otH}–${result.otA}` }),
+          !hasRes && !today && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 10, color: DIM, fontWeight: 600 }, children: "vs" })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 4 }, children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(TeamLogo, { k: match.away, size: 36 }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontSize: 11, fontWeight: 600, color: TEXT, lineHeight: 1.2 }, children: an }),
+          slAway && /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { style: { fontSize: 9, fontWeight: 700, color: GOLD, background: GOLD + "18", borderRadius: 4, padding: "1px 5px" }, children: [
+            "#",
+            slAway.rank
+          ] }),
+          ((_d = slAway == null ? void 0 : slAway.form) == null ? void 0 : _d.length) > 0 && /* @__PURE__ */ jsxRuntimeExports.jsx(FormStrip, { form: slAway.form.slice(-5) })
+        ] })
+      ] }),
+      leg1Agg && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: {
+        background: "rgba(255,255,255,.04)",
+        border: `1px solid ${LINE$1}`,
+        borderRadius: 9,
+        padding: "8px 12px",
+        marginBottom: 10,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        flexWrap: "wrap",
+        gap: 6
+      }, children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", alignItems: "center", gap: 6 }, children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontSize: 9, fontWeight: 700, color: MUTED$1, letterSpacing: ".06em", textTransform: "uppercase" }, children: "Leg 1" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { style: { fontSize: 13, fontWeight: 900, color: TEXT, fontVariantNumeric: "tabular-nums" }, children: [
+            (_e = TEAMS[leg1Agg.leg1Fix.home]) == null ? void 0 : _e.abbr,
+            " ",
+            leg1Agg.h1,
+            "–",
+            leg1Agg.a1,
+            " ",
+            (_f = TEAMS[leg1Agg.leg1Fix.away]) == null ? void 0 : _f.abbr
+          ] })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontSize: 11, fontWeight: 800, color: leg1Agg.diff > 0 ? GREEN$1 : leg1Agg.diff < 0 ? RED$1 : GOLD }, children: leg1Agg.situation })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(OddsRow, { matchId: match.id }),
+      !hasRes && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { marginTop: 12, borderTop: `1px solid ${LINE$1}`, paddingTop: 12 }, children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(ScoreRow, { hv: h, setHv: setH, av: a, setAv: setA }),
+        isUEFA && !locked && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { marginTop: 10 }, children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 10, fontWeight: 700, color: tC, letterSpacing: ".05em", marginBottom: 6, textTransform: "uppercase" }, children: "Πρόκριση" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { display: "flex", gap: 6 }, children: [match.home, match.away].map((tm) => {
+            var _a2;
+            return /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "button",
+              {
+                onClick: () => {
+                  if (!locked) {
+                    setQual(tm);
+                    setSaved(false);
+                  }
+                },
+                style: {
+                  flex: 1,
+                  padding: "7px 5px",
+                  borderRadius: 8,
+                  border: `1px solid ${qual === tm ? tC + "88" : LINE$1}`,
+                  background: qual === tm ? `${tC}18` : "transparent",
+                  color: qual === tm ? tC : MUTED$1,
+                  fontSize: 11,
+                  fontWeight: 700,
+                  cursor: locked ? "not-allowed" : "pointer"
+                },
+                children: ((_a2 = TEAMS[tm]) == null ? void 0 : _a2.name) || tm
+              },
+              tm
+            );
+          }) })
+        ] }),
+        isUEFA && !locked && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { marginTop: 8, display: "flex", gap: 6 }, children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            "button",
+            {
+              onClick: () => {
+                if (!locked) {
+                  setPredOT((v2) => !v2);
+                  setSaved(false);
+                }
+              },
+              style: {
+                flex: 1,
+                padding: "6px",
+                borderRadius: 8,
+                border: `1px solid ${predOT ? GOLD + "66" : LINE$1}`,
+                background: predOT ? `${GOLD}15` : "transparent",
+                color: predOT ? GOLD : MUTED$1,
+                fontSize: 10,
+                fontWeight: 700,
+                cursor: locked ? "not-allowed" : "pointer"
+              },
+              children: [
+                predOT ? "✓ " : "",
+                " ΠΑΡΑΤΑΣΗ"
+              ]
+            }
+          ),
+          predOT && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            "button",
+            {
+              onClick: () => {
+                if (!locked) {
+                  setPredPen((v2) => !v2);
+                  setSaved(false);
+                }
+              },
+              style: {
+                flex: 1,
+                padding: "6px",
+                borderRadius: 8,
+                border: `1px solid ${predPen ? RED$1 + "66" : LINE$1}`,
+                background: predPen ? `${RED$1}15` : "transparent",
+                color: predPen ? RED$1 : MUTED$1,
+                fontSize: 10,
+                fontWeight: 700,
+                cursor: locked ? "not-allowed" : "pointer"
+              },
+              children: [
+                predPen ? "✓ " : "",
+                " Μπενάλντιζ"
+              ]
+            }
+          )
+        ] }),
+        predOT && !locked && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { marginTop: 8 }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(ScoreRow, { lbl: predPen ? "Μπενάλντιζ" : "ΠΑΡΑΤΑΣΗ", hv: otH, setHv: setOtH, av: otA, setAv: setOtA, sm: true }) }),
+        error && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: {
+          fontSize: 11,
+          color: RED$1,
+          background: "rgba(255,77,109,.08)",
+          border: "1px solid rgba(255,77,109,.2)",
+          borderRadius: 8,
+          padding: "7px 10px",
+          marginTop: 8,
+          textAlign: "center",
+          fontWeight: 600
+        }, children: error }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "button",
+          {
+            onClick: save,
+            disabled: locked || saving || saved,
+            style: {
+              width: "100%",
+              marginTop: 10,
+              padding: "11px",
+              borderRadius: 10,
+              background: saved ? `${GREEN$1}22` : locked ? "rgba(255,255,255,.06)" : `${tC}22`,
+              color: saved ? GREEN$1 : locked ? MUTED$1 : tC,
+              fontSize: 13,
+              fontWeight: 800,
+              cursor: locked ? "not-allowed" : "pointer",
+              border: `1px solid ${saved ? GREEN$1 + "44" : locked ? LINE$1 : tC + "44"}`
+            },
+            children: saved ? "✓ Αποθηκεύτηκε!" : locked ? "🔒 Κλειδωμένο" : saving ? "Αποθήκευση…" : myPred ? "Άλλαξε Πρόβλεψη ✏️" : "Κάνε την πρόβλεψή σου ⚽"
+          }
+        )
+      ] }),
+      !showAllPreds && locked && !hasRes && myPred && currentUser && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: {
+        marginTop: 10,
+        background: "rgba(255,255,255,.04)",
+        border: `1px solid ${((_g = PC[currentUser.id]) == null ? void 0 : _g.b) || LINE$1}`,
+        borderRadius: 9,
+        padding: "8px 10px",
+        display: "flex",
+        alignItems: "center",
+        gap: 8
+      }, children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { width: 7, height: 7, borderRadius: "50%", background: ((_h = PC[currentUser.id]) == null ? void 0 : _h.p) || MUTED$1, flexShrink: 0 } }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontSize: 11, fontWeight: 600, color: MUTED$1 }, children: "Η πρόβλεψή μου:" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { style: { fontSize: 14, fontWeight: 900, color: ((_i = PC[currentUser.id]) == null ? void 0 : _i.p) || TEXT, fontVariantNumeric: "tabular-nums" }, children: [
+          myPred.h,
+          "–",
+          myPred.a
+        ] }),
+        myPred.qual && /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { style: { fontSize: 10, color: MUTED$1 }, children: [
+          "→ ",
+          myPred.qual
+        ] })
+      ] }),
+      showAllPreds && predictions && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { marginTop: 10 }, children: [
+        revealOpen && !hasRes && !isProvisional && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 10, fontWeight: 700, color: GOLD, textAlign: "center", marginBottom: 6, letterSpacing: ".06em" }, children: "🔒 ΑΠΟΚΑΛΥΨΗ · κλειδωμένο 15′ πριν" }),
+        isProvisional && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { fontSize: 10, fontWeight: 700, color: GREEN$1, textAlign: "center", marginBottom: 6, letterSpacing: ".06em" }, children: [
+          "⚡ ΖΩΝΤΑΝΟΙ ΠΟΝΤΟΙ · ",
+          actualForScore.h,
+          "–",
+          actualForScore.a
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { display: "flex", gap: 5 }, children: PLAYERS.map((playerKey) => {
+          const pred = predictions[playerKey];
+          const sc2 = pred ? scoreMatch(pred, actualForScore) : null;
+          const pc2 = PC[playerKey];
+          return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: {
+            flex: 1,
+            background: (sc2 == null ? void 0 : sc2.exact) ? `${GREEN$1}15` : (sc2 == null ? void 0 : sc2.correct) ? `${GOLD}0a` : "rgba(255,255,255,.04)",
+            border: `1px solid ${(sc2 == null ? void 0 : sc2.exact) ? GREEN$1 + "44" : (sc2 == null ? void 0 : sc2.correct) ? GOLD + "22" : LINE$1}`,
+            borderRadius: 9,
+            padding: "7px 6px",
+            textAlign: "center",
+            opacity: isProvisional && sc2 ? 0.92 : 1
+          }, children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 9, fontWeight: 700, color: pc2.p, marginBottom: 3, letterSpacing: ".04em" }, children: PLAYER_NAMES[playerKey].substring(0, 4).toUpperCase() }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 13, fontWeight: 800, color: TEXT, fontVariantNumeric: "tabular-nums" }, children: pred ? `${pred.h}–${pred.a}` : "–" }),
+            (pred == null ? void 0 : pred.qual) && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { fontSize: 9, color: MUTED$1, marginTop: 1 }, children: [
+              "→",
+              pred.qual
+            ] }),
+            sc2 && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { fontSize: 10, fontWeight: 700, color: sc2.points === 2 ? GREEN$1 : sc2.points === 1 ? GOLD : DIM, marginTop: 2 }, children: [
+              sc2.points === 2 ? "🎯" : sc2.points === 1 ? "✓" : "✗",
+              sc2.points,
+              "p",
+              isProvisional ? "~" : ""
+            ] })
+          ] }, playerKey);
+        }) })
+      ] }),
+      (currentUser == null ? void 0 : currentUser.role) === "admin" && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", gap: 8, marginTop: 12 }, children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(FetchBtn, { matchId: match.id, onFetched: onRefresh }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          "button",
+          {
+            onClick: () => setShowPush((v2) => !v2),
+            style: {
+              flex: 1,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 5,
+              padding: "8px 10px",
+              borderRadius: 8,
+              border: `1px solid ${showPush ? GOLD + "55" : GOLD + "25"}`,
+              background: showPush ? `${GOLD}20` : `${GOLD}08`,
+              color: GOLD,
+              fontSize: 11,
+              fontWeight: 700,
+              cursor: "pointer"
+            },
+            children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("i", { className: "ti ti-cloud-upload", style: { fontSize: 13 } }),
+              "Push"
+            ]
+          }
+        )
+      ] }),
+      showPush && (currentUser == null ? void 0 : currentUser.role) === "admin" && /* @__PURE__ */ jsxRuntimeExports.jsx(PushPanel, { match, result, pipelineHint, onSaved: () => {
+        setShowPush(false);
+        onRefresh();
+      } })
+    ] })
+  ] });
+}
+function FixtureList({ fixtures, rankMap, formMap, setView, setH2hMatch }) {
+  if (!fixtures.length) return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { padding: 32, textAlign: "center", color: MUTED$1, fontSize: 13 }, children: "Δεν βρέθηκαν αγώνες" });
+  const now = Date.now();
+  const groups = {};
+  fixtures.forEach((m2) => {
+    const key = m2.round || m2.t || "Αγώνες";
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(m2);
+  });
+  return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { children: Object.entries(groups).map(([round, gMatches]) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: {
+      fontSize: 10,
+      fontWeight: 700,
+      letterSpacing: ".08em",
+      textTransform: "uppercase",
+      color: MUTED$1,
+      marginBottom: 8,
+      marginTop: 16,
+      display: "flex",
+      alignItems: "center",
+      gap: 8
+    }, children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { flex: 1, height: 1, background: LINE$1 } }),
+      round,
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { flex: 1, height: 1, background: LINE$1 } })
+    ] }),
+    gMatches.map((m2) => {
+      var _a, _b, _c, _d, _e, _f;
+      const ko = new Date(m2.kickoff).getTime();
+      const isPast = ko < now;
+      const isSL = m2.t === "SL";
+      const homeRank = (rankMap == null ? void 0 : rankMap[m2.home]) || (rankMap == null ? void 0 : rankMap[(_a = TEAMS[m2.home]) == null ? void 0 : _a.name]);
+      const awayRank = (rankMap == null ? void 0 : rankMap[m2.away]) || (rankMap == null ? void 0 : rankMap[(_b = TEAMS[m2.away]) == null ? void 0 : _b.name]);
+      const homeForm = (formMap == null ? void 0 : formMap[m2.home]) || (formMap == null ? void 0 : formMap[(_c = TEAMS[m2.home]) == null ? void 0 : _c.name]) || [];
+      const awayForm = (formMap == null ? void 0 : formMap[m2.away]) || (formMap == null ? void 0 : formMap[(_d = TEAMS[m2.away]) == null ? void 0 : _d.name]) || [];
+      return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: {
+        background: SURF$1,
+        border: "1px solid " + LINE$1,
+        borderRadius: 12,
+        padding: "10px 14px",
+        marginBottom: 6,
+        opacity: isPast ? 0.65 : 1
+      }, children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }, children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(TPill, { id: m2.t }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { fontSize: 10, color: MUTED$1, fontWeight: 600 }, children: [
+            grDate(m2.kickoff),
+            " · ",
+            grKick(m2)
+          ] })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center", gap: 8 }, children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 3 }, children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", alignItems: "center", gap: 5 }, children: [
+              homeRank && /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { style: { fontSize: 9, fontWeight: 700, color: GOLD, background: GOLD + "18", borderRadius: 4, padding: "1px 4px" }, children: [
+                "#",
+                homeRank
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontSize: 12, fontWeight: 700, color: TEXT }, children: ((_e = TEAMS[m2.home]) == null ? void 0 : _e.name) || m2.home }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(TeamLogo, { k: m2.home, size: 22 })
+            ] }),
+            isSL && homeForm.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { display: "flex", justifyContent: "flex-end" }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(FormStrip, { form: homeForm.slice(-5) }) })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontSize: 12, color: DIM, fontWeight: 700 }, children: "vs" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 3 }, children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", alignItems: "center", gap: 5 }, children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(TeamLogo, { k: m2.away, size: 22 }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontSize: 12, fontWeight: 700, color: TEXT }, children: ((_f = TEAMS[m2.away]) == null ? void 0 : _f.name) || m2.away }),
+              awayRank && /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { style: { fontSize: 9, fontWeight: 700, color: GOLD, background: GOLD + "18", borderRadius: 4, padding: "1px 4px" }, children: [
+                "#",
+                awayRank
+              ] })
+            ] }),
+            isSL && awayForm.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsx(FormStrip, { form: awayForm.slice(-5) })
+          ] })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "button",
+          {
+            onClick: () => {
+              setView("h2h");
+              setH2hMatch(m2.id);
+            },
+            style: {
+              marginTop: 8,
+              width: "100%",
+              padding: "5px",
+              borderRadius: 7,
+              border: "1px solid " + LINE$1,
+              background: "rgba(255,255,255,.04)",
+              color: MUTED$1,
+              fontSize: 11,
+              fontWeight: 600,
+              cursor: "pointer"
+            },
+            children: "⚔️ H2H"
+          }
+        )
+      ] }, m2.id);
+    })
+  ] }, round)) });
+}
+function SchedulePage({ slStandings }) {
+  const [filter, setFilter] = reactExports.useState("all");
+  const [view, setView] = reactExports.useState("list");
+  const [h2hMatch, setH2hMatch] = reactExports.useState(null);
+  const [nFilter, setNFilter] = reactExports.useState("all");
+  const [espnFixtures, setEspnFixtures] = reactExports.useState([]);
+  const [loadingFix, setLoadingFix] = reactExports.useState(true);
+  reactExports.useEffect(() => {
+    api.getSlFixtures().then((d) => {
+      var _a;
+      if ((_a = d == null ? void 0 : d.events) == null ? void 0 : _a.length) setEspnFixtures(d.events);
+    }).catch(() => {
+    }).finally(() => setLoadingFix(false));
+  }, []);
+  const now = Date.now();
+  const formMap = {};
+  (slStandings || []).forEach((t2) => {
+    formMap[t2.team] = t2.form || [];
+    formMap[t2.name] = t2.form || [];
+  });
+  const rankMap = {};
+  (slStandings || []).forEach((t2) => {
+    rankMap[t2.team] = t2.rank;
+    rankMap[t2.name] = t2.rank;
+  });
+  let fixtures = [...ALL_FIXTURES];
+  if (filter !== "all") {
+    if (["SL", "UCL", "UEL", "UECL"].includes(filter)) {
+      fixtures = fixtures.filter((m2) => m2.t === filter);
+    } else {
+      fixtures = fixtures.filter((m2) => m2.home === filter || m2.away === filter);
+    }
+  }
+  if (nFilter === "next5") {
+    fixtures = fixtures.filter((m2) => new Date(m2.kickoff).getTime() > now).slice(0, 5);
+  } else if (nFilter === "next3") {
+    fixtures = fixtures.filter((m2) => new Date(m2.kickoff).getTime() > now).slice(0, 3);
+  } else if (nFilter === "last5") {
+    fixtures = fixtures.filter((m2) => new Date(m2.kickoff).getTime() < now).slice(-5);
+  }
+  fixtures.sort((a, b) => {
+    const aPast = new Date(a.kickoff).getTime() < now;
+    const bPast = new Date(b.kickoff).getTime() < now;
+    if (aPast !== bPast) return aPast ? 1 : -1;
+    if (!aPast) return new Date(a.kickoff) - new Date(b.kickoff);
+    return new Date(b.kickoff) - new Date(a.kickoff);
+  });
+  const h2hData = h2hMatch ? ALL_FIXTURES.find((m2) => m2.id === h2hMatch) : null;
+  const allTeams = [...new Set(ALL_FIXTURES.flatMap((m2) => [m2.home, m2.away]))].sort();
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { padding: "12px 16px 80px" }, children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap", alignItems: "center" }, children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        "select",
+        {
+          value: filter,
+          onChange: (e) => setFilter(e.target.value),
+          style: {
+            flex: 1,
+            minWidth: 120,
+            padding: "8px 10px",
+            borderRadius: 9,
+            background: SURF$1,
+            border: "1px solid " + LINE$1,
+            color: TEXT,
+            fontSize: 12,
+            fontWeight: 600
+          },
+          children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("option", { value: "all", children: "🌍 Όλες οι διοργανώσεις" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("optgroup", { label: "Διοργανώσεις", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("option", { value: "SL", children: "🟡 Super League" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("option", { value: "UCL", children: "🔵 Champions League" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("option", { value: "UEL", children: "🟠 Europa League" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("option", { value: "UECL", children: "🟢 Conference League" })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("optgroup", { label: "Ομάδες", children: allTeams.map((t2) => {
+              var _a;
+              return /* @__PURE__ */ jsxRuntimeExports.jsx("option", { value: t2, children: ((_a = TEAMS[t2]) == null ? void 0 : _a.name) || t2 }, t2);
+            }) })
+          ]
+        }
+      ),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        "select",
+        {
+          value: nFilter,
+          onChange: (e) => setNFilter(e.target.value),
+          style: {
+            flex: 1,
+            minWidth: 110,
+            padding: "8px 10px",
+            borderRadius: 9,
+            background: SURF$1,
+            border: "1px solid " + LINE$1,
+            color: TEXT,
+            fontSize: 12,
+            fontWeight: 600
+          },
+          children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("option", { value: "all", children: "Όλοι" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("option", { value: "next3", children: "Επόμενοι 3" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("option", { value: "next5", children: "Επόμενοι 5" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("option", { value: "last5", children: "Τελευταίοι 5" })
+          ]
+        }
+      ),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { display: "flex", gap: 4 }, children: [{ id: "list", l: "📋" }, { id: "h2h", l: "⚔️ H2H" }].map((v2) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "button",
+        {
+          onClick: () => setView(v2.id),
+          style: {
+            padding: "7px 12px",
+            borderRadius: 8,
+            border: "1px solid " + (view === v2.id ? GREEN$1 + "66" : LINE$1),
+            background: view === v2.id ? GREEN$1 + "18" : "transparent",
+            color: view === v2.id ? GREEN$1 : MUTED$1,
+            fontSize: 12,
+            fontWeight: 700,
+            cursor: "pointer"
+          },
+          children: v2.l
+        },
+        v2.id
+      )) })
+    ] }),
+    view === "list" && /* @__PURE__ */ jsxRuntimeExports.jsx(FixtureList, { fixtures, rankMap, formMap, setView, setH2hMatch }),
+    view === "h2h" && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        "select",
+        {
+          value: h2hMatch || "",
+          onChange: (e) => setH2hMatch(e.target.value),
+          style: {
+            width: "100%",
+            padding: "10px 12px",
+            borderRadius: 10,
+            background: SURF$1,
+            border: "1px solid " + LINE$1,
+            color: TEXT,
+            fontSize: 12,
+            fontWeight: 600,
+            marginBottom: 14
+          },
+          children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("option", { value: "", children: "Επίλεξε αγώνα..." }),
+            ALL_FIXTURES.map((m2) => {
+              var _a, _b;
+              return /* @__PURE__ */ jsxRuntimeExports.jsxs("option", { value: m2.id, children: [
+                ((_a = TEAMS[m2.home]) == null ? void 0 : _a.abbr) || m2.home,
+                " vs ",
+                ((_b = TEAMS[m2.away]) == null ? void 0 : _b.abbr) || m2.away,
+                " · ",
+                grDate(m2.kickoff)
+              ] }, m2.id);
+            })
+          ]
+        }
+      ),
+      h2hData && (() => {
+        var _a, _b;
+        const homeTeam = h2hData.home, awayTeam = h2hData.away;
+        const homeLast = ALL_FIXTURES.filter(
+          (m2) => (m2.home === homeTeam || m2.away === homeTeam) && new Date(m2.kickoff).getTime() < now
+        ).slice(-3);
+        const awayLast = ALL_FIXTURES.filter(
+          (m2) => (m2.home === awayTeam || m2.away === awayTeam) && new Date(m2.kickoff).getTime() < now
+        ).slice(-3);
+        const homeNext = ALL_FIXTURES.filter(
+          (m2) => (m2.home === homeTeam || m2.away === homeTeam) && new Date(m2.kickoff).getTime() > now
+        ).slice(0, 3);
+        const awayNext = ALL_FIXTURES.filter(
+          (m2) => (m2.home === awayTeam || m2.away === awayTeam) && new Date(m2.kickoff).getTime() > now
+        ).slice(0, 3);
+        const TeamCol = ({ team, last, next, rank, form }) => {
+          var _a2;
+          return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { flex: 1, minWidth: 0 }, children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }, children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(TeamLogo, { k: team, size: 28 }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 12, fontWeight: 700, color: TEXT }, children: ((_a2 = TEAMS[team]) == null ? void 0 : _a2.name) || team }),
+                rank && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { fontSize: 10, color: GOLD, fontWeight: 700 }, children: [
+                  "#",
+                  rank,
+                  " SL"
+                ] })
+              ] })
+            ] }),
+            (form == null ? void 0 : form.length) > 0 && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { marginBottom: 10 }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(FormStrip, { form }) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 10, fontWeight: 700, color: MUTED$1, letterSpacing: ".06em", textTransform: "uppercase", marginBottom: 6 }, children: "Τελευταίοι 3" }),
+            last.map((m2) => {
+              var _a3;
+              const isHome = m2.home === team;
+              const opp = isHome ? m2.away : m2.home;
+              return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { background: "rgba(255,255,255,.04)", borderRadius: 8, padding: "6px 8px", marginBottom: 4, fontSize: 11 }, children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { style: { color: MUTED$1 }, children: [
+                  isHome ? "Εντός" : "Εκτός",
+                  " vs "
+                ] }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { color: TEXT, fontWeight: 600 }, children: ((_a3 = TEAMS[opp]) == null ? void 0 : _a3.abbr) || opp }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { style: { color: MUTED$1 }, children: [
+                  " · ",
+                  grDate(m2.kickoff)
+                ] })
+              ] }, m2.id);
+            }),
+            last.length === 0 && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 11, color: MUTED$1, padding: "8px 0" }, children: "Δεν υπάρχουν" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 10, fontWeight: 700, color: MUTED$1, letterSpacing: ".06em", textTransform: "uppercase", marginBottom: 6, marginTop: 10 }, children: "Επόμενοι 3" }),
+            next.map((m2) => {
+              var _a3;
+              const isHome = m2.home === team;
+              const opp = isHome ? m2.away : m2.home;
+              return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { background: "rgba(255,255,255,.04)", borderRadius: 8, padding: "6px 8px", marginBottom: 4, fontSize: 11 }, children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { style: { color: MUTED$1 }, children: [
+                  isHome ? "Εντός" : "Εκτός",
+                  " vs "
+                ] }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { color: TEXT, fontWeight: 600 }, children: ((_a3 = TEAMS[opp]) == null ? void 0 : _a3.abbr) || opp }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { style: { color: MUTED$1 }, children: [
+                  " · ",
+                  grDate(m2.kickoff)
+                ] })
+              ] }, m2.id);
+            }),
+            next.length === 0 && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 11, color: MUTED$1, padding: "8px 0" }, children: "Δεν υπάρχουν" })
+          ] });
+        };
+        return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { background: SURF$1, border: "1px solid " + LINE$1, borderRadius: 12, padding: "14px", marginBottom: 10 }, children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { textAlign: "center", marginBottom: 14 }, children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(TPill, { id: h2hData.t }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { fontSize: 13, fontWeight: 700, color: TEXT, marginTop: 8 }, children: [
+              ((_a = TEAMS[homeTeam]) == null ? void 0 : _a.name) || homeTeam,
+              " vs ",
+              ((_b = TEAMS[awayTeam]) == null ? void 0 : _b.name) || awayTeam
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { fontSize: 11, color: MUTED$1, marginTop: 2 }, children: [
+              grDate(h2hData.kickoff),
+              " · ",
+              grTime(h2hData.kickoff)
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", gap: 12 }, children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              TeamCol,
+              {
+                team: homeTeam,
+                last: homeLast,
+                next: homeNext,
+                rank: rankMap[homeTeam],
+                form: formMap[homeTeam]
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { width: 1, background: LINE$1, flexShrink: 0 } }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              TeamCol,
+              {
+                team: awayTeam,
+                last: awayLast,
+                next: awayNext,
+                rank: rankMap[awayTeam],
+                form: formMap[awayTeam]
+              }
+            )
+          ] })
+        ] }) });
+      })(),
+      !h2hData && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { padding: 32, textAlign: "center", color: MUTED$1, fontSize: 13 }, children: "Επίλεξε αγώνα για να δεις το H2H" })
+    ] })
   ] });
 }
 const BG = "#08090d", SURF = "#111318", LINE = "rgba(255,255,255,.1)";
@@ -9193,7 +10434,7 @@ function Login({ onLogin }) {
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { width: "100%", maxWidth: 380, position: "relative", zIndex: 1 }, children: [
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { textAlign: "center", marginBottom: 36 }, children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 10, fontWeight: 700, letterSpacing: ".2em", color: "rgba(255,255,255,.3)", marginBottom: 8 }, children: "CAREDIRECT FC" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 38, fontWeight: 800, color: "#fff", letterSpacing: "-.02em", lineHeight: 1, marginBottom: 10 }, children: "ΚΟΥΒΑΔΕΙΡΟΣ" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 38, fontWeight: 800, color: "#fff", letterSpacing: "-.02em", lineHeight: 1, marginBottom: 10 }, children: "ΚΟΥΒΑΔΕΪΡΟΣ" }),
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }, children: [
           /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { height: 1, width: 40, background: "linear-gradient(90deg,transparent,#00ff8866)" } }),
           /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontSize: 11, fontWeight: 700, color: GREEN, letterSpacing: ".1em" }, children: "2026/27 SEASON" }),
@@ -9265,19 +10506,70 @@ function Login({ onLogin }) {
     /* @__PURE__ */ jsxRuntimeExports.jsx("style", { children: `@keyframes spin{to{transform:rotate(360deg);}}` })
   ] });
 }
+function showError(msg) {
+  var el2 = document.getElementById("root");
+  if (!el2) return;
+  var d = document.createElement("div");
+  d.style.cssText = "min-height:100vh;background:#08090d;color:#ff4d6d;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;gap:16px;font-family:monospace";
+  var icon = document.createElement("div");
+  icon.textContent = "❌";
+  icon.style.fontSize = "32px";
+  var title = document.createElement("div");
+  title.textContent = "ΚΟΥΒΑΔΕΪΡΟΣ — Error";
+  title.style.cssText = "font-size:16px;font-weight:700;color:#fff";
+  var err = document.createElement("div");
+  err.textContent = String(msg);
+  err.style.cssText = "font-size:11px;color:#ff8fa3;max-width:460px;word-break:break-all;padding:12px;background:rgba(255,77,109,.1);border-radius:8px;line-height:1.5";
+  var btn = document.createElement("button");
+  btn.textContent = "Ανανέωση";
+  btn.style.cssText = "background:#ff4d6d;color:#fff;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:700;cursor:pointer";
+  btn.onclick = function() {
+    window.location.reload();
+  };
+  d.appendChild(icon);
+  d.appendChild(title);
+  d.appendChild(err);
+  d.appendChild(btn);
+  el2.innerHTML = "";
+  el2.appendChild(d);
+}
+class ErrorBoundary extends reactExports.Component {
+  constructor(props) {
+    super(props);
+    this.state = { error: null };
+  }
+  static getDerivedStateFromError(e) {
+    return { error: e };
+  }
+  componentDidCatch(e) {
+    showError("React: " + e.message);
+  }
+  render() {
+    if (this.state.error) {
+      showError("React: " + this.state.error.message);
+      return null;
+    }
+    return this.props.children;
+  }
+}
 function Root() {
-  const [user, setUser] = reactExports.useState(() => getStoredUser());
-  function handleLogin(u2) {
-    storeUser(u2);
-    setUser(u2);
+  var user = getStoredUser();
+  var [u2, setU] = reactExports.useState(user);
+  function handleLogin(u22) {
+    storeUser(u22);
+    setU(u22);
   }
   function handleLogout() {
-    setUser(null);
+    setU(null);
   }
-  if (!user) return /* @__PURE__ */ jsxRuntimeExports.jsx(Login, { onLogin: handleLogin });
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(App, { user, onLogout: handleLogout });
+  if (!u2) return React.createElement(Login, { onLogin: handleLogin });
+  return React.createElement(App, { user: u2, onLogout: handleLogout });
 }
-console.log("KOUVADEIROS v7 2026-07-26");
-client.createRoot(document.getElementById("root")).render(
-  /* @__PURE__ */ jsxRuntimeExports.jsx(React.StrictMode, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(Root, {}) })
-);
+console.log("KOUVADEIROS v7 2026-07-30");
+try {
+  client.createRoot(document.getElementById("root")).render(
+    React.createElement(ErrorBoundary, null, React.createElement(Root))
+  );
+} catch (e) {
+  showError("Boot: " + e.message + "\n" + (e.stack || "").split("\n").slice(0, 3).join("\n"));
+}

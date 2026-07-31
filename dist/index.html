@@ -2,9 +2,9 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover,user-scalable=no"/>
   <meta name="theme-color" content="#08090d"/>
-  <title>ΚΟΥΒΑΔΕΙΡΟΣ · 26/27</title>
+  <title>ΚΟΥΒΑΔΕΪΡΟΣ · 26/27</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Space+Mono:wght@700&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.2.0/tabler-icons.min.css"/>
@@ -15,9 +15,9 @@
       font-family: 'Space Grotesk', system-ui, sans-serif;
       background: #08090d; color: #e8e9ef;
       -webkit-font-smoothing: antialiased;
-      min-height: 100dvh;
+      min-height: 100vh;
     }
-    #root { min-height: 100dvh; display: flex; flex-direction: column; }
+    #root { min-height: 100vh; display: flex; flex-direction: column; }
 
     /* ── RESPONSIVE BREAKPOINTS ─────────────────────────────── */
     :root {
@@ -52,12 +52,45 @@
     select { appearance: none; }
     @keyframes spin    { to { transform: rotate(360deg); } }
     @keyframes pulse-d { 0%,100% { opacity:1; } 50% { opacity:.3; } }
+    @keyframes pulse-dot { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:.5; transform:scale(.7); } }
     @keyframes slide-u { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
     @keyframes glow-p  { 0%,100% { box-shadow:0 0 12px #ff224420; } 50% { box-shadow:0 0 28px #ff224440; } }
   </style>
-  <script type="module" crossorigin src="/assets/index-XfL90ylM.js"></script>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="ΚΟΥΒΑΔΕΪΡΟΣ"/>
+  <meta name="theme-color" content="#08090d"/>
+  <style>
+    /* iOS Safari fixes */
+    * { -webkit-tap-highlight-color: transparent; }
+    ::-webkit-scrollbar { display: none; }
+    body { 
+      overscroll-behavior: none;
+      -webkit-overflow-scrolling: touch;
+      background: #08090d;
+    }
+    /* Fix for iOS safe areas */
+    .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+  </style>
+  <link rel="manifest" href="/assets/manifest-CzJLmC09.json"/>
+  <script type="module" crossorigin src="/assets/index-SFcMv3vM.js"></script>
 </head>
 <body>
-  <div id="root"></div>
+  <script>
+  window.onerror = function(msg, src, line, col, err) {
+    var el = document.getElementById('root');
+    if (el) el.innerHTML = '<div style="min-height:100vh;background:#08090d;color:#ff4d6d;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;font-family:monospace;gap:12px;font-size:12px"><div style=\"font-size:28px\">❌</div><div style=\"font-size:15px;font-weight:700;color:#fff\">JS Error</div><div style=\"color:#ff8fa3;max-width:460px;word-break:break-all\">' + msg + '<br><br>' + src + ':' + line + ':' + col + '</div><button onclick=\"location.reload()\" style=\"background:#ff4d6d;color:#fff;border:none;border-radius:8px;padding:10px 24px;font-size:14px;cursor:pointer;margin-top:8px\">Ανανέωση</button></div>';
+  };
+  window.addEventListener('unhandledrejection', function(e) {
+    window.onerror(String(e.reason), 'promise', 0, 0, e.reason);
+  });
+  </script>
+  <div id="root"><div style="min-height:100vh;background:#08090d;display:flex;align-items:center;justify-content:center;color:#fff;font-family:system-ui;font-size:16px;flex-direction:column;gap:12px"><div style="font-size:32px">⚽</div><div>Φορτώνει...</div></div></div>
+  <script nomodule>
+    // Safari < 10.1 doesn't support ES modules
+    var el = document.getElementById('root');
+    if (el) {
+      el.innerHTML = '<div style="min-height:100vh;background:#08090d;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;gap:16px;text-align:center"><div style="font-size:32px">⚠️</div><div style="font-size:18px;font-weight:700">Παρακαλώ ενημερώστε το Safari σας</div><div style="font-size:14px;color:rgba(255,255,255,.6);max-width:300px">Απαιτείται Safari 14 ή νεότερο για να λειτουργήσει η εφαρμογή.</div></div>';
+    }
+  </script>
 </body>
 </html>

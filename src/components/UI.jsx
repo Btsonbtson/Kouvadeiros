@@ -1,11 +1,11 @@
 import { useState } from 'react'
-import { LOGOS, TEAM_COLORS } from '../lib/logos'
+import { LOGOS, TEAM_COLORS, logoUrl } from '../lib/logos'
 import { TEAMS } from '../lib/data'
 
 function ShieldFallback({ k, size }) {
   const t = TEAMS[k] || { abbr: k }
   const color = TEAM_COLORS[k] || '#444'
-  const abbr = (t.abbr || k).slice(0, 3)
+  const abbr = (t.abbr || k || '?').slice(0, 3)
   return (
     <svg width={size} height={size} viewBox="0 0 64 64" style={{ flexShrink: 0 }}>
       <path d="M32 4 L58 16 L58 36 Q58 54 32 62 Q6 54 6 36 L6 16 Z"
@@ -19,24 +19,48 @@ function ShieldFallback({ k, size }) {
 }
 
 export function TeamLogo({ k, size = 32 }) {
-  const [failed, setFailed] = useState(false)
-  const url = LOGOS[k]
+  const [tryIdx, setTryIdx] = useState(0)
+  const primary = logoUrl(k) || LOGOS[k]
+  const candidates = primary
+    ? [primary, primary.endsWith('.svg') ? primary.replace(/\.svg$/i, '.png') : primary.replace(/\.png$/i, '.svg'), `/logos/${k}.svg`, `/logos/${k}.png`]
+    : [`/logos/${k}.svg`, `/logos/${k}.png`]
+  const uniq = [...new Set(candidates.filter(Boolean))]
+  const url = uniq[tryIdx]
 
-  if (!url || failed) return <ShieldFallback k={k} size={size} />
+  if (!k || k === 'TBD' || tryIdx >= uniq.length) return <ShieldFallback k={k} size={size} />
 
+  // Soft plate so white-only crests (e.g. PAOK) stay visible on dark UI
   return (
-    <img
-      src={url}
-      alt={k}
-      width={size}
-      height={size}
-      onError={() => setFailed(true)}
+    <span
       style={{
-        width: size, height: size,
-        objectFit: 'contain', flexShrink: 0,
-        filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.5))',
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: size,
+        height: size,
+        flexShrink: 0,
+        borderRadius: Math.max(4, Math.round(size * 0.18)),
+        background: 'rgba(255,255,255,0.92)',
+        padding: Math.max(1, Math.round(size * 0.06)),
+        boxSizing: 'border-box',
       }}
-    />
+    >
+      <img
+        key={url}
+        src={url}
+        alt={TEAMS[k]?.name || k}
+        width={size}
+        height={size}
+        loading="lazy"
+        decoding="async"
+        onError={() => setTryIdx(i => i + 1)}
+        style={{
+          width: '100%', height: '100%',
+          objectFit: 'contain',
+          display: 'block',
+        }}
+      />
+    </span>
   )
 }
 

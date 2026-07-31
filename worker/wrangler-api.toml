@@ -14,4 +14,5 @@ crons = ["*/5 * * * *"]
 #   TWILIO_SID
 #   TWILIO_TOKEN
 #   TWILIO_FROM   (optional, default whatsapp:+14155238886)
+#   ADMIN_PHONE  (optional E.164, used if boikos has no /save-phone yet)
 # Optional: FDORG_TOKEN

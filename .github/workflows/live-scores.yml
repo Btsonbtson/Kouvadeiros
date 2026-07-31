@@ -16,6 +16,7 @@ jobs:
       - name: Install deps
         run: pip install requests python-dotenv boto3
       - name: Fetch + upload to R2
+        # Skips automatically when no fixture is in 15′ warm-up → +200′ live window
         run: python scripts/upload_to_r2.py
         env:
           FDO_API_KEY: ${{ secrets.FDORG_TOKEN }}

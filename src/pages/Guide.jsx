@@ -169,6 +169,12 @@ export default function Guide({ onBack }) {
                 Αν <strong style={{color:TEXT}}>δεν έχεις κάνει πρόβλεψη</strong> για κάποιον αγώνα, λαμβάνεις αυτόματο WhatsApp μήνυμα <strong style={{color:TEXT}}>1 ώρα</strong> και ξανά <strong style={{color:TEXT}}>30 λεπτά</strong> πριν την εκκίνηση.
               </div>
             </div>
+            <div style={{ background:'rgba(255,77,109,.06)', border:`1px solid rgba(255,77,109,.25)`, borderRadius:10, padding:'14px', marginBottom:14 }}>
+              <div style={{ fontSize:13, fontWeight:700, color:RED, marginBottom:8 }}>📰 Ο Κουβάς</div>
+              <div style={{ fontSize:12, color:MUTED, lineHeight:1.7 }}>
+                Μετά το τελευταίο ματς της ημέρας (~2½ ώρες μετά τη σέντρα), στέλνουμε σε <strong style={{color:TEXT}}>όλους τους παίκτες</strong> το πρωτοσέλιδο «Ο Κουβάς»: αποτελέσματα, πόντοι ημέρας και ισότιμο δηλητήριο για τον καθένα. Link + φωτο μέσα στο WhatsApp.
+              </div>
+            </div>
             <div style={{ fontSize:12, fontWeight:700, color:MUTED, letterSpacing:'.06em', textTransform:'uppercase', marginBottom:10 }}>Μορφή μηνύματος</div>
             <div style={{ background:'#0d0f14', borderRadius:10, padding:'14px', fontFamily:'monospace', fontSize:12, lineHeight:1.8, color:TEXT, border:`1px solid ${LINE}`, marginBottom:14 }}>
               ⚽ KOUVADEIROS — Υπενθύμιση<br/>
@@ -192,7 +198,7 @@ export default function Guide({ onBack }) {
 
           <Section emoji="📲" title="Ενεργοποίηση WhatsApp" accent={BLUE}>
             <Rule n="1" text="Αποθήκευσε τον αριθμό σου" sub="Κατά τη σύνδεση ζητήθηκε ο αριθμός κινητού σου. Αν τον παρέλειψες, μπορείς να τον εισάγεις από τις Ρυθμίσεις."/>
-            <Rule n="2" text="Αποδέξου το πρώτο μήνυμα" sub="Πρέπει να στείλεις 'join kouv' στο Twilio sandbox αριθμό για να ενεργοποιηθείς (sandbox mode)"/>
+            <Rule n="2" text="JOIN στο Twilio Sandbox (ΥΠΟΧΡΕΩΤΙΚΟ)" sub="Άνοιξε WhatsApp → νέο chat στο +1 415 523 8886 → στείλε ακριβώς το μήνυμα join από Twilio Console (Messaging → Try it out → Send a WhatsApp message), π.χ. join <δύο-λέξεις>. Χωρίς αυτό, τα μηνύματα αποτυγχάνουν με error 63015."/>
             <Rule n="3" text="Απαντήσεις μέσω WhatsApp" sub="Μπορείς να κάνεις πρόβλεψη απαντώντας απευθείας στο μήνυμα — αποθηκεύεται αυτόματα στην εφαρμογή"/>
           </Section>
         </>}
