@@ -1,0 +1,15 @@
+name = "kouvadeiros-live"
+main = "live-scores.js"
+compatibility_date = "2024-09-23"
+
+# Merge these bindings into production worker `kouvadeiros-api`:
+# [[r2_buckets]]
+# binding = "SCORES_BUCKET"
+# bucket_name = "kouvadeiros-scores"
+#
+# [[kv_namespaces]]
+# binding = "STATE"
+# id = "your-kv-id"
+#
+# [vars]
+# # FDORG_TOKEN set as secret in dashboard

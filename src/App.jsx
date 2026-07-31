@@ -5,8 +5,9 @@ import {
   ALL_FIXTURES, SUPER_LEAGUE, UEFA_FIXTURES,
   TEAMS, PLAYERS, PLAYER_NAMES, PCOL,
   scoreMatch, computeLeaderboard,
-  grTime, grDate, isToday, isLocked, nowGR,
+  grTime, grDate, grKick, isToday, isLocked, nowGR, inLiveWindow,
 } from './lib/data'
+import { mapPipelineToLiveScores } from './lib/pipelineScores'
 import { TeamLogo, TPill, PtsBadge, ScorePill, Card, SLbl, Spinner } from './components/UI'
 import H2HGraph from './components/H2HGraph'
 import Guide from './pages/Guide'
@@ -65,17 +66,22 @@ function FetchBtn({matchId,onFetched}){
 }
 
 // ─── PUSH RESULT ──────────────────────────────────────────────────────────────
-function PushPanel({match,result,onSaved}){
-  const [h,setH]=useState(result?.h??0),[a,setA]=useState(result?.a??0)
-  const [mn,setMn]=useState(0)
+function PushPanel({match,result,onSaved,pipelineHint}){
+  const [h,setH]=useState(result?.h??pipelineHint?.h??0),[a,setA]=useState(result?.a??pipelineHint?.a??0)
+  const [mn,setMn]=useState(pipelineHint?.min&&!pipelineHint?.final?pipelineHint.min:0)
   const [ot,setOt]=useState(false),[otH,setOtH]=useState(0),[otA,setOtA]=useState(0)
   const [pen,setPen]=useState(false),[penH,setPenH]=useState(0),[penA,setPenA]=useState(0)
   const [busy,setBusy]=useState(false),[msg,setMsg]=useState('')
   const isuefa=isUEFATie(match.id)
+  const imported=pipelineHint?.final&&result==null
 
   async function doLive(){
     setBusy(true);setMsg('')
-    try{const r=await api.setLive(match.id,h,a,mn,false);setMsg(r.ok?`✅ Live ${h}–${a} (${mn}')!`:'❌ '+JSON.stringify(r));if(r.ok)setTimeout(()=>setMsg(''),3000)}
+    try{
+      const r=await api.setLive(match.id,h,a,mn,false)
+      setMsg(r.ok?`✅ Live ${h}–${a} (${mn}')!`:'❌ '+JSON.stringify(r))
+      if(r.ok){ onSaved?.(); setTimeout(()=>setMsg(''),3000) }
+    }
     catch(e){setMsg('❌ '+e.message)}
     setBusy(false)
   }
@@ -92,6 +98,9 @@ function PushPanel({match,result,onSaved}){
   </div>
   return <div style={{marginTop:10,background:'rgba(255,221,0,.05)',border:'1px solid rgba(255,221,0,.3)',borderRadius:12,padding:14}}>
     <div style={{fontSize:12,fontWeight:700,color:'#f0c040',marginBottom:12}}>📋 ΕΙΣΑΓΩΓΗ ΣΚΟΡ</div>
+    {imported&&<div style={{fontSize:10,fontWeight:600,color:GREEN,marginBottom:10,padding:'6px 8px',borderRadius:7,background:'rgba(0,255,136,.08)',border:'1px solid rgba(0,255,136,.25)'}}>
+      Imported from {pipelineHint.provider||'pipeline'} — confirm with ΤΕΛΙΚΟ
+    </div>}
     <div style={{display:'grid',gridTemplateColumns:'1fr auto 1fr',alignItems:'end',gap:8,marginBottom:10}}>
       <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:3}}>
         <div style={{fontSize:10,color:'rgba(255,255,255,.4)'}}>{TEAMS[match.home]?.abbr||match.home}</div>
@@ -745,6 +754,7 @@ export default function App({ user, onLogout }) {
   const [screen,  setScreen]  = useState('matchday')
   const [state,   setState]   = useState({ predictions:{...SEEDED_PREDS}, results:{...SEEDED_RES}, chat:[], slStandings:[] })
   const [liveScores, setLiveScores] = useState({})
+  const [pipelineHints, setPipelineHints] = useState({})
   const [loading, setLoading] = useState(true)
   const [syncing, setSyncing] = useState(false)
   const [syncOk,  setSyncOk]  = useState(true)
@@ -756,15 +766,40 @@ export default function App({ user, onLogout }) {
   const isTablet  = bp === 'tablet'
   const isMobile  = bp === 'mobile'
 
+  const pullPipelineScores = useCallback(async () => {
+    try {
+      const [livePayload, todayPayload] = await Promise.all([
+        api.getLiveScores('live').catch(() => ({ matches: [] })),
+        api.getTodayScores().catch(() => ({ matches: [] })),
+      ])
+      const byExt = {}
+      ;[...(livePayload.matches || []), ...(todayPayload.matches || [])].forEach(m => {
+        if (m?.external_id) byExt[m.external_id] = m
+      })
+      const mapped = mapPipelineToLiveScores(Object.values(byExt))
+      const live = {}, hints = {}
+      Object.entries(mapped).forEach(([id, v]) => {
+        if (v.final) hints[id] = v
+        else live[id] = v
+      })
+      return { live, hints }
+    } catch {
+      return { live: {}, hints: {} }
+    }
+  }, [])
+
   const load = useCallback(async () => {
     try {
       const s = await api.getState()
       // Extract liveScores from state (Worker stores live_{matchId})
-      const live={}
+      const fromKv={}
       Object.entries(s).forEach(([k,v])=>{
-        if(k.startsWith('live_')&&v) live[k.replace('live_','')]=v
+        if(k.startsWith('live_')&&v) fromKv[k.replace('live_','')]=v
       })
-      if(Object.keys(live).length>0) setLiveScores(live)
+      const pipe = await pullPipelineScores()
+      // Pipeline live first; manual KV /set-live overrides
+      setLiveScores({ ...pipe.live, ...fromKv })
+      setPipelineHints(pipe.hints)
       setState({
         ...s,
         predictions:{ ...SEEDED_PREDS,...s.predictions,
@@ -772,27 +807,36 @@ export default function App({ user, onLogout }) {
         results:{ ...SEEDED_RES, ...s.results },
       })
       setSyncOk(true)
-      // Also fetch SL standings (non-blocking)
       api.getSlStandings().then(d=>{
         if(d?.teams?.length) setState(prev=>({...prev,slStandings:d.teams}))
       }).catch(()=>{})
     } catch { setSyncOk(false) }
     finally { setLoading(false) }
-  },[])
+  },[pullPipelineScores])
 
-  useEffect(()=>{ load(); poll.current=setInterval(()=>{
-      // Check if any match is live right now
-      const now=Date.now()
-      const anyLive=ALL_FIXTURES.some(m=>{
-        const ko=new Date(m.kickoff).getTime()
-        const minsAfter=(now-ko)/60000
-        return minsAfter>=0&&minsAfter<=120
+  // Poll /state + pipeline R2 scores; faster in kickoff windows
+  useEffect(()=>{
+    let cancelled=false
+    load()
+    const tick=async()=>{
+      if(cancelled) return
+      const due=ALL_FIXTURES.filter(m=>{
+        if(m.home==='TBD'||m.away==='TBD'||m.timeTbd) return false
+        return inLiveWindow(m.kickoff)
       })
-      load()
-      // Reschedule with appropriate interval
+      // Legacy on-demand fetch still available for admin; pipeline is primary
+      if(user?.role==='admin'&&due.length){
+        await Promise.allSettled(due.map(m=>api.fetchScores(m.id).catch(()=>null)))
+      }
+      if(!cancelled) await load()
+      if(cancelled) return
       clearInterval(poll.current)
-      poll.current=setInterval(load,anyLive?5000:15000)
-    },15000); return()=>clearInterval(poll.current) },[load])
+      const fast=due.length>0||ALL_FIXTURES.some(m=>inLiveWindow(m.kickoff))
+      poll.current=setInterval(tick, fast?8000:20000)
+    }
+    poll.current=setInterval(tick,12000)
+    return()=>{cancelled=true;clearInterval(poll.current)}
+  },[load,user?.role])
 
   async function savePrediction(matchId,h,a,qual,predOT,otH,otA,predPen,penH,penA){
     setSyncing(true)
@@ -822,7 +866,7 @@ export default function App({ user, onLogout }) {
 
   const pc = PC[user.id] || PC.boikos
   const pages={
-    matchday:<MatchdayPage predictions={state.predictions} results={state.results} onRefresh={load} currentUser={user} revealed={state.revealed} onSave={savePrediction} liveScores={liveScores} slStandings={state.slStandings}/>,
+    matchday:<MatchdayPage predictions={state.predictions} results={state.results} onRefresh={load} currentUser={user} revealed={state.revealed} onSave={savePrediction} liveScores={liveScores} pipelineHints={pipelineHints} slStandings={state.slStandings}/>,
     league:  <LeaguePage   predictions={state.predictions} results={state.results} thavmaStats={state.thavmaStats}/>,
     schedule: <SchedulePage slStandings={state.slStandings}/>,
     history: <HistoryPage  predictions={state.predictions} results={state.results}/>,
@@ -1093,7 +1137,7 @@ function LeaguePage({predictions,results,thavmaStats}){
               ))}
             </div>
             {nextMatch&&<div style={{fontSize:10,color:MUTED,marginBottom:10}}>
-              ⏭ Επόμενος: <span style={{color:GOLD,fontWeight:700}}>{TEAMS[nextMatch.home]?.abbr} vs {TEAMS[nextMatch.away]?.abbr}</span> · {grDate(nextMatch.kickoff)} {grTime(nextMatch.kickoff)}
+              ⏭ Επόμενος: <span style={{color:GOLD,fontWeight:700}}>{TEAMS[nextMatch.home]?.abbr} vs {TEAMS[nextMatch.away]?.abbr}</span> · {grDate(nextMatch.kickoff)} {grKick(nextMatch)}
             </div>}
             <div style={{display:'flex',gap:6}}>
               {PLAYERS.map(p=>(
@@ -1111,9 +1155,15 @@ function LeaguePage({predictions,results,thavmaStats}){
 }
 
 // ─── MATCHDAY PAGE ────────────────────────────────────────────────────────────
-function MatchdayPage({predictions,results,onRefresh,currentUser,revealed,onSave,liveScores,slStandings}){
+function MatchdayPage({predictions,results,onRefresh,currentUser,revealed,onSave,liveScores,pipelineHints,slStandings}){
   const now=Date.now()
   const ONE_HOUR=3600000
+  const isLive=(m,res)=>{
+    if(res) return false
+    if(liveScores?.[m.id]) return true
+    const ko=new Date(m.kickoff).getTime()
+    return now>=ko&&now<ko+7200000
+  }
   const sorted=[...ALL_FIXTURES]
     .filter(m=>{
       const ko=new Date(m.kickoff).getTime()
@@ -1124,18 +1174,15 @@ function MatchdayPage({predictions,results,onRefresh,currentUser,revealed,onSave
     })
     .sort((a,b)=>{
       const aRes=results?.[a.id], bRes=results?.[b.id]
-      const aKo=new Date(a.kickoff).getTime(), bKo=new Date(b.kickoff).getTime()
-      const aLive=now>=aKo&&now<aKo+7200000&&!aRes
-      const bLive=now>=bKo&&now<bKo+7200000&&!bRes
-      const aLocked=now>=aKo-60000, bLocked=now>=bKo-60000
+      const aLive=isLive(a,aRes), bLive=isLive(b,bRes)
+      // Live games first, then chronological kickoff
       if(aLive&&!bLive) return -1
       if(bLive&&!aLive) return 1
-      if(aLocked!==bLocked) return aLocked?1:-1
-      return aKo-bKo
+      return new Date(a.kickoff).getTime()-new Date(b.kickoff).getTime()
     })
   return <div style={{padding:'12px 16px 80px'}}>
     <div style={{fontSize:10,fontWeight:700,letterSpacing:'.08em',textTransform:'uppercase',color:MUTED,marginBottom:14}}>
-      Ανοιχτές πρώτα · Ζωντανοί αγώνες επάνω
+      Χρονολογικά · Ζωντανοί αγώνες επάνω
     </div>
     {sorted.map(m=>(
       <MatchPredictCard key={m.id} match={m}
@@ -1147,6 +1194,7 @@ function MatchdayPage({predictions,results,onRefresh,currentUser,revealed,onSave
         revealed={revealed}
         onSave={onSave}
         liveScore={liveScores?.[m.id]}
+        pipelineHint={pipelineHints?.[m.id]}
         slStandings={slStandings}
       />
     ))}
@@ -1171,7 +1219,7 @@ function FormStrip({form}){
 }
 
 // ─── UNIFIED MATCH+PREDICT CARD ───────────────────────────────────────────────
-function MatchPredictCard({match,result,predictions,onRefresh,allResults,currentUser,revealed,onSave,liveScore,slStandings}){
+function MatchPredictCard({match,result,predictions,onRefresh,allResults,currentUser,revealed,onSave,liveScore,pipelineHint,slStandings}){
   // ── State ──────────────────────────────────────────────────────────────────
   const [showPush,setShowPush]=useState(false)
   const myPred=currentUser?predictions?.[currentUser.id]:null
@@ -1287,9 +1335,9 @@ function MatchPredictCard({match,result,predictions,onRefresh,allResults,current
         </div>
         <div style={{textAlign:'right'}}>
           <div style={{fontSize:11,fontWeight:700,color:locked?RED:GREEN}}>
-            {locked?'🔒 Κλειδωμένο':`Κλείνει ${grTime(match.kickoff)}`}
+            {locked?'🔒 Κλειδωμένο':(match.timeTbd?`Κλείνει TBA`:`Κλείνει ${grKick(match)}`)}
           </div>
-          <div style={{fontSize:10,color:MUTED}}>{grDate(match.kickoff)}</div>
+          <div style={{fontSize:10,color:MUTED}}>{grDate(match.kickoff)} · {grKick(match)}</div>
         </div>
       </div>
 
@@ -1457,7 +1505,7 @@ function MatchPredictCard({match,result,predictions,onRefresh,allResults,current
           </div>
         )}
         {showPush&&currentUser?.role==='admin'&&(
-          <PushPanel match={match} result={result} onSaved={()=>{setShowPush(false);onRefresh()}}/>
+          <PushPanel match={match} result={result} pipelineHint={pipelineHint} onSaved={()=>{setShowPush(false);onRefresh()}}/>
         )}
       </div>
     </div>
@@ -1499,7 +1547,7 @@ function FixtureList({fixtures,rankMap,formMap,setView,setH2hMatch}){
             padding:'10px 14px',marginBottom:6,opacity:isPast?0.65:1}}>
             <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:6}}>
               <TPill id={m.t}/>
-              <div style={{fontSize:10,color:MUTED,fontWeight:600}}>{grDate(m.kickoff)} · {grTime(m.kickoff)}</div>
+              <div style={{fontSize:10,color:MUTED,fontWeight:600}}>{grDate(m.kickoff)} · {grKick(m)}</div>
             </div>
             <div style={{display:'grid',gridTemplateColumns:'1fr auto 1fr',alignItems:'center',gap:8}}>
               <div style={{display:'flex',flexDirection:'column',alignItems:'flex-end',gap:3}}>

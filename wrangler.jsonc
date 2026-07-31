@@ -1,0 +1,13 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "kouvadeiros-scores",
+  "main": "worker/scores-worker.js",
+  "compatibility_date": "2026-07-01",
+  "workers_dev": true,
+  "kv_namespaces": [
+    {
+      "binding": "KOUV",
+      "id": "5988821db92146b08969e4b27ec8854e"
+    }
+  ]
+}

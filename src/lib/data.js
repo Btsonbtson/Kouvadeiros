@@ -49,14 +49,14 @@ export const TEAMS = {
 //        PAOK, LEV(ΛΕΒΑΔΕΙΑΚΟΣ), ARI(ΑΡΗΣ)
 
 export const SUPER_LEAGUE = [
-  // ── 1η Αγωνιστική ──
-  {id:'sl-1-1',t:'SL',md:1,home:'AEK', away:'IRA', kickoff:'2026-08-22T17:00:00Z',round:'Αγωνιστική 1'},
-  {id:'sl-1-2',t:'SL',md:1,home:'KAL', away:'ARI', kickoff:'2026-08-22T17:00:00Z',round:'Αγωνιστική 1'},
-  {id:'sl-1-3',t:'SL',md:1,home:'OLY', away:'ATR', kickoff:'2026-08-22T17:00:00Z',round:'Αγωνιστική 1'},
-  {id:'sl-1-4',t:'SL',md:1,home:'OFI', away:'VOL', kickoff:'2026-08-22T17:00:00Z',round:'Αγωνιστική 1'},
-  {id:'sl-1-5',t:'SL',md:1,home:'PAO', away:'KIF', kickoff:'2026-08-22T17:00:00Z',round:'Αγωνιστική 1'},
-  {id:'sl-1-6',t:'SL',md:1,home:'PNE', away:'AST', kickoff:'2026-08-22T17:00:00Z',round:'Αγωνιστική 1'},
-  {id:'sl-1-7',t:'SL',md:1,home:'PAOK',away:'LEV', kickoff:'2026-08-22T17:00:00Z',round:'Αγωνιστική 1'},
+  // ── 1η Αγωνιστική ── (ώρες: Super League / Dnews / SportDay, 28/7/2026)
+  {id:'sl-1-1',t:'SL',md:1,home:'AEK', away:'IRA', kickoff:'2026-08-22T17:00:00Z',round:'Αγωνιστική 1'}, // Σάβ 22/8 20:00
+  {id:'sl-1-2',t:'SL',md:1,home:'KAL', away:'ARI', kickoff:'2026-08-22T17:00:00Z',round:'Αγωνιστική 1'}, // Σάβ 22/8 20:00
+  {id:'sl-1-3',t:'SL',md:1,home:'OLY', away:'ATR', kickoff:'2026-08-22T19:00:00Z',round:'Αγωνιστική 1'}, // Σάβ 22/8 22:00
+  {id:'sl-1-4',t:'SL',md:1,home:'OFI', away:'VOL', kickoff:'2026-08-23T16:30:00Z',round:'Αγωνιστική 1'}, // Κυρ 23/8 19:30
+  {id:'sl-1-5',t:'SL',md:1,home:'PAO', away:'KIF', kickoff:'2026-08-23T18:00:00Z',round:'Αγωνιστική 1'}, // Κυρ 23/8 21:00
+  {id:'sl-1-6',t:'SL',md:1,home:'PNE', away:'AST', kickoff:'2026-08-23T18:30:00Z',round:'Αγωνιστική 1'}, // Κυρ 23/8 21:30
+  {id:'sl-1-7',t:'SL',md:1,home:'PAOK',away:'LEV', kickoff:'2026-08-23T18:00:00Z',round:'Αγωνιστική 1'}, // Κυρ 23/8 21:00
 
   // ── 2η Αγωνιστική ──
   {id:'sl-2-1',t:'SL',md:2,home:'AST', away:'OLY', kickoff:'2026-08-29T17:00:00Z',round:'Αγωνιστική 2'},
@@ -286,15 +286,18 @@ export const SUPER_LEAGUE = [
 
 export const UEFA_FIXTURES = [
   {id:'uel-paok-1', t:'UEL', greek:'PAOK', home:'DYN', away:'PAOK', kickoff:'2026-07-23T17:00:00Z', round:'Q2 · Leg 1', leg:1, tie:'uel-paok', venue:'Motor Lublin Arena, Πολωνία'},
-  {id:'uel-paok-2', t:'UEL', greek:'PAOK', home:'PAOK',away:'DYN',  kickoff:'2026-07-30T17:45:00Z', round:'Q2 · Leg 2', leg:2, tie:'uel-paok', venue:'Toumba, Θεσσαλονίκη'},
+  {id:'uel-paok-2', t:'UEL', greek:'PAOK', home:'PAOK',away:'DYN',  kickoff:'2026-07-30T17:45:00Z', round:'Q2 · Leg 2', leg:2, tie:'uel-paok', venue:'Toumba, Θεσσαλονίκη'}, // Πέμ 30/7 20:45
   {id:'uecl-pao-1', t:'UECL',greek:'PAO', home:'PKS', away:'PAO',  kickoff:'2026-07-23T18:00:00Z', round:'Q2 · Leg 1', leg:1, tie:'uecl-pao',venue:'Fehérvári úti, Paks'},
-  {id:'uecl-pao-2', t:'UECL',greek:'PAO', home:'PAO', away:'PKS',  kickoff:'2026-07-30T17:45:00Z', round:'Q2 · Leg 2', leg:2, tie:'uecl-pao',venue:'ΟΑΚΑ, Αθήνα'},
-  {id:'uel-ofi-1',  t:'UEL', greek:'OFI', home:'OFI', away:'TBD',  kickoff:'2026-07-24T17:00:00Z', round:'Q2 · Leg 1', leg:1, tie:'uel-ofi', venue:'Πανκρήτιο, Ηράκλειο'},
-  {id:'uel-ofi-2',  t:'UEL', greek:'OFI', home:'TBD', away:'OFI',  kickoff:'2026-07-31T17:00:00Z', round:'Q2 · Leg 2', leg:2, tie:'uel-ofi', venue:'Έδρα αντιπάλου'},
-  {id:'ucl-oly-1',   t:'UCL', greek:'OLY', home:'OLY', away:'NEC',  kickoff:'2026-08-04T18:30:00Z', round:'Q3 · Leg 1', leg:1, tie:'ucl-oly', venue:'Karaiskakis, Πειραιάς'},
-  {id:'ucl-oly-2',  t:'UCL', greek:'OLY', home:'NEC', away:'OLY',  kickoff:'2026-08-11T18:00:00Z', round:'Q3 · Leg 2', leg:2, tie:'ucl-oly', venue:'Goffert, Nijmegen'},
-  {id:'ucl-aek-1',  t:'UCL', greek:'AEK', home:'AEK', away:'TBD',  kickoff:'2026-08-19T18:30:00Z', round:'PO · Leg 1', leg:1, tie:'ucl-aek', venue:'OPAP Arena, Αθήνα'},
-  {id:'ucl-aek-2',  t:'UCL', greek:'AEK', home:'TBD', away:'AEK',  kickoff:'2026-08-26T18:30:00Z', round:'PO · Leg 2', leg:2, tie:'ucl-aek'},
+  {id:'uecl-pao-2', t:'UECL',greek:'PAO', home:'PAO', away:'PKS',  kickoff:'2026-07-30T18:30:00Z', round:'Q2 · Leg 2', leg:2, tie:'uecl-pao',venue:'ΟΑΚΑ, Αθήνα'}, // Πέμ 30/7 21:30
+  // ΟΦΗ UEL playoffs — Πέμ 20/8 & 27/8, κλήρωση 3/8, αντίπαλος+ώρα TBD (betarades)
+  {id:'uel-ofi-1',  t:'UEL', greek:'OFI', home:'OFI', away:'TBD',  kickoff:'2026-08-20T18:00:00Z', round:'PO · Leg 1', leg:1, tie:'uel-ofi', venue:'Πανκρήτιο, Ηράκλειο', timeTbd:true},
+  {id:'uel-ofi-2',  t:'UEL', greek:'OFI', home:'TBD', away:'OFI',  kickoff:'2026-08-27T18:00:00Z', round:'PO · Leg 2', leg:2, tie:'uel-ofi', venue:'Έδρα αντιπάλου', timeTbd:true},
+  // Ολυμπιακός–NEC: olympiacos.org / UEFA — Τρί 4/8 21:00, ρεβάνς 11/8 20:30 Ελλ.
+  {id:'ucl-oly-1',  t:'UCL', greek:'OLY', home:'OLY', away:'NEC',  kickoff:'2026-08-04T18:00:00Z', round:'Q3 · Leg 1', leg:1, tie:'ucl-oly', venue:'Karaiskakis, Πειραιάς'},
+  {id:'ucl-oly-2',  t:'UCL', greek:'OLY', home:'NEC', away:'OLY',  kickoff:'2026-08-11T17:30:00Z', round:'Q3 · Leg 2', leg:2, tie:'ucl-oly', venue:'Goffert, Nijmegen'},
+  // ΑΕΚ playoffs: παράθυρο 18–19 & 25–26/8 — ακριβής ώρα μετά την κλήρωση
+  {id:'ucl-aek-1',  t:'UCL', greek:'AEK', home:'AEK', away:'TBD',  kickoff:'2026-08-19T18:00:00Z', round:'PO · Leg 1', leg:1, tie:'ucl-aek', venue:'OPAP Arena, Αθήνα', timeTbd:true},
+  {id:'ucl-aek-2',  t:'UCL', greek:'AEK', home:'TBD', away:'AEK',  kickoff:'2026-08-26T18:00:00Z', round:'PO · Leg 2', leg:2, tie:'ucl-aek', timeTbd:true},
 ]
 
 export const ALL_FIXTURES = [...SUPER_LEAGUE, ...UEFA_FIXTURES]
@@ -335,12 +338,19 @@ export function computeLeaderboard(fixtures, predictions, results) {
 
 // ─── TIME ─────────────────────────────────────────────────────────────────────
 const TZ = 'Europe/Athens'
-export const grTime  = iso => new Date(iso).toLocaleTimeString('el-GR',  { timeZone:TZ, hour:'2-digit', minute:'2-digit' })
+const timeOpts = { timeZone:TZ, hour:'2-digit', minute:'2-digit', hour12:false }
+export const grTime  = iso => new Date(iso).toLocaleTimeString('el-GR', timeOpts)
+export const grKick  = m => m?.timeTbd ? 'Ώρα TBA' : grTime(m.kickoff)
 export const grShort = iso => new Date(iso).toLocaleDateString('el-GR',  { timeZone:TZ, day:'numeric', month:'short' })
 export const grDate  = iso => new Date(iso).toLocaleDateString('el-GR',  { timeZone:TZ, weekday:'short', day:'numeric', month:'short' })
-export const nowGR   = ()  => new Date().toLocaleTimeString('el-GR', { timeZone:TZ, hour:'2-digit', minute:'2-digit' })
+export const nowGR   = ()  => new Date().toLocaleTimeString('el-GR', timeOpts)
 export const isToday = iso => {
   const f = d => d.toLocaleDateString('el-GR', { timeZone:TZ })
   return f(new Date()) === f(new Date(iso))
 }
 export const isLocked = iso => Date.now() >= new Date(iso).getTime() - 60000
+/** Match is in the live kickoff window (0–120 min), ignoring stored results */
+export const inLiveWindow = iso => {
+  const mins = (Date.now() - new Date(iso).getTime()) / 60000
+  return mins >= 0 && mins <= 120
+}

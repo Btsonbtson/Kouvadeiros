@@ -13,6 +13,9 @@ export default defineConfig({
   define: {
     __WORKER_URL__: JSON.stringify(
       process.env.VITE_WORKER_URL || 'https://kouvadeiros-api.jboikos.workers.dev'
-    )
+    ),
+    __SCORES_URL__: JSON.stringify(
+      process.env.VITE_SCORES_URL || 'https://kouvadeiros-scores.jboikos.workers.dev'
+    ),
   }
 })
