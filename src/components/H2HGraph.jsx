@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { ALL_FIXTURES, PLAYERS, PLAYER_NAMES, scoreMatch } from '../lib/data'
+import { ALL_FIXTURES, PLAYERS, PLAYER_NAMES, scorePlayerMatch } from '../lib/data'
 
 const PC = {
   boikos:        { color:'#ff2244', glow:'#ff224460', area:'#ff224415', dash:'none'    },
@@ -19,14 +19,14 @@ function buildTimeline(predictions, results) {
     const actual = results[m.id]
     const label  = (m.home||'?').substring(0,3)+' vs '+(m.away||'?').substring(0,3)
     PLAYERS.forEach(p => {
-      const sc = scoreMatch(predictions?.[m.id]?.[p], actual)
+      const sc = scorePlayerMatch(m, predictions?.[m.id]?.[p], actual, predictions, ALL_FIXTURES, p)
       cum[p] += sc?.points ?? 0
     })
     return {
       id:m.id, label, pts:{...cum},
       scores: Object.fromEntries(PLAYERS.map(p=>[p,{
         pred: predictions?.[m.id]?.[p],
-        sc:   scoreMatch(predictions?.[m.id]?.[p], actual)
+        sc:   scorePlayerMatch(m, predictions?.[m.id]?.[p], actual, predictions, ALL_FIXTURES, p)
       }])),
       actual
     }

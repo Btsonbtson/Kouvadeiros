@@ -157,7 +157,10 @@ function makeToken() {
   return Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2)
 }
 function json(d, s = 200) {
-  return new Response(JSON.stringify(d), { status: s, headers: { 'Content-Type': 'application/json', ...CORS } })
+  return new Response(JSON.stringify(d), {
+    status: s,
+    headers: { 'Content-Type': 'application/json; charset=utf-8', ...CORS },
+  })
 }
 
 async function getAllUsers(env) {
@@ -286,12 +289,16 @@ function grTime(iso) {
 function matchResult(h, a) {
   return h > a ? 'H' : h < a ? 'A' : 'D'
 }
-function scoreMatch(pred, actual) {
+function scoreMatch(pred, actual, opts = {}) {
   if (!pred || actual == null) return null
   const exact = pred.h === actual.h && pred.a === actual.a
   const correct = matchResult(pred.h, pred.a) === matchResult(actual.h, actual.a)
-  const qualCorrect = !!(pred.qual && actual.qual && pred.qual === actual.qual)
-  return { exact, correct, qualCorrect, points: (exact ? 1 : 0) + (correct ? 1 : 0) + (qualCorrect ? 1 : 0) }
+  const awardQual = opts.awardQual !== false && !!actual.qual
+  const qualTip = opts.qualTip !== undefined ? opts.qualTip : pred?.qual
+  const qualCorrect = !!(awardQual && qualTip && actual.qual && qualTip === actual.qual)
+  const scorePts = (exact ? 1 : 0) + (correct ? 1 : 0)
+  const qualPts = qualCorrect ? 1 : 0
+  return { exact, correct, qualCorrect, scorePts, qualPts, points: scorePts + qualPts }
 }
 
 function mergeResults(state) {
@@ -771,10 +778,41 @@ export default {
       const state = await getState(env)
       if (!state.chat) state.chat = []
       const ts = new Date().toLocaleTimeString('el-GR', { timeZone: 'Europe/Athens', hour: '2-digit', minute: '2-digit' })
-      state.chat.push({ p: user.name, t: text, ts, a: user.role === 'admin' })
+      const clean = String(text || '').trim().slice(0, 500)
+      if (!clean) return json({ error: 'Empty' }, 400)
+      state.chat.push({ p: user.name, t: clean, ts, a: user.role === 'admin' })
       if (state.chat.length > 200) state.chat = state.chat.slice(-200)
       await setState(env, state)
-      return json({ ok: true })
+
+      // Offline ping: WhatsApp everyone else (app may be closed)
+      const waNotify = []
+      try {
+        const users = await getAllUsers(env)
+        const phones = { ...DEFAULT_PHONES, ...(state.phones || {}) }
+        if (env.ADMIN_PHONE && !phones.boikos) phones.boikos = env.ADMIN_PHONE
+        const snippet = clean.length > 120 ? clean.slice(0, 117) + '…' : clean
+        const waBody =
+          `🔥 *Ιερά Εξέταση*\n` +
+          `*${user.name}* · ${ts}\n\n` +
+          `${snippet}\n\n` +
+          `kouvadeiros.pages.dev`
+        for (const u of Object.values(users)) {
+          if (!u?.id || u.id === user.id) continue
+          const phone = phones[u.id]
+          if (!phone) {
+            waNotify.push({ id: u.id, ok: false, error: 'no phone' })
+            continue
+          }
+          const wa = await sendWA(env, phone, waBody)
+          waNotify.push({ id: u.id, name: u.name, ok: !!wa.ok, error: wa.error || wa.data?.message || null })
+          console.log('chat WA', u.id, wa.ok, wa.error || wa.http)
+        }
+      } catch (e) {
+        console.log('chat WA notify error', e?.message || e)
+        waNotify.push({ ok: false, error: String(e?.message || e) })
+      }
+
+      return json({ ok: true, waNotify })
     }
 
     if (path === '/save-phone' && request.method === 'PATCH') {

@@ -4,7 +4,8 @@ import { api, clearAuth, storeUser } from './lib/api'
 import {
   ALL_FIXTURES, SUPER_LEAGUE, UEFA_FIXTURES,
   TEAMS, PLAYERS, PLAYER_NAMES, PCOL,
-  scoreMatch, computeLeaderboard, mergeScoringResults, scorelineToActual,
+  scoreMatch, scorePlayerMatch, resolveQualTip, computeLeaderboard, mergeScoringResults, scorelineToActual,
+  buildPlayerMatchLedger,
   grTime, grDate, grKick, isToday, isLocked, isRevealOpen, nowGR, inLiveWindow,
   anyLiveScoreActivity, msUntilNextLiveScoreBand, inLiveScoreBand,
 } from './lib/data'
@@ -12,6 +13,7 @@ import { mapPipelineToLiveScores } from './lib/pipelineScores'
 import { TeamLogo, TPill, PtsBadge, ScorePill, Card, SLbl, Spinner } from './components/UI'
 import H2HGraph from './components/H2HGraph'
 import Guide from './pages/Guide'
+import { playChatBell } from './lib/chatBell'
 
 
 
@@ -44,7 +46,7 @@ const ODDS = {
 }
 
 const SEEDED_PREDS={
-  'uel-paok-1':{boikos:{h:2,a:1,qual:'DYN'},mavromichalis:{h:0,a:0,qual:'DYN'},chousiadas:{h:2,a:1,qual:'DYN'}},
+  'uel-paok-1':{boikos:{h:2,a:1,qual:'DYN'},mavromichalis:{h:0,a:0,qual:'PAOK'},chousiadas:{h:2,a:1,qual:'DYN'}},
   'uecl-pao-1':{boikos:{h:0,a:3,qual:'PAO'},mavromichalis:{h:0,a:1,qual:'PAO'},chousiadas:{h:1,a:2,qual:'PAO'}},
 }
 const SEEDED_RES={'uel-paok-1':{h:2,a:3},'uecl-pao-1':{h:1,a:2},'uel-paok-2':{h:2,a:0,qual:'PAOK'},'uecl-pao-2':{h:2,a:2,qual:'PAO'}}
@@ -176,7 +178,7 @@ function H2HChart({predictions,results}){
   played.forEach(m=>{
     const actual=results[m.id]
     PLAYERS.forEach(p=>{
-      const sc=scoreMatch(predictions?.[m.id]?.[p],actual)
+      const sc=scorePlayerMatch(m,predictions?.[m.id]?.[p],actual,predictions,ALL_FIXTURES,p)
       running[p]+=(sc?.points||0)
     })
     timeline.push({
@@ -326,7 +328,7 @@ function RivalryStats({predictions,results,thavmaStats}){
       const actual=results[m.id]
       const preds=PLAYERS.map(p=>predictions?.[m.id]?.[p])
       if(preds.some(p=>!p)) return
-      const scores=PLAYERS.map((p,i)=>scoreMatch(preds[i],actual))
+      const scores=PLAYERS.map((p,i)=>scorePlayerMatch(m,preds[i],actual,predictions,ALL_FIXTURES,p))
       const pts=scores.map(s=>s?.points??0)
       const res3=preds.map(pr=>pr.h>pr.a?'H':pr.h<pr.a?'A':'D')
 
@@ -601,7 +603,7 @@ function HistoryPage({predictions,results}){
           <div style={{display:'flex',alignItems:'center',gap:8}}><span style={{fontSize:12,fontWeight:700}}>{TEAMS[m.away]?.name}</span><TeamLogo k={m.away} size={26}/></div>
         </div>
         <div style={{display:'flex',gap:5}}>
-          {PLAYERS.map(p=>{const pred=predictions?.[m.id]?.[p],sc=pred?scoreMatch(pred,actual):null,pc=PC[p];return <div key={p} style={{flex:1,background:sc?.exact?`${GREEN}12`:sc?.correct?`${GOLD}08`:'rgba(255,255,255,.04)',borderRadius:9,padding:'8px',textAlign:'center',border:`1px solid ${sc?.exact?GREEN+'35':sc?.correct?GOLD+'20':LINE}`}}>
+          {PLAYERS.map(p=>{const pred=predictions?.[m.id]?.[p],sc=pred?scorePlayerMatch(m,pred,actual,predictions,ALL_FIXTURES,p):null,pc=PC[p];return <div key={p} style={{flex:1,background:sc?.exact?`${GREEN}12`:sc?.correct?`${GOLD}08`:'rgba(255,255,255,.04)',borderRadius:9,padding:'8px',textAlign:'center',border:`1px solid ${sc?.exact?GREEN+'35':sc?.correct?GOLD+'20':LINE}`}}>
             <div style={{fontSize:10,fontWeight:800,color:pc.p,marginBottom:3,letterSpacing:'.04em'}}>{PLAYER_NAMES[p].substring(0,4).toUpperCase()}</div>
             <div style={{fontSize:13,fontWeight:800,color:TEXT,fontVariantNumeric:'tabular-nums'}}>{pred?`${pred.h}–${pred.a}`:'–'}</div>
             {sc&&<div style={{fontSize:11,fontWeight:700,color:sc.points===2?GREEN:sc.points===1?GOLD:DIM,marginTop:2}}>{sc.points===2?'🎯':sc.points===1?'✓':'✗'}{sc.points}p</div>}
@@ -719,11 +721,11 @@ function LeaderSidebar({ predictions, results, compact }) {
             <div style={{width:32,height:32,borderRadius:'50%',background:p.p,display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:900,color:'#08090d'}}>{PLAYER_NAMES[row.player].substring(0,1)}</div>
             <div style={{flex:1}}>
               <div style={{fontSize:13,fontWeight:700,color:TEXT}}>{PLAYER_NAMES[row.player]}</div>
-              <div style={{fontSize:10,color:MUTED}}>{row.exact}🎯 {row.correct}✓</div>
+              <div style={{fontSize:10,color:MUTED}}>{row.exact}🎯 {row.correct}✓ {(row.qual||0)>0?`${row.qual}🔑`:''}</div>
             </div>
             <div style={{textAlign:'right'}}>
               <div style={{fontSize:20,fontWeight:900,color:p.p,fontVariantNumeric:'tabular-nums'}}>{row.pts}{hasLivePts?<span style={{fontSize:12,opacity:.7}}>~</span>:null}</div>
-              <div style={{fontSize:9,color:MUTED}}>pts{maxPts>0?`/${maxPts}`:''}</div>
+              <div style={{fontSize:9,color:MUTED}}>{(row.qual||0)>0?`${(row.pts||0)-(row.qual||0)}+${row.qual}q · `:''}pts{maxPts>0?`/${maxPts}`:''}</div>
             </div>
           </div>
         })}
@@ -798,6 +800,43 @@ export default function App({ user, onLogout }) {
     }
     return false
   }, [state.chat, chatReadIdx, screen, user?.name, user?.id])
+
+  // Unlock audio after first tap (browsers block autoplay until gesture)
+  useEffect(() => {
+    const soft = async () => {
+      try {
+        const AC = window.AudioContext || window.webkitAudioContext
+        if (!AC) return
+        const ctx = new AC()
+        if (ctx.state === 'suspended') await ctx.resume()
+        await ctx.close()
+      } catch {}
+    }
+    window.addEventListener('pointerdown', soft, { once: true })
+    return () => window.removeEventListener('pointerdown', soft)
+  }, [])
+
+  // Bell when a new Ιερά Εξέταση message arrives (not your own)
+  const chatLenRef = useRef((state.chat || []).length)
+  const chatBootRef = useRef(true)
+  useEffect(() => {
+    const chat = state.chat || []
+    const prevLen = chatLenRef.current
+    chatLenRef.current = chat.length
+    if (chatBootRef.current) {
+      chatBootRef.current = false
+      return
+    }
+    if (chat.length <= prevLen) return
+    const newcomers = chat.slice(prevLen)
+    const myName = (user?.name || '').toLowerCase()
+    const myId = (user?.id || '').toLowerCase()
+    const fromOther = newcomers.some((m) => {
+      const who = (m?.p || '').toLowerCase()
+      return who && who !== myName && who !== myId
+    })
+    if (fromOther) playChatBell()
+  }, [state.chat, user?.name, user?.id])
 
   const pullPipelineScores = useCallback(async () => {
     // Live pipeline only during match windows — not idle all day
@@ -1079,6 +1118,15 @@ export default function App({ user, onLogout }) {
 function LeaguePage({predictions,results,thavmaStats}){
   const board=computeLeaderboard(ALL_FIXTURES,predictions,results)
   const [tab,setTab]=useState('standings')
+  const [openPlayer,setOpenPlayer]=useState(null)
+  const [openCat,setOpenCat]=useState({}) // `${playerId}:${cat}` → bool
+
+  function toggleCat(pid, cat) {
+    const key = `${pid}:${cat}`
+    setOpenCat(prev => ({ ...prev, [key]: !prev[key] }))
+  }
+  function isCatOpen(pid, cat) { return !!openCat[`${pid}:${cat}`] }
+
   return <div style={{padding:'16px 16px 80px'}}>
     <div style={{display:'flex',gap:6,marginBottom:16,overflowX:'auto',scrollbarWidth:'none',msOverflowStyle:'none'}}>
       {[{id:'standings',l:'Συγκομιδή'},{id:'rivalry',l:'🌶️ Διαγκωνισμοί'},{id:'analytics',l:'Αναλυτικά'},{id:'campaigns',l:'Ενεργές Διοργανώσεις'}].map(tabItem=>(
@@ -1092,38 +1140,122 @@ function LeaguePage({predictions,results,thavmaStats}){
       ))}
     </div>
     {tab==='standings'&&<>
-      <div style={{fontSize:10,fontWeight:700,letterSpacing:'.1em',textTransform:'uppercase',color:'rgba(255,255,255,.4)',marginBottom:10}}>Ανάλυση ανά τουρνουά</div>
+      <div style={{fontSize:10,fontWeight:700,letterSpacing:'.1em',textTransform:'uppercase',color:'rgba(255,255,255,.4)',marginBottom:6}}>Κανόνες βαθμολογίας</div>
+      <div style={{fontSize:11,color:MUTED,marginBottom:14,lineHeight:1.55,background:'rgba(255,255,255,.03)',border:`1px solid ${LINE}`,borderRadius:10,padding:'10px 12px'}}>
+        Ανά τελικό αγώνα: <span style={{color:GREEN}}>exact +1</span> · <span style={{color:GOLD}}>1Χ2 +1</span> (exact = <strong style={{color:TEXT}}>2p</strong>) · <span style={{color:BLUE}}>πρόκριση +1</span> — η πρόβλεψη πρόκρισης μπαίνει στο <strong style={{color:TEXT}}>Leg 1</strong> και μετράει μόνο όταν κλείσει το <strong style={{color:TEXT}}>Leg 2</strong>. Παράταση/πέναλτι μόνο στο Leg 2.
+      </div>
       {board.map(row=>{
+        const ledger = buildPlayerMatchLedger(ALL_FIXTURES, predictions, results, row.player)
         const bd={};
         ['SL','UCL','UEL','UECL'].forEach(t=>{
-          let pts=0,played=0;
-          ALL_FIXTURES.filter(m=>m.t===t).forEach(m=>{
-            const ac=results?.[m.id];if(!ac)return;
-            const sc=scoreMatch(predictions?.[m.id]?.[row.player],ac);
-            if(!sc)return;pts+=sc.points;played++;
-          });
-          bd[t]={pts,played};
-        });
-        const pcr=PC[row.player];
+          const rows = ledger.filter(r => r.competition === t)
+          bd[t]={
+            pts: rows.reduce((s,r)=>s+r.points,0),
+            played: rows.length,
+            qual: rows.filter(r=>r.qualCorrect).length,
+            rows,
+          }
+        })
+        const pcr=PC[row.player]
+        const qualPts=row.qual||0
+        const scorePts=ledger.reduce((s,r)=>s+r.scorePts,0)
+        const expanded = openPlayer === row.player
+        const catRows = {
+          exact: ledger.filter(r => r.exact),
+          result: ledger.filter(r => r.correct),
+          qual: ledger.filter(r => r.qualCorrect),
+          all: ledger.filter(r => r.points > 0),
+        }
+
+        function MatchRows({ rows, empty }) {
+          if (!rows.length) return <div style={{fontSize:11,color:MUTED,padding:'6px 2px'}}>{empty || 'Κανένα'}</div>
+          return rows.map(r => (
+            <div key={r.matchId} style={{display:'grid',gridTemplateColumns:'1fr auto',gap:8,padding:'8px 0',borderBottom:`1px solid ${LINE}`}}>
+              <div>
+                <div style={{fontSize:12,fontWeight:700,color:TEXT}}>{r.label}</div>
+                <div style={{fontSize:10,color:MUTED,marginTop:2}}>
+                  Tip {r.tip}{r.tipQual?` →${r.tipQual}`:''} · Αποτ. {r.actual}{r.actualQual?` →${r.actualQual}`:''}
+                </div>
+                <div style={{fontSize:10,marginTop:3,display:'flex',gap:6,flexWrap:'wrap'}}>
+                  {r.exact && <span style={{color:GREEN}}>exact +1</span>}
+                  {r.correct && <span style={{color:GOLD}}>1Χ2 +1</span>}
+                  {r.qualCorrect && <span style={{color:BLUE}}>πρόκριση +1 ({r.actualQual})</span>}
+                  {!r.exact && !r.correct && !r.qualCorrect && <span style={{color:MUTED}}>0</span>}
+                </div>
+              </div>
+              <div style={{textAlign:'right'}}>
+                <div style={{fontSize:16,fontWeight:900,color:pcr.p}}>+{r.points}</div>
+                <div style={{fontSize:9,color:MUTED}}>{r.scorePts} σκορ{r.qualPts?` + ${r.qualPts}🔑`:''}</div>
+              </div>
+            </div>
+          ))
+        }
+
         return <div key={row.player} style={{background:SURF,border:'1px solid '+LINE,borderRadius:12,padding:'14px 16px',marginBottom:8}}>
-          <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:12}}>
+          <button type="button" onClick={()=>setOpenPlayer(expanded?null:row.player)}
+            style={{display:'flex',alignItems:'center',gap:10,width:'100%',background:'none',border:'none',padding:0,cursor:'pointer',textAlign:'left',color:'inherit'}}>
             <div style={{width:36,height:36,borderRadius:'50%',background:pcr.p,display:'flex',alignItems:'center',justifyContent:'center',fontSize:15,fontWeight:900,color:SURF}}>{PLAYER_NAMES[row.player].substring(0,1)}</div>
             <div style={{flex:1}}>
-              <div style={{fontSize:14,fontWeight:700,color:TEXT}}>{PLAYER_NAMES[row.player]}</div>
-              <div style={{fontSize:10,color:MUTED,marginTop:1}}>{row.exact} exact · {row.correct} correct · {row.played} games</div>
-            </div>
-            <div style={{fontSize:22,fontWeight:900,color:pcr.p}}>{row.pts}<span style={{fontSize:12,color:MUTED,fontWeight:500}}>p</span></div>
-          </div>
-          <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:5}}>
-            {Object.entries(bd).map(([t,d])=>(
-              <div key={t} style={{background:'rgba(255,255,255,.05)',borderRadius:8,padding:'8px 5px',textAlign:'center'}}>
-                <TPill id={t}/>
-                <div style={{fontSize:15,fontWeight:800,marginTop:5,color:d.pts>0?pcr.p:MUTED}}>{d.pts}</div>
-                <div style={{fontSize:9,color:MUTED,marginTop:1}}>{d.played}αγ</div>
+              <div style={{fontSize:14,fontWeight:700,color:TEXT}}>{PLAYER_NAMES[row.player]} <span style={{fontSize:11,color:MUTED}}>{expanded?'▾':'▸'}</span></div>
+              <div style={{fontSize:10,color:MUTED,marginTop:1}}>
+                {row.exact} exact · {row.correct} 1Χ2 · <span style={{color:BLUE}}>{qualPts} πρόκριση</span> · {row.played} αγώνες
               </div>
+            </div>
+            <div style={{textAlign:'right'}}>
+              <div style={{fontSize:22,fontWeight:900,color:pcr.p}}>{row.pts}<span style={{fontSize:12,color:MUTED,fontWeight:500}}>p</span></div>
+              <div style={{fontSize:9,color:MUTED,marginTop:2}}>{scorePts} σκορ + <span style={{color:BLUE}}>{qualPts}🔑</span></div>
+            </div>
+          </button>
+
+          <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:5,marginTop:12}}>
+            {[
+              {id:'exact',l:'Exact',v:row.exact,c:GREEN,rows:catRows.exact},
+              {id:'result',l:'1Χ2',v:row.correct,c:GOLD,rows:catRows.result},
+              {id:'qual',l:'Πρόκριση',v:qualPts,c:BLUE,rows:catRows.qual},
+            ].map(s=>(
+              <button type="button" key={s.id} onClick={()=>toggleCat(row.player,s.id)}
+                style={{background:isCatOpen(row.player,s.id)?`${s.c}14`:'rgba(255,255,255,.05)',borderRadius:8,padding:'8px 6px',textAlign:'center',border:`1px solid ${isCatOpen(row.player,s.id)?s.c+'55':s.c+'22'}`,cursor:'pointer',color:'inherit'}}>
+                <div style={{fontSize:9,fontWeight:700,color:MUTED,letterSpacing:'.05em',textTransform:'uppercase'}}>{s.l} {isCatOpen(row.player,s.id)?'▾':'▸'}</div>
+                <div style={{fontSize:18,fontWeight:900,color:s.v?s.c:MUTED,marginTop:2}}>{s.v}</div>
+                <div style={{fontSize:9,color:MUTED}}>+{s.v}p · {s.rows.length} αγ</div>
+              </button>
             ))}
           </div>
-        </div>;
+          {['exact','result','qual'].map(cat => isCatOpen(row.player, cat) && (
+            <div key={cat} style={{marginTop:8,padding:'4px 6px 2px',background:'rgba(0,0,0,.25)',borderRadius:8}}>
+              <MatchRows rows={catRows[cat]} empty={`Κανένα hit σε ${cat}`} />
+            </div>
+          ))}
+
+          <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:5,marginTop:10}}>
+            {Object.entries(bd).map(([t,d])=>(
+              <button type="button" key={t} onClick={()=>toggleCat(row.player,`t:${t}`)}
+                style={{background:isCatOpen(row.player,`t:${t}`)?'rgba(255,255,255,.09)':'rgba(255,255,255,.05)',borderRadius:8,padding:'8px 5px',textAlign:'center',border:`1px solid ${LINE}`,cursor:'pointer',color:'inherit'}}>
+                <TPill id={t}/>
+                <div style={{fontSize:15,fontWeight:800,marginTop:5,color:d.pts>0?pcr.p:MUTED}}>{d.pts}</div>
+                <div style={{fontSize:9,color:MUTED,marginTop:1}}>{d.played}αγ{d.qual?` · ${d.qual}🔑`:''} {isCatOpen(row.player,`t:${t}`)?'▾':'▸'}</div>
+              </button>
+            ))}
+          </div>
+          {['SL','UCL','UEL','UECL'].map(t => isCatOpen(row.player, `t:${t}`) && (
+            <div key={t} style={{marginTop:8,padding:'4px 6px 2px',background:'rgba(0,0,0,.25)',borderRadius:8}}>
+              <MatchRows rows={bd[t].rows} empty={`Κανένας τελειωμένος ${t}`} />
+            </div>
+          ))}
+
+          {expanded && (
+            <div style={{marginTop:12,paddingTop:10,borderTop:`1px solid ${LINE}`}}>
+              <div style={{fontSize:10,fontWeight:700,letterSpacing:'.08em',textTransform:'uppercase',color:MUTED,marginBottom:6}}>Όλοι οι αγώνες με βαθμούς</div>
+              <MatchRows rows={catRows.all} empty="Κανένας βαθμός ακόμα" />
+              {ledger.some(r => r.points === 0) && (
+                <>
+                  <div style={{fontSize:10,fontWeight:700,letterSpacing:'.08em',textTransform:'uppercase',color:MUTED,margin:'10px 0 6px'}}>Μηδενικά</div>
+                  <MatchRows rows={ledger.filter(r => r.points === 0)} />
+                </>
+              )}
+            </div>
+          )}
+        </div>
       })}
     </>}
     {tab==='rivalry'&&<RivalryStats predictions={predictions} results={results} thavmaStats={thavmaStats}/>}
@@ -1133,16 +1265,17 @@ function LeaguePage({predictions,results,thavmaStats}){
       return <div>
         {PLAYERS.map(p=>{
           const pc2=PC[p]
-          let exact=0,correct=0,total=0,streak=0,maxStreak=0,curStreak=0,pts=0
+          let exact=0,correct=0,qual=0,total=0,streak=0,maxStreak=0,curStreak=0,pts=0
           played.forEach(m=>{
             const pred=predictions?.[m.id]?.[p]
             const res=results[m.id]
             if(!pred) return
-            const sc=scoreMatch(pred,res)
+            const sc=scorePlayerMatch(m,pred,res,predictions,ALL_FIXTURES,p)
             if(!sc) return
             total++; pts+=sc.points
             if(sc.exact){exact++;correct++}
             else if(sc.correct){correct++}
+            if(sc.qualCorrect)qual++
             curStreak=sc.points>0?curStreak+1:0
             maxStreak=Math.max(maxStreak,curStreak)
           })
@@ -1154,14 +1287,15 @@ function LeaguePage({predictions,results,thavmaStats}){
               <div style={{width:38,height:38,borderRadius:'50%',background:pc2.p,display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,fontWeight:900,color:'#08090d'}}>{PLAYER_NAMES[p][0]}</div>
               <div style={{flex:1}}>
                 <div style={{fontSize:14,fontWeight:700,color:TEXT}}>{PLAYER_NAMES[p]}</div>
-                <div style={{fontSize:10,color:MUTED}}>{total} αγώνες · {pts} πόντοι</div>
+                <div style={{fontSize:10,color:MUTED}}>{total} αγώνες · {pts} πόντοι · {qual} πρόκριση</div>
               </div>
               <div style={{fontSize:26,fontWeight:900,color:pc2.p}}>{avgPts}<span style={{fontSize:11,color:MUTED}}>p/αγ</span></div>
             </div>
-            <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8,marginBottom:10}}>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:8,marginBottom:10}}>
               {[
                 {lbl:'Ακρίβεια',val:accPct+'%',sub:correct+'/'+total+' σωστά',color:accPct>=60?GREEN:accPct>=40?GOLD:RED},
                 {lbl:'Exact Score',val:exactPct+'%',sub:exact+'/'+total+' ακριβή',color:exactPct>=30?GREEN:exactPct>=15?GOLD:RED},
+                {lbl:'Πρόκριση',val:qual,sub:'+'+qual+'p bonus',color:qual>0?BLUE:MUTED},
                 {lbl:'Max Σερί',val:maxStreak,sub:'σερί πόντοι',color:maxStreak>=3?GREEN:maxStreak>=2?GOLD:MUTED},
               ].map(stat=>(
                 <div key={stat.lbl} style={{background:'rgba(255,255,255,.04)',borderRadius:10,padding:'10px 8px',textAlign:'center'}}>
@@ -1194,7 +1328,7 @@ function LeaguePage({predictions,results,thavmaStats}){
           const totalPts=PLAYERS.reduce((acc,p)=>{
             let pts=0
             played.forEach(m=>{
-              const sc=scoreMatch(predictions?.[m.id]?.[p],results[m.id])
+              const sc=scorePlayerMatch(m,predictions?.[m.id]?.[p],results[m.id],predictions,ALL_FIXTURES,p)
               if(sc) pts+=sc.points
             })
             acc[p]=pts; return acc
@@ -1269,6 +1403,7 @@ function MatchdayPage({predictions,results,scoringResults,onRefresh,currentUser,
         result={results?.[m.id]}
         scoringActual={scoringResults?.[m.id]}
         predictions={predictions?.[m.id]}
+        allPredictions={predictions}
         onRefresh={onRefresh}
         allResults={results}
         currentUser={currentUser}
@@ -1300,7 +1435,7 @@ function FormStrip({form}){
 }
 
 // ─── UNIFIED MATCH+PREDICT CARD ───────────────────────────────────────────────
-function MatchPredictCard({match,result,scoringActual,predictions,onRefresh,allResults,currentUser,revealed,onSave,liveScore,pipelineHint,slStandings}){
+function MatchPredictCard({match,result,scoringActual,predictions,allPredictions,onRefresh,allResults,currentUser,revealed,onSave,liveScore,pipelineHint,slStandings}){
   // ── State ──────────────────────────────────────────────────────────────────
   const [showPush,setShowPush]=useState(false)
   const myPred=currentUser?predictions?.[currentUser.id]:null
@@ -1326,6 +1461,13 @@ function MatchPredictCard({match,result,scoringActual,predictions,onRefresh,allR
   const hasRes=result!=null
   const locked=isLocked(match.kickoff)
   const isUEFA=isUEFATie(match.id)
+  const isLeg1=match.leg===1
+  const isLeg2=match.leg===2
+  const showQualUI=isUEFA&&isLeg1
+  const showExtraTimeUI=isUEFA&&isLeg2
+  const myLeg1Qual=currentUser
+    ? resolveQualTip(allPredictions || {}, ALL_FIXTURES, match, currentUser.id)
+    : null
   const isRevealed=revealed?.[match.id]||false
   const revealOpen=isRevealOpen(match.kickoff)||isRevealed
   const actualForScore=scoringActual??result??scorelineToActual(liveScore)??scorelineToActual(pipelineHint)
@@ -1395,7 +1537,15 @@ function MatchPredictCard({match,result,scoringActual,predictions,onRefresh,allR
   async function save(){
     if(locked)return;setSaving(true);setError('')
     try{
-      await onSave(match.id,h,a,qual,predOT,otH,otA,predPen,penH,penA)
+      // Leg 1: score + πρόκριση (no OT/pen). Leg 2: score + OT/pen (no qual).
+      const saveQual = showQualUI ? qual : null
+      const saveOT = showExtraTimeUI ? predOT : false
+      const saveOtH = showExtraTimeUI && predOT ? otH : 0
+      const saveOtA = showExtraTimeUI && predOT ? otA : 0
+      const savePen = showExtraTimeUI && predOT ? predPen : false
+      const savePenH = savePen ? penH : 0
+      const savePenA = savePen ? penA : 0
+      await onSave(match.id,h,a,saveQual,saveOT,saveOtH,saveOtA,savePen,savePenH,savePenA)
       setSaved(true);setTimeout(()=>setSaved(false),2500)
     }catch(e){
       setError('❌ '+(e?.message||'Σφάλμα')+' — έλεγξε σύνδεση & ξανά')
@@ -1478,10 +1628,10 @@ function MatchPredictCard({match,result,scoringActual,predictions,onRefresh,allR
             {/* Score input */}
             <ScoreRow hv={h} setHv={setH} av={a} setAv={setA}/>
 
-            {/* UEFA qual selector */}
-            {isUEFA&&!locked&&(
+            {/* UEFA πρόκριση — Leg 1 only */}
+            {showQualUI&&!locked&&(
               <div style={{marginTop:10}}>
-                <div style={{fontSize:10,fontWeight:700,color:tC,letterSpacing:'.05em',marginBottom:6,textTransform:'uppercase'}}>Πρόκριση</div>
+                <div style={{fontSize:10,fontWeight:700,color:tC,letterSpacing:'.05em',marginBottom:6,textTransform:'uppercase'}}>Πρόκριση (μετράει μετά το Leg 2)</div>
                 <div style={{display:'flex',gap:6}}>
                   {[match.home,match.away].map(tm=>(
                     <button key={tm} onClick={()=>{if(!locked){setQual(tm);setSaved(false)}}}
@@ -1495,8 +1645,15 @@ function MatchPredictCard({match,result,scoringActual,predictions,onRefresh,allR
               </div>
             )}
 
-            {/* Overtime toggle (UEFA only) */}
-            {isUEFA&&!locked&&(
+            {/* Locked Leg 2: show Leg 1 πρόκριση tip (read-only) */}
+            {showExtraTimeUI&&myLeg1Qual&&(
+              <div style={{marginTop:10,fontSize:11,color:MUTED,background:'rgba(77,159,255,.06)',border:`1px solid rgba(77,159,255,.2)`,borderRadius:8,padding:'8px 10px'}}>
+                Πρόκριση από Leg 1: <strong style={{color:BLUE}}>→ {myLeg1Qual}</strong> <span style={{opacity:.7}}>(κλειδωμένη · βαθμολογείται στο τέλος της σειράς)</span>
+              </div>
+            )}
+
+            {/* Παράταση / Μπενάλντιζ — Leg 2 only */}
+            {showExtraTimeUI&&!locked&&(
               <div style={{marginTop:8,display:'flex',gap:6}}>
                 <button onClick={()=>{if(!locked){setPredOT(v=>!v);setSaved(false)}}}
                   style={{flex:1,padding:'6px',borderRadius:8,border:`1px solid ${predOT?GOLD+'66':LINE}`,
@@ -1514,7 +1671,7 @@ function MatchPredictCard({match,result,scoringActual,predictions,onRefresh,allR
             )}
 
             {/* OT score row */}
-            {predOT&&!locked&&<div style={{marginTop:8}}>
+            {showExtraTimeUI&&predOT&&!locked&&<div style={{marginTop:8}}>
               <ScoreRow lbl={predPen?'Μπενάλντιζ':'ΠΑΡΑΤΑΣΗ'} hv={otH} setHv={setOtH} av={otA} setAv={setOtA} sm/>
             </div>}
 
@@ -1542,7 +1699,8 @@ function MatchPredictCard({match,result,scoringActual,predictions,onRefresh,allR
             <div style={{width:7,height:7,borderRadius:'50%',background:PC[currentUser.id]?.p||MUTED,flexShrink:0}}/>
             <span style={{fontSize:11,fontWeight:600,color:MUTED}}>Η πρόβλεψή μου:</span>
             <span style={{fontSize:14,fontWeight:900,color:PC[currentUser.id]?.p||TEXT,fontVariantNumeric:'tabular-nums'}}>{myPred.h}–{myPred.a}</span>
-            {myPred.qual&&<span style={{fontSize:10,color:MUTED}}>→ {myPred.qual}</span>}
+            {myPred.qual&&showQualUI&&<span style={{fontSize:10,color:MUTED}}>→ {myPred.qual}</span>}
+            {isLeg2&&myLeg1Qual&&<span style={{fontSize:10,color:BLUE}}>→ {myLeg1Qual}</span>}
           </div>
         )}
 
@@ -1558,8 +1716,11 @@ function MatchPredictCard({match,result,scoringActual,predictions,onRefresh,allR
             <div style={{display:'flex',gap:5}}>
               {PLAYERS.map(playerKey=>{
                 const pred=predictions[playerKey]
-                const sc=pred?scoreMatch(pred,actualForScore):null
+                const sc=pred?scorePlayerMatch(match,pred,actualForScore,allPredictions||{},ALL_FIXTURES,playerKey):null
                 const pc=PC[playerKey]
+                const shownQual=isLeg1
+                  ? pred?.qual
+                  : resolveQualTip(allPredictions||{},ALL_FIXTURES,match,playerKey)
                 return (
                   <div key={playerKey} style={{flex:1,
                     background:sc?.exact?`${GREEN}15`:sc?.correct?`${GOLD}0a`:'rgba(255,255,255,.04)',
@@ -1568,8 +1729,8 @@ function MatchPredictCard({match,result,scoringActual,predictions,onRefresh,allR
                     opacity:isProvisional&&sc?0.92:1}}>
                     <div style={{fontSize:9,fontWeight:700,color:pc.p,marginBottom:3,letterSpacing:'.04em'}}>{PLAYER_NAMES[playerKey].substring(0,4).toUpperCase()}</div>
                     <div style={{fontSize:13,fontWeight:800,color:TEXT,fontVariantNumeric:'tabular-nums'}}>{pred?`${pred.h}–${pred.a}`:'–'}</div>
-                    {pred?.qual&&<div style={{fontSize:9,color:MUTED,marginTop:1}}>→{pred.qual}</div>}
-                    {sc&&<div style={{fontSize:10,fontWeight:700,color:sc.points===2?GREEN:sc.points===1?GOLD:DIM,marginTop:2}}>{sc.points===2?'🎯':sc.points===1?'✓':'✗'}{sc.points}p{isProvisional?'~':''}</div>}
+                    {shownQual&&<div style={{fontSize:9,color:MUTED,marginTop:1}}>→{shownQual}</div>}
+                    {sc&&<div style={{fontSize:10,fontWeight:700,color:sc.points>=2?GREEN:sc.points===1?GOLD:DIM,marginTop:2}}>{sc.exact?'🎯':sc.correct?'✓':sc.qualCorrect?'🔑':'✗'}{sc.points}p{isProvisional?'~':''}{sc.qualPts?` ·${sc.qualPts}🔑`:''}</div>}
                   </div>
                 )
               })}

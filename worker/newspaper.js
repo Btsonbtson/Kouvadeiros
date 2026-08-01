@@ -89,13 +89,41 @@ function matchResult(h, a) {
   return h > a ? 'H' : h < a ? 'A' : 'D'
 }
 
-export function scoreMatch(pred, actual) {
+function parseTieMeta(match) {
+  if (match?.leg != null) return match
+  const m = String(match?.id || '').match(/^(.*)-([12])$/)
+  if (!m) return { ...match, leg: null, tie: null }
+  return { ...match, tie: m[1], leg: Number(m[2]) }
+}
+
+function getTieLeg1Id(match) {
+  const meta = parseTieMeta(match)
+  if (!meta.tie) return null
+  return `${meta.tie}-1`
+}
+
+export function scoreMatch(pred, actual, opts = {}) {
   if (!pred || actual == null) return null
   const exact = pred.h === actual.h && pred.a === actual.a
   const correct = matchResult(pred.h, pred.a) === matchResult(actual.h, actual.a)
-  const qualCorrect = !!(pred.qual && actual.qual && pred.qual === actual.qual)
-  const points = (exact ? 1 : 0) + (correct ? 1 : 0) + (qualCorrect ? 1 : 0)
-  return { exact, correct, qualCorrect, points }
+  const awardQual = opts.awardQual !== false && !!actual.qual
+  const qualTip = opts.qualTip !== undefined ? opts.qualTip : pred?.qual
+  const qualCorrect = !!(awardQual && qualTip && actual.qual && qualTip === actual.qual)
+  const scorePts = (exact ? 1 : 0) + (correct ? 1 : 0)
+  const qualPts = qualCorrect ? 1 : 0
+  return { exact, correct, qualCorrect, scorePts, qualPts, points: scorePts + qualPts }
+}
+
+function scorePlayerMatchWorker(match, pred, actual, predictions, playerId) {
+  if (!pred || actual == null) return null
+  const meta = parseTieMeta(match)
+  if (meta.leg === 1) return scoreMatch(pred, actual, { awardQual: false })
+  if (meta.leg === 2 && actual.qual) {
+    const leg1Id = getTieLeg1Id(match)
+    const qualTip = (leg1Id && predictions?.[leg1Id]?.[playerId]?.qual) || null
+    return scoreMatch(pred, actual, { qualTip, awardQual: true })
+  }
+  return scoreMatch(pred, actual, { awardQual: false })
 }
 
 export function athensDate(iso) {
@@ -142,15 +170,20 @@ export function buildDayLedger(matches, state, users) {
     }
     for (const p of players) {
       const pred = preds[p.id]
-      const sc = scoreMatch(pred, actual)
+      const sc = scorePlayerMatchWorker(match, pred, actual, state.predictions || {}, p.id)
       const pts = sc?.points ?? 0
       if (pred) dayPts[p.id] += pts
       if (sc?.exact) dayExact[p.id] += 1
       if (pred && pts === 0) dayMiss[p.id] += 1
+      const leg1Id = getTieLeg1Id(match)
+      const tipQual =
+        parseTieMeta(match).leg === 2
+          ? state.predictions?.[leg1Id]?.[p.id]?.qual
+          : pred?.qual
       row.players.push({
         id: p.id,
         name: p.name,
-        tip: pred ? `${pred.h}–${pred.a}${pred.qual ? ' →' + pred.qual : ''}` : 'ΧΩΡΙΣ ΠΡΟΒΛΕΨΗ',
+        tip: pred ? `${pred.h}–${pred.a}${tipQual ? ' →' + tipQual : ''}` : 'ΧΩΡΙΣ ΠΡΟΒΛΕΨΗ',
         pts,
         exact: !!sc?.exact,
         correct: !!sc?.correct,

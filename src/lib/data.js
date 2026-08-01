@@ -314,15 +314,93 @@ export const ALL_FIXTURES = [...SUPER_LEAGUE, ...UEFA_FIXTURES]
 // ─── SCORING ──────────────────────────────────────────────────────────────────
 export function matchResult(h, a) { return h > a ? 'H' : h < a ? 'A' : 'D' }
 
-export function scoreMatch(pred, actual) {
+/** Find Leg 1 fixture of the same UEFA tie. */
+export function getTieLeg1(fixtures, match) {
+  if (!match?.tie) return null
+  return (fixtures || []).find((f) => f.tie === match.tie && f.leg === 1) || null
+}
+
+/**
+ * Qualifier tip lives on Leg 1 only.
+ * Assessed against Leg 2 official result.qual.
+ */
+export function resolveQualTip(predictions, fixtures, match, playerId) {
+  const leg1 = match?.leg === 1 ? match : getTieLeg1(fixtures, match)
+  if (!leg1) return null
+  return predictions?.[leg1.id]?.[playerId]?.qual || null
+}
+
+/**
+ * Core scorer.
+ * opts.qualTip — tip to compare for πρόκριση (usually from Leg 1)
+ * opts.awardQual — false on Leg 1 (never award until Leg 2 settles)
+ */
+export function scoreMatch(pred, actual, opts = {}) {
   if (!pred || actual == null) return null
   const exact   = pred.h === actual.h && pred.a === actual.a
   const correct = matchResult(pred.h, pred.a) === matchResult(actual.h, actual.a)
-  // Qual bonus: +1 if correct qualifier predicted (for UEFA Leg 2)
-  const qualCorrect = pred.qual && actual.qual && pred.qual === actual.qual
-  const basePoints = (exact ? 1 : 0) + (correct ? 1 : 0)
-  const qualBonus  = qualCorrect ? 1 : 0
-  return { exact, correct, qualCorrect, points: basePoints + qualBonus, provisional: !!actual.provisional }
+  const awardQual = opts.awardQual !== false && !!actual.qual
+  const qualTip = opts.qualTip !== undefined ? opts.qualTip : pred?.qual
+  const qualCorrect = !!(awardQual && qualTip && actual.qual && qualTip === actual.qual)
+  const scorePts = (exact ? 1 : 0) + (correct ? 1 : 0)
+  const qualPts  = qualCorrect ? 1 : 0
+  return {
+    exact,
+    correct,
+    qualCorrect,
+    scorePts,
+    qualPts,
+    points: scorePts + qualPts,
+    provisional: !!actual.provisional,
+  }
+}
+
+/**
+ * Full UEFA-aware score for one player on one fixture.
+ * Leg 1: scoreline only (πρόκριση tip stored, not scored yet).
+ * Leg 2: scoreline from Leg 2 tip + πρόκριση from Leg 1 tip vs result.qual.
+ */
+export function scorePlayerMatch(match, pred, actual, predictions, fixtures, playerId) {
+  if (!pred || actual == null) return null
+  if (match?.leg === 1) {
+    return scoreMatch(pred, actual, { awardQual: false })
+  }
+  if (match?.leg === 2 && actual.qual) {
+    const qualTip = resolveQualTip(predictions, fixtures, match, playerId)
+    return scoreMatch(pred, actual, { qualTip, awardQual: true })
+  }
+  return scoreMatch(pred, actual, { awardQual: false })
+}
+
+/** Per-match ledger for one player (finished fixtures only). */
+export function buildPlayerMatchLedger(fixtures, predictions, results, playerId) {
+  const rows = []
+  for (const m of fixtures || []) {
+    const actual = results?.[m.id]
+    if (actual == null) continue
+    const pred = predictions?.[m.id]?.[playerId]
+    const sc = scorePlayerMatch(m, pred, actual, predictions, fixtures, playerId)
+    if (!sc) continue
+    const tipQual = resolveQualTip(predictions, fixtures, m, playerId)
+    rows.push({
+      matchId: m.id,
+      label: `${TEAMS[m.home]?.abbr || m.home}–${TEAMS[m.away]?.abbr || m.away}`,
+      competition: m.t,
+      round: m.round || m.md || '',
+      leg: m.leg || null,
+      tip: pred ? `${pred.h}–${pred.a}` : '—',
+      tipQual: m.leg === 2 ? tipQual : (pred?.qual || tipQual || null),
+      actual: `${actual.h}–${actual.a}`,
+      actualQual: actual.qual || null,
+      exact: sc.exact,
+      correct: sc.correct,
+      qualCorrect: sc.qualCorrect,
+      scorePts: sc.scorePts,
+      qualPts: sc.qualPts,
+      points: sc.points,
+    })
+  }
+  return rows
 }
 
 /** Turn a live / hint scoreline into an actual for scoreMatch (provisional until official result). */
@@ -357,18 +435,18 @@ export function mergeScoringResults(results = {}, liveScores = {}, finishedHints
 
 export function computeLeaderboard(fixtures, predictions, results) {
   const t = {}
-  PLAYERS.forEach(p => { t[p] = { pts:0, exact:0, correct:0, played:0 } })
+  PLAYERS.forEach(p => { t[p] = { pts:0, exact:0, correct:0, qual:0, played:0 } })
   fixtures.forEach(m => {
     const actual = results?.[m.id]
     if (actual == null) return
     PLAYERS.forEach(p => {
-      const sc = scoreMatch(predictions?.[m.id]?.[p], actual)
+      const sc = scorePlayerMatch(m, predictions?.[m.id]?.[p], actual, predictions, fixtures, p)
       if (!sc) return
       t[p].pts    += sc.points
       t[p].played += 1
       if (sc.exact)      t[p].exact++
       if (sc.correct)    t[p].correct++
-      if (sc.qualCorrect) t[p].qual = (t[p].qual||0)+1
+      if (sc.qualCorrect) t[p].qual++
     })
   })
   return PLAYERS.slice().sort((a, b) => t[b].pts - t[a].pts)

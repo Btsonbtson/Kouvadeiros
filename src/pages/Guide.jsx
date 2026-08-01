@@ -106,19 +106,19 @@ export default function Guide({ onBack }) {
               </div>
             </div>
 
-            <div style={{ fontSize:12, fontWeight:700, color:MUTED, letterSpacing:'.07em', textTransform:'uppercase', marginBottom:10 }}>BONUS UEFA — Αγώνες Ρήτρα</div>
+            <div style={{ fontSize:12, fontWeight:700, color:MUTED, letterSpacing:'.07em', textTransform:'uppercase', marginBottom:10 }}>BONUS UEFA — Πρόκριση & παράταση</div>
             {[
-              {l:'🔑 Πρόκριση (ποιος προκρίνεται)', v:'+1p', c:BLUE},
-              {l:'⏱ Παρατάσεις — σωστό αποτέλεσμα AET', v:'+1p', c:GOLD},
-              {l:'⏱ Παρατάσεις — ακριβές σκορ AET', v:'+1p', c:GOLD},
-              {l:'⚽ Πέναλτι — σωστό αποτέλεσμα', v:'+1p', c:ORA},
-              {l:'⚽ Πέναλτι — ακριβές σκορ (π.χ. 4–3)', v:'+1p', c:ORA},
+              {l:'🔑 Πρόκριση — προβλέπεται στο Leg 1, μετράει μετά το Leg 2', v:'+1p', c:BLUE},
+              {l:'⏱ Παράταση / Μπενάλντιζ — μόνο στο Leg 2 (αποθήκευση, χωρίς πόντους ακόμη)', v:'—', c:MUTED},
             ].map((r,i)=>(
               <div key={i} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'8px 0', borderBottom:`1px solid rgba(255,255,255,.05)` }}>
                 <span style={{ fontSize:12, color:MUTED }}>{r.l}</span>
                 <span style={{ fontSize:13, fontWeight:800, color:r.c }}>{r.v}</span>
               </div>
             ))}
+            <div style={{ fontSize:11, color:MUTED, marginTop:10, lineHeight:1.5 }}>
+              Στο Leg 1 διαλέγεις σκορ + ποιος προκρίνεται. Στο Leg 2 διαλέγεις σκορ (+ προαιρετικά παράταση/πέναλτι). Η πρόκριση βαθμολογείται μόνο όταν καταχωρηθεί το επίσημο qual στο Leg 2.
+            </div>
           </Section>
 
           <Section emoji="📊" title="Παραδείγματα" accent={BLUE}>
@@ -143,8 +143,8 @@ export default function Guide({ onBack }) {
           <Section emoji="📱" title="Πώς κάνω πρόβλεψη;" accent={GREEN}>
             <Rule n="1" text='Πήγαινε στην καρτέλα "Predict"' sub="Βλέπεις όλους τους επερχόμενους αγώνες σε χρονολογική σειρά"/>
             <Rule n="2" text="Επίλεξε το σκορ που προβλέπεις" sub="Χρησιμοποίησε τα +/– κουμπιά για γκολ Γηπεδούχου και Φιλοξενούμενου"/>
-            <Rule n="3" text="UEFA: επίλεξε ποιος προκρίνεται" sub="Εμφανίζεται μπλε κουτί με dropdown — +1 πόντος εάν βρεις σωστά"/>
-            <Rule n="4" text="UEFA Leg 2: πρόβλεψη παράτασης/πέναλτι" sub="Τσέκαρε τα κουτάκια ΑΕΤ & Pen αν πιστεύεις ότι θα χρειαστούν"/>
+            <Rule n="3" text="UEFA Leg 1: επίλεξε ποιος προκρίνεται" sub="Μπλε κουτί μόνο στο πρώτο ματς της σειράς — +1 όταν κλείσει το Leg 2"/>
+            <Rule n="4" text="UEFA Leg 2: παράταση / πέναλτι (προαιρετικά)" sub="Μόνο στο δεύτερο ματς. Δεν εμφανίζονται στο Leg 1"/>
             <Rule n="5" text='Πάτα "Αποθήκευσε πρόβλεψη"' sub="Πράσινο κουμπί στο κάτω μέρος. Μπορείς να αλλάξεις μέχρι 15 λεπτά πριν τον αγώνα"/>
           </Section>
 
@@ -173,6 +173,12 @@ export default function Guide({ onBack }) {
               <div style={{ fontSize:13, fontWeight:700, color:RED, marginBottom:8 }}>📰 Ο Κουβάς</div>
               <div style={{ fontSize:12, color:MUTED, lineHeight:1.7 }}>
                 Μετά το τελευταίο ματς της ημέρας (~2½ ώρες μετά τη σέντρα), στέλνουμε σε <strong style={{color:TEXT}}>όλους τους παίκτες</strong> το πρωτοσέλιδο «Ο Κουβάς»: αποτελέσματα, πόντοι ημέρας και ισότιμο δηλητήριο για τον καθένα. Link + φωτο μέσα στο WhatsApp.
+              </div>
+            </div>
+            <div style={{ background:'rgba(255,107,53,.06)', border:`1px solid rgba(255,107,53,.25)`, borderRadius:10, padding:'14px', marginBottom:14 }}>
+              <div style={{ fontSize:13, fontWeight:700, color:ORA, marginBottom:8 }}>🔥 Ιερά Εξέταση — offline</div>
+              <div style={{ fontSize:12, color:MUTED, lineHeight:1.7 }}>
+                Νέο μήνυμα στο chat → WhatsApp στους άλλους παίκτες (ακόμα κι αν η εφαρμογή είναι κλειστή). Μέσα στην εφαρμογή ακούγεται και το κουδούνι.
               </div>
             </div>
             <div style={{ fontSize:12, fontWeight:700, color:MUTED, letterSpacing:'.06em', textTransform:'uppercase', marginBottom:10 }}>Μορφή μηνύματος</div>
