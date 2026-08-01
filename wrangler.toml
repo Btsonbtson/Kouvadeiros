@@ -1,0 +1,5 @@
+# Cloudflare Pages (Vite). Workers use: wrangler deploy -c worker/wrangler-api.toml
+# Scores worker: wrangler deploy -c worker/wrangler-scores.jsonc
+name = "kouvadeiros"
+compatibility_date = "2026-07-24"
+pages_build_output_dir = "./dist"

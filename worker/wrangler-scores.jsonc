@@ -1,7 +1,7 @@
 {
-  "$schema": "./node_modules/wrangler/config-schema.json",
+  "$schema": "../node_modules/wrangler/config-schema.json",
   "name": "kouvadeiros-scores",
-  "main": "worker/scores-worker.js",
+  "main": "scores-worker.js",
   "compatibility_date": "2026-07-01",
   "workers_dev": true,
   "kv_namespaces": [
