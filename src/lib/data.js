@@ -2,7 +2,7 @@
 // ─── FIXTURES ─────────────────────────────────────────────────────────────────
 export const PLAYERS = ['boikos','mavromichalis','chousiadas']
 export const PLAYER_NAMES = { boikos:'Boikos', mavromichalis:'Mavromichalis', chousiadas:'Chousiadas' }
-export const PCOL = { boikos:'#ff2244', mavromichalis:'#4d9fff', chousiadas:'#ff6b35' }
+export const PCOL = { boikos:'#ff2244', mavromichalis:'#ffdd00', chousiadas:'#00ff88' }
 
 export const TEAMS = {
   PAO: {name:'Παναθηναϊκός',abbr:'PAO',color:'#1a7c2a'},
@@ -336,7 +336,9 @@ export function resolveQualTip(predictions, fixtures, match, playerId) {
  * opts.awardQual — false on Leg 1 (never award until Leg 2 settles)
  */
 export function scoreMatch(pred, actual, opts = {}) {
+  // No tip before lock = DQ for that match (missing ≠ default 0–0)
   if (!pred || actual == null) return null
+  if (typeof pred.h !== 'number' || typeof pred.a !== 'number') return null
   const exact   = pred.h === actual.h && pred.a === actual.a
   const correct = matchResult(pred.h, pred.a) === matchResult(actual.h, actual.a)
   const awardQual = opts.awardQual !== false && !!actual.qual

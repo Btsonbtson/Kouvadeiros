@@ -128,8 +128,8 @@ export function Spinner({ size = 20 }) {
 
 export function Card({ children, glow, style: sx }) {
   return (
-    <div style={{ background:'#111318', border:glow?`1px solid ${glow}44`:'1px solid #ffffff0e',
-      borderRadius:12, padding:'14px 16px', marginBottom:10,
+    <div style={{ background:'rgba(17,19,24,.55)', border:glow?`1px solid ${glow}44`:'1px solid #ffffff12',
+      borderRadius:12, padding:'14px 16px', marginBottom:10, backdropFilter:'blur(6px)',
       boxShadow:glow?`0 0 20px ${glow}12`:'none', ...sx }}>
       {children}
     </div>

@@ -3,8 +3,8 @@ import { ALL_FIXTURES, PLAYERS, PLAYER_NAMES, scorePlayerMatch } from '../lib/da
 
 const PC = {
   boikos:        { color:'#ff2244', glow:'#ff224460', area:'#ff224415', dash:'none'    },
-  mavromichalis: { color:'#4d9fff', glow:'#4d9fff60', area:'#4d9fff15', dash:'8,4'    },
-  chousiadas:    { color:'#ff6b35', glow:'#ff6b3560', area:'#ff6b3515', dash:'4,4,1,4' },
+  mavromichalis: { color:'#ffdd00', glow:'#ffdd0060', area:'#ffdd0015', dash:'8,4'    },
+  chousiadas:    { color:'#00ff88', glow:'#00ff8860', area:'#00ff8815', dash:'4,4,1,4' },
 }
 // Z-order: draw Boikos last so it's always on top
 const DRAW_ORDER = ['mavromichalis','chousiadas','boikos']

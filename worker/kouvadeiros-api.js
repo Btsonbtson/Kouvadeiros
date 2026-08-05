@@ -290,7 +290,9 @@ function matchResult(h, a) {
   return h > a ? 'H' : h < a ? 'A' : 'D'
 }
 function scoreMatch(pred, actual, opts = {}) {
+  // No tip on file = disqualified for this match (never treat missing as 0–0)
   if (!pred || actual == null) return null
+  if (typeof pred.h !== 'number' || typeof pred.a !== 'number') return null
   const exact = pred.h === actual.h && pred.a === actual.a
   const correct = matchResult(pred.h, pred.a) === matchResult(actual.h, actual.a)
   const awardQual = opts.awardQual !== false && !!actual.qual
@@ -928,6 +930,22 @@ export default {
         const state = await getState(env)
         if (!state.results) state.results = {}
         let changed = false
+        // Optional explicit results from admin body (e.g. { "ucl-oly-1": { h:0, a:0 } })
+        if (body.results && typeof body.results === 'object') {
+          for (const [mid, score] of Object.entries(body.results)) {
+            if (score && typeof score.h === 'number' && typeof score.a === 'number') {
+              state.results[mid] = {
+                ...(state.results[mid] || {}),
+                h: score.h,
+                a: score.a,
+                qual: score.qual || state.results[mid]?.qual || null,
+                source: 'newspaper-issue',
+                fetchedAt: new Date().toISOString(),
+              }
+              changed = true
+            }
+          }
+        }
         for (const m of MATCHES.filter((x) => athensDate(x.kickoff) === ymd)) {
           if (!state.results[m.id] && FALLBACK_RESULTS[m.id]) {
             state.results[m.id] = { ...FALLBACK_RESULTS[m.id], source: 'newspaper', fetchedAt: new Date().toISOString() }

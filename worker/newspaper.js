@@ -1,6 +1,6 @@
 /**
  * KOUVADEIROS — Ο Κουβάς
- * Greek red-top tabloid. Provocative. Poisonous. Photorealistic web visuals.
+ * Greek red-top tabloid. Provocative. Poisonous. Madhouse. Photorealistic web visuals.
  */
 
 /** Known finals when KV lags (synced with Worker KNOWN + app seeds) */
@@ -9,9 +9,16 @@ export const FALLBACK_RESULTS = {
   'uecl-pao-1': { h: 1, a: 2 },
   'uel-paok-2': { h: 2, a: 0, qual: 'PAOK' },
   'uecl-pao-2': { h: 2, a: 2, qual: 'PAO' },
+  'ucl-oly-1': { h: 0, a: 0 },
 }
 
-/** Curated Unsplash stills — stadium drama + teasing vibes for tipsters */
+const PLAYER_COLORS = {
+  boikos: '#ff2244',
+  mavromichalis: '#ffdd00',
+  chousiadas: '#00ff88',
+}
+
+/** Curated Unsplash stills — stadium + SI / page-3 glam (adult fashion & beach) */
 const VISUAL_BANK = {
   stadium: [
     'https://images.unsplash.com/photo-1522778119026-d647f0596c20?auto=format&fit=crop&w=1400&q=80',
@@ -26,33 +33,37 @@ const VISUAL_BANK = {
     'https://images.unsplash.com/photo-1560272564-c83b66b1ad12?auto=format&fit=crop&w=900&q=80',
     'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?auto=format&fit=crop&w=900&q=80',
     'https://images.unsplash.com/photo-1526232761682-d26e03ac148e?auto=format&fit=crop&w=900&q=80',
-    'https://images.unsplash.com/photo-1461896836934-ffe607ba6851?auto=format&fit=crop&w=900&q=80',
   ],
   despair: [
-    'https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?auto=format&fit=crop&w=900&q=80',
     'https://images.unsplash.com/photo-1486286701208-1d58e9339349?auto=format&fit=crop&w=900&q=80',
     'https://images.unsplash.com/photo-1551958219-acbc608c6377?auto=format&fit=crop&w=900&q=80',
     'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=900&q=80',
-    'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?auto=format&fit=crop&w=900&q=70&sat=-100',
   ],
   crowd: [
     'https://images.unsplash.com/photo-1543326727-cf6c39e8f84c?auto=format&fit=crop&w=1200&q=80',
     'https://images.unsplash.com/photo-1529900748604-07564a03e7a6?auto=format&fit=crop&w=1200&q=80',
-    'https://images.unsplash.com/photo-1517466787929-bc90951d0974?auto=format&fit=crop&w=1200&q=80',
   ],
-  /** Extra teasing cutouts — facepalm / empty / comedy energy */
-  roast: [
-    'https://images.unsplash.com/photo-1522778119026-d647f0596c20?auto=format&fit=crop&w=600&q=80',
-    'https://images.unsplash.com/photo-1489944440615-453fc2b6a9a9?auto=format&fit=crop&w=600&q=80',
-    'https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=600&q=80',
-    'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=600&q=80',
-    'https://images.unsplash.com/photo-1551958219-acbc608c6377?auto=format&fit=crop&w=600&q=80',
-    'https://images.unsplash.com/photo-1461896836934-ffe607ba6851?auto=format&fit=crop&w=600&q=80',
+  /** Sports Illustrated swimsuit / Daily Mail page-3 cover energy */
+  glam: [
+    'https://images.unsplash.com/photo-1570258028946-b9a55411d117?auto=format&fit=crop&w=900&h=1200&q=80',
+    'https://images.unsplash.com/photo-1568819317551-31051b37f69f?auto=format&fit=crop&w=900&h=1200&q=80',
+    'https://images.unsplash.com/photo-1525672716948-1f0bb9c49883?auto=format&fit=crop&w=900&h=1200&q=80',
+    'https://images.unsplash.com/photo-1636427697818-a1bf8794ee17?auto=format&fit=crop&w=900&h=1200&q=80',
+    'https://images.unsplash.com/photo-1616147503419-500e80be8447?auto=format&fit=crop&w=900&h=1200&q=80',
+    'https://images.unsplash.com/photo-1724124658760-05c3a8d2c077?auto=format&fit=crop&w=900&h=1200&q=80',
+    'https://images.unsplash.com/photo-1589676562553-1fb5f8c3937e?auto=format&fit=crop&w=900&h=1200&q=80',
+    'https://images.unsplash.com/photo-1699061930674-1be64fe86fc3?auto=format&fit=crop&w=900&h=1200&q=80',
+    'https://images.unsplash.com/photo-1628196747637-160b1be385ac?auto=format&fit=crop&w=900&h=1200&q=80',
+    'https://images.unsplash.com/photo-1630588034516-9180c7ead89e?auto=format&fit=crop&w=900&h=1200&q=80',
+    'https://images.unsplash.com/photo-1643848950187-a5658454e278?auto=format&fit=crop&w=900&h=1200&q=80',
+    'https://images.unsplash.com/photo-1695990190577-e367721ef82a?auto=format&fit=crop&w=900&h=1200&q=80',
+    'https://images.unsplash.com/photo-1695990191278-fe203094860a?auto=format&fit=crop&w=900&h=1200&q=80',
+    'https://images.unsplash.com/photo-1655663843133-3b951f435fb2?auto=format&fit=crop&w=900&h=1200&q=80',
+    'https://images.unsplash.com/photo-1756277123994-f79585558b0c?auto=format&fit=crop&w=900&h=1200&q=80',
   ],
   laugh: [
     'https://images.unsplash.com/photo-1517466787929-bc90951d0974?auto=format&fit=crop&w=700&q=80',
     'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?auto=format&fit=crop&w=700&q=80',
-    'https://images.unsplash.com/photo-1526232761682-d26e03ac148e?auto=format&fit=crop&w=700&q=80',
   ],
 }
 
@@ -69,18 +80,30 @@ function pickFrom(arr, seed) {
   return arr[seed % arr.length]
 }
 
+function uniqPick(arr, seed, n) {
+  const out = []
+  let s = seed >>> 0
+  for (let i = 0; i < n * 4 && out.length < n; i++) {
+    s = (Math.imul(s ^ (s >>> 13), 0x5bd1e995) + i) >>> 0
+    const u = arr[s % arr.length]
+    if (!out.includes(u)) out.push(u)
+  }
+  while (out.length < n) out.push(arr[out.length % arr.length])
+  return out
+}
+
 export function pickVisuals(ymd, round = 0) {
   const s = hashSeed(`${ymd}:v${round}:kouvas`)
-  const roastA = pickFrom(VISUAL_BANK.roast, s >> 2)
-  const roastB = pickFrom(VISUAL_BANK.roast, s >> 5)
-  const roastC = pickFrom(VISUAL_BANK.roast, s >> 9)
+  const glam = uniqPick(VISUAL_BANK.glam, s, 4)
   return {
     hero: pickFrom(VISUAL_BANK.stadium, s),
     king: pickFrom(VISUAL_BANK.celebrate, s >> 3),
     donut: pickFrom(VISUAL_BANK.despair, s >> 7),
     strip: pickFrom(VISUAL_BANK.crowd, s >> 11),
     laugh: pickFrom(VISUAL_BANK.laugh, s >> 13),
-    roast: [roastA, roastB, roastC].filter((u, i, a) => a.indexOf(u) === i),
+    page3: glam[0],
+    glam: glam,
+    roast: glam.slice(0, 3),
     round,
   }
 }
@@ -103,7 +126,9 @@ function getTieLeg1Id(match) {
 }
 
 export function scoreMatch(pred, actual, opts = {}) {
+  // No tip on file = disqualified for this match (never treat missing as 0–0)
   if (!pred || actual == null) return null
+  if (typeof pred.h !== 'number' || typeof pred.a !== 'number') return null
   const exact = pred.h === actual.h && pred.a === actual.a
   const correct = matchResult(pred.h, pred.a) === matchResult(actual.h, actual.a)
   const awardQual = opts.awardQual !== false && !!actual.qual
@@ -170,11 +195,12 @@ export function buildDayLedger(matches, state, users) {
     }
     for (const p of players) {
       const pred = preds[p.id]
-      const sc = scorePlayerMatchWorker(match, pred, actual, state.predictions || {}, p.id)
-      const pts = sc?.points ?? 0
-      if (pred) dayPts[p.id] += pts
+      const dq = !pred || typeof pred.h !== 'number' || typeof pred.a !== 'number'
+      const sc = dq ? null : scorePlayerMatchWorker(match, pred, actual, state.predictions || {}, p.id)
+      const pts = dq ? null : (sc?.points ?? 0)
+      if (!dq) dayPts[p.id] += pts
       if (sc?.exact) dayExact[p.id] += 1
-      if (pred && pts === 0) dayMiss[p.id] += 1
+      if (!dq && pts === 0) dayMiss[p.id] += 1
       const leg1Id = getTieLeg1Id(match)
       const tipQual =
         parseTieMeta(match).leg === 2
@@ -183,8 +209,11 @@ export function buildDayLedger(matches, state, users) {
       row.players.push({
         id: p.id,
         name: p.name,
-        tip: pred ? `${pred.h}–${pred.a}${tipQual ? ' →' + tipQual : ''}` : 'ΧΩΡΙΣ ΠΡΟΒΛΕΨΗ',
+        tip: dq
+          ? 'ΑΠΟΚΛΕΙΣΜΟΣ'
+          : `${pred.h}–${pred.a}${tipQual ? ' →' + tipQual : ''}`,
         pts,
+        dq,
         exact: !!sc?.exact,
         correct: !!sc?.correct,
       })
@@ -204,123 +233,734 @@ export function buildDayLedger(matches, state, users) {
   return { matchRows, ranking, dayPts }
 }
 
-function pickHeadlines(ranking, matchRows, round = 0) {
+/** Full season table across every finished fixture (not just today). */
+export function buildSeasonTable(allMatches, state, users) {
+  const players = Object.values(users).map((u) => ({ id: u.id, name: u.name }))
+  const stats = Object.fromEntries(
+    players.map((p) => [
+      p.id,
+      { id: p.id, name: p.name, pts: 0, exact: 0, correct: 0, played: 0, misses: 0, dayWins: 0 },
+    ]),
+  )
+
+  const byDate = {}
+  for (const match of allMatches) {
+    const actual = resolveResult(state, match.id)
+    if (!actual) continue
+    const ymd = athensDate(match.kickoff)
+    if (!byDate[ymd]) byDate[ymd] = []
+    byDate[ymd].push(match)
+
+    for (const p of players) {
+      const pred = state.predictions?.[match.id]?.[p.id]
+      const sc = scorePlayerMatchWorker(match, pred, actual, state.predictions || {}, p.id)
+      if (!pred) continue
+      stats[p.id].played += 1
+      stats[p.id].pts += sc?.points ?? 0
+      if (sc?.exact) stats[p.id].exact += 1
+      if (sc?.correct) stats[p.id].correct += 1
+      if ((sc?.points ?? 0) === 0) stats[p.id].misses += 1
+    }
+  }
+
+  for (const ymd of Object.keys(byDate)) {
+    const day = buildDayLedger(byDate[ymd], state, users)
+    if (!day.ranking.length) continue
+    const top = day.ranking[0]?.pts
+    if (top == null) continue
+    for (const p of day.ranking) {
+      if (p.pts === top && top > 0) stats[p.id].dayWins += 1
+    }
+  }
+
+  const rows = players
+    .map((p) => stats[p.id])
+    .sort((a, b) => b.pts - a.pts || b.exact - a.exact || a.name.localeCompare(b.name))
+
+  return rows
+}
+
+/** Cumulative points timeline for competition graph SVG. */
+export function buildCompetitionTimeline(allMatches, state, users) {
+  const players = Object.values(users).map((u) => ({ id: u.id, name: u.name }))
+  const played = allMatches
+    .filter((m) => resolveResult(state, m.id))
+    .sort((a, b) => new Date(a.kickoff) - new Date(b.kickoff))
+
+  const cum = Object.fromEntries(players.map((p) => [p.id, 0]))
+  const events = []
+  for (const match of played) {
+    const actual = resolveResult(state, match.id)
+    for (const p of players) {
+      const pred = state.predictions?.[match.id]?.[p.id]
+      const sc = scorePlayerMatchWorker(match, pred, actual, state.predictions || {}, p.id)
+      cum[p.id] += sc?.points ?? 0
+    }
+    const short =
+      (match.homeTeam || match.label || match.id || '?').toString().slice(0, 10)
+    events.push({
+      id: match.id,
+      label: short,
+      pts: { ...cum },
+    })
+  }
+  const maxPts = Math.max(...players.map((p) => cum[p.id]), 2)
+  return { events, maxPts, final: { ...cum }, players }
+}
+
+function buildCompetitionSvg(timeline) {
+  const { events, maxPts, players } = timeline
+  if (!events.length) {
+    return `<div class="graph-empty">Το γράφημα περιμένει αίμα... ακόμα τίποτα επίσημο!</div>`
+  }
+
+  const W = 680
+  const H = 240
+  const PAD = { top: 22, right: 16, bottom: 36, left: 36 }
+  const gW = W - PAD.left - PAD.right
+  const gH = H - PAD.top - PAD.bottom
+  const allPts = [{ pts: Object.fromEntries(players.map((p) => [p.id, 0])) }, ...events]
+  const N = Math.max(allPts.length - 1, 1)
+  const xFor = (i) => PAD.left + (i / N) * gW
+  const yFor = (v) => PAD.top + gH - (v / maxPts) * gH
+
+  const smoothPath = (pid) => {
+    const pts = allPts.map((ev, i) => ({ x: xFor(i), y: yFor(ev.pts[pid] ?? 0) }))
+    if (pts.length < 2) return `M${pts[0].x} ${pts[0].y}`
+    let d = `M${pts[0].x} ${pts[0].y}`
+    for (let i = 1; i < pts.length; i++) {
+      const prev = pts[i - 1]
+      const curr = pts[i]
+      const cpx = (prev.x + curr.x) / 2
+      d += ` C${cpx} ${prev.y} ${cpx} ${curr.y} ${curr.x} ${curr.y}`
+    }
+    return d
+  }
+
+  const grid = [0, 0.25, 0.5, 0.75, 1]
+    .map((t) => {
+      const y = PAD.top + gH * (1 - t)
+      const v = Math.round(maxPts * t)
+      return `<line x1="${PAD.left}" y1="${y}" x2="${W - PAD.right}" y2="${y}" stroke="#000" stroke-opacity=".08"/><text x="${PAD.left - 6}" y="${y + 3}" text-anchor="end" font-size="9" font-weight="900" fill="#333">${v}</text>`
+    })
+    .join('')
+
+  const drawOrder = [...players].sort((a, b) => {
+    if (a.id === 'boikos') return 1
+    if (b.id === 'boikos') return -1
+    return a.id.localeCompare(b.id)
+  })
+
+  const lines = drawOrder
+    .map((p) => {
+      const color = PLAYER_COLORS[p.id] || '#111'
+      const last = allPts[allPts.length - 1]
+      const lx = xFor(allPts.length - 1)
+      const ly = yFor(last.pts[p.id] ?? 0)
+      return (
+        `<path d="${smoothPath(p.id)}" fill="none" stroke="${color}" stroke-width="3.5" stroke-linecap="round"/>` +
+        `<circle cx="${lx}" cy="${ly}" r="5" fill="${color}" stroke="#000" stroke-width="1.5"/>` +
+        `<text x="${lx - 4}" y="${ly - 8}" text-anchor="end" font-size="10" font-weight="900" fill="${color}">${esc(p.name)} ${last.pts[p.id] ?? 0}</text>`
+      )
+    })
+    .join('')
+
+  const xLabels = events
+    .filter((_, i) => i === 0 || i === events.length - 1 || i % Math.ceil(events.length / 4) === 0)
+    .map((ev) => {
+      const idx = events.indexOf(ev) + 1
+      return `<text x="${xFor(idx)}" y="${H - 10}" text-anchor="middle" font-size="8" font-weight="700" fill="#444">${esc(ev.label)}</text>`
+    })
+    .join('')
+
+  return `<svg class="comp-graph" viewBox="0 0 ${W} ${H}" role="img" aria-label="Competition graph">${grid}${lines}${xLabels}</svg>`
+}
+
+
+function compTag(match) {
+  const lg = String(match?.espnLeague || match?.t || '')
+  if (lg.includes('champions') || lg === 'UCL') return 'UCL'
+  if (lg.includes('europa.conf') || lg === 'UECL') return 'UECL'
+  if (lg.includes('europa') || lg === 'UEL') return 'UEL'
+  if (lg.includes('gre') || lg === 'SL') return 'SL'
+  return 'EU'
+}
+
+function formatKickShort(iso) {
+  try {
+    return new Date(iso).toLocaleString('el-GR', {
+      timeZone: 'Europe/Athens',
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    })
+  } catch {
+    return iso
+  }
+}
+
+function playerOrder(users) {
+  const preferred = ['boikos', 'mavromichalis', 'chousiadas']
+  const map = Object.fromEntries(Object.values(users).map((u) => [u.id, u]))
+  const out = preferred.filter((id) => map[id]).map((id) => ({ id, name: map[id].name }))
+  for (const u of Object.values(users)) {
+    if (!out.find((p) => p.id === u.id)) out.push({ id: u.id, name: u.name })
+  }
+  return out
+}
+
+/** Upcoming fixtures with near-insulting challenge lines per player. */
+export function buildUpcomingChallenges(allMatches, state, users, ymd, seed = 0) {
+  const players = playerOrder(users)
+  const now = new Date(`${ymd}T12:00:00+03:00`).getTime()
+  const upcoming = allMatches
+    .filter((m) => !resolveResult(state, m.id) && !m.timeTbd)
+    .filter((m) => new Date(m.kickoff).getTime() >= now - 6 * 3600000)
+    .sort((a, b) => new Date(a.kickoff) - new Date(b.kickoff))
+    .slice(0, 2)
+
+  const season = buildSeasonTable(allMatches, state, users)
+  const byId = Object.fromEntries(season.map((r) => [r.id, r]))
+  const leader = season[0]
+  const goat = season[season.length - 1]
+
+  // Each entry is a distinct voice — never reuse the same template id in one edition
+  const tauntBank = [
+    (p, m) => `${p.name}… can you take the upcoming challenge??? ${m.label} δεν συγχωρεί κουρασμένους.`,
+    (p, m) => `No prayer for the dying, ${p.name}! ${m.label} — θα χτυπήσεις ΚΑΝΕΝΑ;;;`,
+    (p, m) => `More games to try for… ${p.name}, are you going to hit ANY??? Ή συνεχίζουμε με «σχεδόν»;`,
+    (p, m) => `${p.name}: ${m.label} σε κοιτάει. Exact ή σιωπή!!!`,
+    (p, m) => `Challenge accepted… ή όχι; ${p.name} vs ${m.label}. Το ιστορικό σου λέει «ίσως αύριο».`,
+    (p, m) => `${p.name} — tips required. Courage optional. ${m.label} σε περιμένει…`,
+    (p, m) => `Still breathing? Good. ${p.name}, ${compTag(m)} δεν είναι φιλικό. Ξύπνα!!!`,
+    (p, m) => `${p.name}, το μπέργκερ μυρίζει… ${m.label} είναι η ευκαιρία. Μην τη χάσεις. Πάλι.`,
+    (p, m) => `${p.name} στο ${m.label}: βάλε αριθμό ή πάρε εισιτήριο για την Ιερά Εξέταση!!!`,
+    (p, m) => `Ώρα μηδέν για ${p.name}. ${m.label} δεν δέχεται «έτσι κι έτσι».`,
+    (p, m) => `${p.name} — αν χάσεις και αυτό το ${compTag(m)}, το φύλλο γράφει ΝΤΟΝΑΤ με κεφαλαία.`,
+    (p, m) => `Ψίθυρος από τον Κουβά: ${p.name}, ${m.label} είναι παγίδα. Ή παγιδεύεις εσύ.`,
+    (p, m) => `${p.name} έχει ${byId[p.id]?.pts ?? 0}πτ συνολικά… ${m.label} θα προσθέσει δόξα ή ντροπή;`,
+    (p, m) => `Μην κοιμάσαι, ${p.name}. ${m.label} ξεκινάει και τα tips δεν μπαίνουν μόνα τους!!!`,
+    (p, m) => `${p.name} vs μοίρα: ${m.label}. Spoiler — η μοίρα διαβάζει το φύλλο.`,
+  ]
+
+  const crownBank = [
+    (p, m, pts) => `${p.name} φοράει την κορώνα (${pts}πτ) — ${m.label} είναι η δοκιμασία του θρόνου!!!`,
+    (p, m, pts) => `Leader alert: ${p.name} (${pts}πτ). ${m.label} θα σε κρατήσει πάνω ή θα σε ρίξει;`,
+    (p, m, pts) => `${p.name} προηγείται… Prove it στο ${m.label} ή δώσε την καρέκλα!!!`,
+  ]
+
+  const digBank = [
+    (p, m, pts) => `${p.name} στον πάτο (${pts}πτ). ${m.label}: last chance saloon. Hit κάτι!!!`,
+    (p, m, pts) => `No prayer for the dying — εκτός αν ${p.name} ξυπνήσει στο ${m.label} (${pts}πτ).`,
+    (p, m, pts) => `${p.name} (${pts}πτ) κυνηγάει το μπέργκερ. ${m.label} είναι το γκάζι ή το φρένο.`,
+  ]
+
+  const headlineBank = [
+    (m) => `⏭ ΕΠΟΜΕΝΟ · ${m.label} — αντέχετε το βάρος;;;`,
+    (m) => `ALARM!!! ${m.label} · tips ή χάος`,
+    (m) => `THE FIXTURE FROM HELL… ${m.label}. Προφήτες στο εδώλιο!!!`,
+    (m) => `${compTag(m)} CALLING… ${m.label}. Ποιος θα απαντήσει πρώτος;`,
+    (m) => `ΣΤΟ ΜΑΤΙ · ${m.label}. Χωρίς έλεος, χωρίς επανάληψη.`,
+    (m) => `ΚΛΕΙΔΩΣΕ TIP · ${m.label} πριν σε κλειδώσει ο Κουβάς!!!`,
+  ]
+
+  const usedTemplates = new Set() // 'taunt:3', 'crown:0', 'head:1', ...
+  const usedFingerprints = new Set()
+  const usedByPlayer = Object.fromEntries(players.map((p) => [p.id, new Set()]))
+
+  function fingerprint(line, p, m) {
+    return String(line || '')
+      .replaceAll(p.name, '{P}')
+      .replaceAll(m.label, '{M}')
+      .replace(/\d+\s*πτ/gi, '{N}')
+      .replace(/\d+/g, '{N}')
+      .toLowerCase()
+      .replace(/[^a-zα-ωάέήίόύώϊϋΐΰ0-9{}\s]/gi, '')
+      .replace(/\s+/g, ' ')
+      .trim()
+  }
+
+  function takeFrom(bank, prefix, start, p, m, extraArgs = []) {
+    for (let attempt = 0; attempt < bank.length; attempt++) {
+      const idx = (start + attempt) % bank.length
+      const tid = `${prefix}:${idx}`
+      if (usedTemplates.has(tid)) continue
+      const line = bank[idx](p, m, ...extraArgs)
+      const fp = fingerprint(line, p, m)
+      if (usedFingerprints.has(fp)) continue
+      if (usedByPlayer[p.id]?.has(fp)) continue
+      usedTemplates.add(tid)
+      usedFingerprints.add(fp)
+      usedByPlayer[p.id].add(fp)
+      return line
+    }
+    // Absolute fallback — still unique via match id salt
+    const line = `${p.name} · ${m.label} · slot ${prefix}${start}: βάλε tip ή σωπά!!!`
+    const fp = fingerprint(line, p, m)
+    usedFingerprints.add(fp)
+    usedByPlayer[p.id].add(fp)
+    return line
+  }
+
+  const cards = upcoming.map((m, i) => {
+    const s = (seed + i * 97 + hashSeed(m.id)) >>> 0
+    const tipsFiled = players.filter((p) => state.predictions?.[m.id]?.[p.id]).length
+
+    // Unique headline template per card
+    let headline = null
+    for (let attempt = 0; attempt < headlineBank.length; attempt++) {
+      const idx = (s + i * 5 + attempt) % headlineBank.length
+      const tid = `head:${idx}`
+      if (usedTemplates.has(tid)) continue
+      usedTemplates.add(tid)
+      headline = headlineBank[idx](m)
+      break
+    }
+    if (!headline) headline = `⏭ ${m.label} — γύρος πρόκλησης ${i + 1}`
+
+    const challenges = players.map((p, pi) => {
+      const st = byId[p.id] || { pts: 0 }
+      const start = s + pi * 17 + i * 11
+      let line
+      // Role lines: each crown/dig template used at most once in the whole edition
+      if (leader && p.id === leader.id && leader.pts > 0) {
+        line = takeFrom(crownBank, 'crown', start, p, m, [leader.pts])
+      } else if (goat && p.id === goat.id && season.length > 1) {
+        line = takeFrom(digBank, 'dig', start, p, m, [st.pts])
+      } else {
+        line = takeFrom(tauntBank, 'taunt', start, p, m)
+      }
+      return { id: p.id, name: p.name, line }
+    })
+
+    return {
+      id: m.id,
+      label: m.label,
+      comp: compTag(m),
+      when: formatKickShort(m.kickoff) + (m.timeTbd ? ' · TBA' : ''),
+      tipCount: tipsFiled,
+      tipNeed: players.length,
+      headline,
+      challenges,
+    }
+  })
+
+  if (cards.length < 2) {
+    const mystery = allMatches
+      .filter((m) => !resolveResult(state, m.id) && m.timeTbd)
+      .sort((a, b) => new Date(a.kickoff) - new Date(b.kickoff))[0]
+    if (mystery) {
+      cards.push({
+        id: mystery.id,
+        label: mystery.label,
+        comp: compTag(mystery),
+        when: formatKickShort(mystery.kickoff) + ' · ώρα TBA',
+        tipCount: players.filter((p) => state.predictions?.[mystery.id]?.[p.id]).length,
+        tipNeed: players.length,
+        headline: `❓ ΜΥΣΤΗΡΙΟ · ${mystery.label} — ούτε ώρα, μόνο πίεση`,
+        challenges: players.map((p, pi) => ({
+          id: p.id,
+          name: p.name,
+          line: takeFrom(tauntBank, 'taunt', seed + 200 + pi * 9, p, mystery),
+        })),
+      })
+    }
+  }
+
+  return cards.slice(0, 2)
+}
+
+function pickCouple(arr, seed) {
+  if (!arr?.length) return []
+  if (arr.length <= 2) return arr.slice()
+  const a = seed % arr.length
+  let b = (seed >> 5) % arr.length
+  if (b === a) b = (a + 1) % arr.length
+  return [arr[a], arr[b]]
+}
+
+/** Διαγωνισμοί-style digest: oracle, lone wolf, H2H, campaigns, thavma. */
+export function buildRivalryDigest(allMatches, state, users, seed = 0) {
+  const players = playerOrder(users)
+  const ids = players.map((p) => p.id)
+  const nameOf = Object.fromEntries(players.map((p) => [p.id, p.name]))
+
+  const oracle = Object.fromEntries(ids.map((id) => [id, 0]))
+  const contrarian = Object.fromEntries(ids.map((id) => [id, 0]))
+  const oneVsTwo = Object.fromEntries(ids.map((id) => [id, { wins: 0, losses: 0, battles: 0 }]))
+  const h2h = {}
+  for (let i = 0; i < ids.length; i++) {
+    for (let j = i + 1; j < ids.length; j++) {
+      h2h[`${ids[i]}_${ids[j]}`] = {
+        a: ids[i],
+        b: ids[j],
+        names: [nameOf[ids[i]], nameOf[ids[j]]],
+        wins: [0, 0, 0],
+        diff: 0,
+      }
+    }
+  }
+
+  const played = allMatches.filter((m) => resolveResult(state, m.id))
+  for (const match of played) {
+    const actual = resolveResult(state, match.id)
+    const preds = ids.map((id) => state.predictions?.[match.id]?.[id])
+    if (preds.some((p) => !p)) continue
+    const scores = ids.map((id, i) =>
+      scorePlayerMatchWorker(match, preds[i], actual, state.predictions || {}, id),
+    )
+    const pts = scores.map((s) => s?.points ?? 0)
+    const res3 = preds.map((pr) => (pr.h > pr.a ? 'H' : pr.h < pr.a ? 'A' : 'D'))
+
+    for (let i = 0; i < ids.length; i++) {
+      for (let j = i + 1; j < ids.length; j++) {
+        const key = `${ids[i]}_${ids[j]}`
+        if (res3[i] !== res3[j]) {
+          h2h[key].diff++
+          if (pts[i] > pts[j]) h2h[key].wins[0]++
+          else if (pts[j] > pts[i]) h2h[key].wins[1]++
+          else h2h[key].wins[2]++
+        }
+      }
+    }
+
+    const exactPs = ids.filter((_, i) => scores[i]?.exact)
+    if (exactPs.length === 1) oracle[exactPs[0]]++
+
+    ids.forEach((id, i) => {
+      const others = ids.filter((_, j) => j !== i)
+      const otherRes = others.map((oid) => {
+        const op = state.predictions?.[match.id]?.[oid]
+        return op ? (op.h > op.a ? 'H' : op.h < op.a ? 'A' : 'D') : null
+      })
+      if (otherRes[0] && otherRes.every((r) => r === otherRes[0]) && res3[i] !== otherRes[0]) {
+        contrarian[id]++
+        const myPts = pts[i]
+        const theirPts = Math.max(...others.map((oid) => pts[ids.indexOf(oid)]))
+        oneVsTwo[id].battles++
+        if (myPts > theirPts) oneVsTwo[id].wins++
+        else if (myPts < theirPts) oneVsTwo[id].losses++
+      }
+    })
+  }
+
+  const campaigns = [
+    { id: 'UEL', name: 'Europa League', match: (m) => compTag(m) === 'UEL' },
+    { id: 'UECL', name: 'Conference', match: (m) => compTag(m) === 'UECL' },
+    { id: 'UCL', name: 'Champions League', match: (m) => compTag(m) === 'UCL' },
+    { id: 'SL', name: 'Super League', match: (m) => compTag(m) === 'SL' },
+  ].map((c) => {
+    const ms = allMatches.filter(c.match)
+    const done = ms.filter((m) => resolveResult(state, m.id))
+    const left = ms.length - done.length
+    const pts = Object.fromEntries(ids.map((id) => [id, 0]))
+    for (const m of done) {
+      const actual = resolveResult(state, m.id)
+      for (const id of ids) {
+        const sc = scorePlayerMatchWorker(
+          m,
+          state.predictions?.[m.id]?.[id],
+          actual,
+          state.predictions || {},
+          id,
+        )
+        pts[id] += sc?.points ?? 0
+      }
+    }
+    const next = ms
+      .filter((m) => !resolveResult(state, m.id))
+      .sort((a, b) => new Date(a.kickoff) - new Date(b.kickoff))[0]
+    return {
+      id: c.id,
+      name: c.name,
+      played: done.length,
+      total: ms.length,
+      left,
+      pts,
+      next: next ? next.label : null,
+    }
+  })
+
+  const oLdr = ids.reduce((a, b) => (oracle[a] >= oracle[b] ? a : b))
+  const cLdr = ids.reduce((a, b) => (contrarian[a] >= contrarian[b] ? a : b))
+
+  const thavma = {}
+  for (const id of ids) {
+    const ts = state.thavmaStats?.[id] || { benefited: 0, pts_gained: 0, pts_lost: {} }
+    const lost = Object.values(ts.pts_lost || {}).reduce((a, b) => a + b, 0)
+    thavma[id] = {
+      name: nameOf[id],
+      benefited: ts.benefited || 0,
+      gained: ts.pts_gained || 0,
+      lost,
+    }
+  }
+
+  const straps = []
+  if (oracle[oLdr] > 0) {
+    straps.push(
+      `🔮 ORACLE: ${nameOf[oLdr]} μόνος exact ${oracle[oLdr]}×… οι άλλοι κοιτούσαν το ταβάνι!!!`,
+    )
+  }
+  if (contrarian[cLdr] > 0) {
+    const st = oneVsTwo[cLdr]
+    const pct = st.battles ? Math.round((st.wins / st.battles) * 100) : 0
+    straps.push(
+      `🐺 LONE WOLF: ${nameOf[cLdr]} κόντρα στους δύο (${st.wins}W/${st.losses}L · ${pct}%). Can you take isolation???`,
+    )
+  }
+  for (const row of Object.values(h2h)) {
+    if (!row.diff) continue
+    const lead =
+      row.wins[0] === row.wins[1]
+        ? 'ισοπαλία δηλητηρίου'
+        : row.wins[0] > row.wins[1]
+          ? `${row.names[0]} δαγκώνει`
+          : `${row.names[1]} δαγκώνει`
+    straps.push(
+      `⚔️ ${row.names[0]} vs ${row.names[1]}: ${row.wins[0]}–${row.wins[1]} (${row.diff} διαφωνίες) — ${lead}!!!`,
+    )
+  }
+  for (const c of campaigns) {
+    if (!c.total) continue
+    const ranked = ids.slice().sort((a, b) => c.pts[b] - c.pts[a])
+    const top = ranked[0]
+    straps.push(
+      `${c.id}: ${nameOf[top]} ${c.pts[top]}πτ · ${c.played}/${c.total} · μένουν ${c.left}${c.next ? ` · next: ${c.next}` : ''}`,
+    )
+  }
+  for (const id of ids) {
+    const t = thavma[id]
+    if (t.gained || t.lost) {
+      straps.push(
+        `🙏 ΘΑΥΜΑ ${t.name}: +${t.gained}p late · −${t.lost}p κλεμμένα. No prayer for the dying… εκτός αν μπει μετά το 85'!!!`,
+      )
+    }
+  }
+
+  // Random couple only — not the whole Διαγωνισμός dump
+  const liveCampaigns = campaigns.filter((c) => c.total > 0)
+  return {
+    oracle,
+    contrarian,
+    oneVsTwo,
+    h2h: Object.values(h2h),
+    campaigns: pickCouple(liveCampaigns, seed >> 3),
+    thavma,
+    straps: pickCouple(straps, seed >> 7),
+    players,
+  }
+}
+
+
+function pickMyth(seed, names) {
+  const myths = [
+    `Κάπου στον Όλυμπο, ο Ερμής έκλεψε τα tips του Απόλλωνα... κι ο Δίας γέλασε τόσο δυνατά που έπεσε κεραυνός στο Καραϊσκάκη. Οι θνητοί — ${names} — ακόμα ψάχνουν το σκορ στα σύννεφα!`,
+    `Λένε πως η Κασσάνδρα προέβλεψε 2–1... κανείς δεν την άκουσε. Απόψε, στον Κουβά, η ιστορία επαναλαμβάνεται. Μόνο που αυτή τη φορά... το μαντείο φοράει κίτρινα γυαλιά και φωνάζει «ΝΤΟΝΑΤ!!!»`,
+    `Ο Σίσυφος κυλάει έναν μπέργκερ στην ανηφόρα. Κάθε φορά που φτάνει στην κορυφή... κάποιος από τους ${names} προβλέπει ισοπαλία. Ο βράχος κυλάει πίσω. Για πάντα.`,
+    `Η Πανδώρα άνοιξε το κουτί. Μέσα: λάθος ακριβή σκορ, false 9, και ένα φύλλο εφημερίδας που λέει «...αύριο θα τα πιάσουμε». Οι θεοί ακόμα κλαίνε από τα γέλια.`,
+    `Ο Ικάρος πέταξε κοντά στον ήλιο με φτερά από προβλέψεις. Λιώσανε. Έπεσε. Κάτω τον περίμενε ο Μινώταυρος με ταμπέλα: «ΧΩΡΙΣ ΠΡΟΒΛΕΨΗ». Τέλος; Όχι ακόμα...`,
+    `Στην Τροία, ο Δούρειος Ίππος μπήκε με σκορ 0–0 στο ημίχρονο. Μέσα; Προφήτες. Έξω; Η Ιερά Εξέταση. Το υπόλοιπο είναι... μυθολογία και πόντοι.`,
+    `Ο Νάρκισσος κοιτούσε τη βαθμολογία στο νερό μέχρι που πνίγηκε από αυτοθαυμασμό. Η Ηχώ ακόμα επαναλαμβάνει: «exact... exact... exact...» — αλλά ποιος ακούει;`,
+  ]
+  return pickFrom(myths, seed >> 9)
+}
+
+function pickHeadlines(ranking, matchRows, round = 0, seasonRows = [], upcoming = [], rivalry = null) {
   if (!ranking.length || !matchRows.length) {
     return {
-      yell: 'ΣΙΩΠΗ!',
-      splash: 'ΤΙΠΟΤΑ!',
-      kicker: 'Κανένας αγώνας. Κανένα δράμα. Αηδία.',
+      yell: 'ΣΙΩΠΗ!!!',
+      splash: 'ΤΙΠΟΤΑ...',
+      kicker: 'Κανένας αγώνας. Κανένα δράμα. Αηδία απόλυτη.',
       quote: '«Ο Κουβάς» σήμερα... άδειος. Όπως και κάποιοι από σας.',
-      straps: ['Οι συντάκτες πήγαν για σουβλάκι. Εσείς για ύπνο.'],
+      straps: ['Οι συντάκτες πήγαν για σουβλάκι. Εσείς για ύπνο...'],
       captions: {},
       playerLines: [],
-      amok: 'ΑΜΟΚ: Ακυρώθηκε λόγω πλήξης.',
+      amok: 'ΑΜΟΚ: Ακυρώθηκε λόγω πλήξης!!!',
+      myth: 'Ο Όλυμπος έκλεισε για συντήρηση. Ελάτε αύριο. Ίσως.',
+      page3Cap: 'ΚΟΡΙΤΣΙΑ ΤΗΣ ΗΜΕΡΑΣ · χωρίς tips, μόνο χάος',
+      equalBilling: 'Boikos · Mavromichalis · Chousiadas — ίσο μερίδιο, ίσο δηλητήριο',
+      frontTeasers: [
+        '⚖️ ΙΣΗ ΚΑΛΥΨΗ: Boikos · Mavromichalis · Chousiadas',
+        'FANS FRONT PAGE · ακόμα κι αν σήμερα είναι κενό… τα επόμενα σε κυνηγάνε!!!',
+        ...(upcoming?.[0] ? [`⏭ Επόμενο: ${upcoming[0].label}`] : []),
+      ].slice(0, 3),
     }
   }
 
   const hero = ranking[0]
   const goat = ranking[ranking.length - 1]
-  const seed = hashSeed(`${ranking.map((p) => p.id + p.pts).join('|')}:${round}`)
+  const seed = hashSeed(`${ranking.map((p) => p.id + p.pts).join('|')}:${round}:mad`)
+  const names = ranking.map((p) => p.name).join(', ')
 
-  const yellPool = ['ΔΑΓΚΩΝΕΙ!', 'ΣΦΑΖΕΙ!', 'ΚΑΕΙ!', 'ΤΡΟΜΟΣ!', 'ΒΟΗΘΕΙΑ!', 'ΕΚΡΗΞΗ!', 'ΧΑΟΣ!', 'ΔΗΛΗΤΗΡΙΟ!']
+  const yellPool = [
+    'ΤΡΕΛΑ!!!',
+    'ΤΡΕΛΟΚΟΜΕΙΟ!!!',
+    'ΔΑΓΚΩΝΕΙ...',
+    'ΣΦΑΖΕΙ!!!',
+    'ΒΟΗΘΕΙΑ!!!',
+    'ΧΑΟΣ!!!',
+    'ΔΗΛΗΤΗΡΙΟ...',
+    'ΕΚΡΗΞΗ!!!',
+    'ΜΑΤΩΜΕΝΟ!!!',
+    'ΟΥΑΟΥ!!!',
+  ]
   const yell = yellPool[seed % yellPool.length]
 
-  // Splash names the day — equal billing: table in one scream
-  const tableSplash = ranking.map((p) => `${p.name.toUpperCase()} ${p.pts}`).join(' · ')
   const splashPool = [
     tableSplash,
-    `${hero.name.toUpperCase()} ΜΠΡΟΣΤΑ — ΟΛΟΙ ΣΤΟ ΧΑΛΙ`,
-    `ΙΣΟΙ ΣΤΗΝ ΕΙΡΩΝΕΙΑ`,
-    `ΚΑΝΕΙΣ ΑΘΩΟΣ`,
+    `ΙΣΗ ΚΑΛΥΨΗ: ${names.toUpperCase()}`,
+    `ΚΑΝΕΙΣ ΑΘΩΟΣ — ${ranking.map((p) => p.name.toUpperCase()).join(' / ')}`,
+    `ΤΡΕΙΣ ΠΡΟΦΗΤΕΣ · ${ranking.map((p) => `${p.pts}ΠΤ`).join(' · ')}`,
   ]
   const splash = splashPool[(seed >> 4) % splashPool.length]
 
-  // Kicker: name EVERY player with their day points (equal airtime)
-  const kicker = ranking.map((p, i) => {
-    const medal = i === 0 ? '👑' : i === ranking.length - 1 ? '🍩' : '😐'
-    return `${medal} ${p.name} ${p.pts}πτ`
-  }).join('  |  ')
+  const kickerBits = ranking.map((p, i) => {
+    const medal = i === 0 ? '👑' : i === ranking.length - 1 ? '🍩' : '🌶️'
+    return `${medal} ${p.name} ${p.pts}πτ σήμερα`
+  })
+  const kicker = `${kickerBits.join('  ·  ')} ...και αύριο; Μυστήριο!!!`
 
-  const names = ranking.map((p) => p.name)
   const quote = pickFrom(
     [
-      `«${names.join(', ')}: τρεις προφήτες, μία κωμωδία.»`,
-      `«Σήμερα μοιράσαμε δηλητήριο ισότιμα: ${names.join(' · ')}.»`,
-      `«${hero.name} γέλασε, ${goat.name} έκλαψε, οι υπόλοιποι... υπήρχαν.»`,
-      `«Ιερά Εξέταση προς ${names.join(', ')}: εξηγήστε τα tips σας. Τώρα.»`,
+      `«${names}... τρεις προφήτες, μία κωμωδία, μηδέν έλεος.»`,
+      `«Ο Κουβάς ψιθυρίζει: ${hero.name} γέλασε... ${goat.name} ακόμα μετράει τα λάθη!!!»`,
+      `«Ίση μεταχείριση; Ναι. Ίσο δηλητήριο!!! ${names} — εξηγήστε τα tips. Τώρα.»`,
+      `«Απόψε το τρελοκομείο άνοιξε νωρίς. Οι νοσοκόμες; Οι προβλέψεις σας...»`,
+      `«Μην κοιτάς μόνο το σκορ. Κοίτα... ποιος έκλεισε τα μάτια και πάτησε «αποστολή».»`,
     ],
     seed >> 5,
   )
 
-  // One match strap — then EQUAL per-player roast lines (same length energy)
-  const straps = []
-  for (const row of matchRows) {
-    const tipsLine = row.players
-      .map((pl) => `${pl.name} ${pl.tip}(+${pl.pts})`)
-      .join(' · ')
-    straps.push(`${row.label} ${row.score}${row.qual ? ' →' + row.qual : ''} ‖ ${tipsLine}`)
+  // Straps: one spicy line per match — no tip dump repeat
+  const straps = matchRows.map((row) => {
+    const best = [...row.players].sort((a, b) => b.pts - a.pts)[0]
+    const worst = [...row.players].sort((a, b) => a.pts - b.pts)[0]
+    return pickFrom(
+      [
+        `${row.label} ${row.score}${row.qual ? ' →' + row.qual : ''}... ${best.name} χαμογελά (+${best.pts}), ${worst.name} ήδη γράφει απολογία!!!`,
+        `${row.label}: ${row.score}. Στη σκηνή του εγκλήματος; ${worst.name} με tip ${worst.tip}... Ουάου.`,
+        `ΜΑΤΣ ${row.label} ${row.score} — και ξαφνικά... ${best.name} μοιάζει με μέντιουμ!!!`,
+      ],
+      seed + row.id.length,
+    )
+  })
+
+  const seasonLeader = seasonRows[0]
+  const seasonLast = seasonRows[seasonRows.length - 1]
+  if (seasonLeader && seasonLast && seasonLeader.id !== seasonLast.id) {
+    straps.push(
+      `ΓΕΝΙΚΗ ΒΑΘΜΟΛΟΓΙΑ: ${seasonLeader.name} μπροστά με ${seasonLeader.pts}πτ... ${seasonLast.name} κυνηγάει το μπέργκερ με ${seasonLast.pts}. Ακόμα δεν τελείωσε!!!`,
+    )
   }
 
   const playerLines = ranking.map((p, i) => {
     const role = i === 0 ? 'ΗΜΕΡΑΣ' : i === ranking.length - 1 ? 'ΝΤΟΝΑΤ' : 'ΜΕΣΑΙΟΣ'
-    const bite = pickFrom(
+    return pickFrom(
       [
-        `${p.name} (${role}): ${p.pts}πτ, ${p.exact} exact, ${p.misses} άκυρα. Ο Κουβάς σε είδε.`,
-        `${p.name}: ${p.pts} πόντοι σήμερα. Ούτε άγιος ούτε μάρτυρας — απλά εκτεθειμένος.`,
-        `${p.name} στα ${p.pts}. Κράτα το για την Ιερά Εξέταση.`,
-        `${p.name} — ${p.pts}πτ. Ίση μεταχείριση: ίσο δηλητήριο.`,
+        `${p.name} (${role}): ${p.pts}πτ, ${p.exact} exact, ${p.misses} άκυρα... Ο Κουβάς σε είδε. Και γέλασε.`,
+        `${p.name} — ${p.pts} σήμερα. Ούτε άγιος, ούτε μάρτυρας. Απλά... εκτεθειμένος!!!`,
+        `${p.name} στα ${p.pts}. Κράτα το για την Ιερά Εξέταση. Θα χρειαστείς μάρτυρες.`,
       ],
       seed + i * 17 + p.name.length,
     )
-    return bite
   })
-  straps.push(...playerLines)
 
   const captions = {}
   for (let i = 0; i < ranking.length; i++) {
     const p = ranking[i]
-    const others = ranking.filter((x) => x.id !== p.id).map((x) => x.name).join(' & ')
+    const others = ranking
+      .filter((x) => x.id !== p.id)
+      .map((x) => x.name)
+      .join(' & ')
     if (i === 0) {
       captions[p.id] = pickFrom(
         [
-          `${p.name} (${p.pts}πτ) — προσωρινός βασιλιάς. ${others} ήδη σχεδιάζουν εκδίκηση.`,
-          `${p.name} κέρδισε τη μέρα με ${p.pts}. Μην το καμαρώνεις· ο Κουβάς γράφει και αύριο.`,
-          `${p.name} στην κορυφή (${p.pts}). Οι άλλοι (${others}) τρώνε σκόνη — προς το παρόν.`,
+          `${p.name} (${p.pts}πτ) — προσωρινός βασιλιάς!!! ${others} ήδη σχεδιάζουν εκδίκηση...`,
+          `${p.name} έκλεψε τη μέρα με ${p.pts}. Μην καμαρώνεις· ο Κουβάς γράφει και αύριο!!!`,
+          `${p.name} στην κορυφή (${p.pts})... Οι άλλοι τρώνε σκόνη. Προς το παρόν.`,
         ],
         seed + i,
       )
     } else if (i === ranking.length - 1) {
       captions[p.id] = pickFrom(
         [
-          `${p.name} (${p.pts}πτ) — πάτος σήμερα. ${others} χαμογελούν. Το μπέργκερ σε περιμένει.`,
-          `${p.name} στο μηδενικό κλίμα (${p.pts}). Ίση κάλυψη: ίση ντροπή.`,
-          `${p.name} έκλεισε τελευταίος (${p.pts}). Ο Κουβάς δεν κάνει εξαιρέσεις.`,
+          `${p.name} (${p.pts}πτ) — πάτος σήμερα!!! ${others} χαμογελούν. Το μπέργκερ σε περιμένει...`,
+          `${p.name} στο μηδενικό κλίμα (${p.pts}). Ίση κάλυψη: ίση ντροπή!!!`,
+          `${p.name} έκλεισε τελευταίος (${p.pts})... Ο Κουβάς δεν κάνει εξαιρέσεις. Ποτέ.`,
         ],
         seed + i,
       )
     } else {
       captions[p.id] = pickFrom(
         [
-          `${p.name} (${p.pts}πτ) — μεσαία ζώνη. Ούτε δόξα ούτε έλεος. ${others} σε προσπερνούν ή σε κυνηγάνε.`,
+          `${p.name} (${p.pts}πτ) — μεσαία ζώνη. Ούτε δόξα, ούτε έλεος... απλά δράμα!!!`,
           `${p.name} στα ${p.pts}: γκριζάδα υψηλής εντάσεως. Ο Κουβάς σε καρφώνει κι εσένα.`,
-          `${p.name} — ${p.pts}πτ. Ίσο μερίδιο πρωτοσέλιδου, ίσο μερίδιο ειρωνείας.`,
+          `${p.name} — ${p.pts}πτ. Ίσο μερίδιο πρωτοσέλιδου, ίσο μερίδιο ειρωνείας!!!`,
         ],
         seed + i,
       )
     }
   }
 
-  const amok = `ΑΜΟΚ ισότιμο: ${ranking.map((p) => `${p.name} ${p.pts}`).join(' · ')}. Κανείς δεν γλιτώνει.`
+  const amok = pickFrom(
+    [
+      `ΑΜΟΚ!!! ${ranking.map((p) => `${p.name} ${p.pts}`).join(' · ')}. Κανείς δεν γλιτώνει απόψε...`,
+      `ΤΡΕΛΟΚΟΜΕΙΟ ΑΝΟΙΧΤΟ: ${names}. Οι γιατροί παραιτήθηκαν. Μείνανε μόνο τα tips!!!`,
+      `ΣΥΝΑΓΕΡΜΟΣ... ${hero.name} πανηγυρίζει, ${goat.name} μετράει. Ο Κουβάς πουλάει εισιτήρια.`,
+    ],
+    seed >> 11,
+  )
 
+  const glamNames = ['ΝΙΚΗ', 'ΑΦΡΟΔΙΤΗ', 'ΕΛΕΝΗ', 'ΙΡΙΣ', 'ΣΕΛΗΝΗ', 'ΚΛΕΙΩ']
+  const page3Cap = pickFrom(
+    [
+      `PAGE 3 · ${pickFrom(glamNames, seed)} σε «ακριβές προβλέψεις»... εσείς; Ακόμα στο 0–0!!!`,
+      `ΚΟΡΙΤΣΙΑ ΤΗΣ ΕΚΔΟΣΗΣ · πιο καυτά από τα tips σας. Και πιο ακριβή!!!`,
+      `SPORTS ILLUSTRATED vibes · Ο Κουβάς δεν πουλάει μόνο σκορ... πουλάει και μάτια!!!`,
+    ],
+    seed >> 15,
+  )
+
+  // Equal billing: every player named with same energy — no starring one prophet
+  const equalBilling = ranking
+    .map((p, i) => {
+      const tag = i === 0 ? 'ΗΜΕΡΑΣ' : i === ranking.length - 1 ? 'ΝΤΟΝΑΤ' : 'ΜΕΣΑΙΟΣ'
+      return `${p.name} ${p.pts}πτ (${tag})`
+    })
+    .join(' · ')
+
+  const frontTeasers = [
+    `⚖️ ΙΣΗ ΚΑΛΥΨΗ: ${equalBilling}`,
+    pickFrom(
+      [
+        'FANS FRONT PAGE: διάβασε, θύμωσε, βάλε tip — ή μείνε ΝΤΟΝΑΤ!!!',
+        'Το φύλλο των φιλάθλων… όχι των ευγενών. Welcome to the madhouse.',
+        'Αν δεν σε έθιξε αυτό το φύλλο — δεν διάβασες αρκετά!!!',
+        'Μέσα: λίγα ματς μπροστά, λίγοι διαγκωνισμοί, μηδέν επανάληψη. Πάμε.',
+      ],
+      seed >> 17,
+    ),
+  ]
+  if (upcoming?.length) {
+    frontTeasers.push(`⏭ Επόμενο στο ραντάρ: ${upcoming[0].label} — λεπτομέρειες κάτω, όχι εδώ.`)
+  }
   return {
     yell,
     splash,
     kicker,
     quote,
-    straps: straps.slice(0, 2 + ranking.length),
+    straps: straps.slice(0, 3),
     captions,
     playerLines,
     amok,
+    myth: pickMyth(seed, names),
+    page3Cap,
+    equalBilling,
+    frontTeasers: frontTeasers.slice(0, 3),
   }
 }
 
@@ -329,20 +969,39 @@ export function buildEdition(ymd, allMatches, state, users, opts = {}) {
   const dayMatches = matchesForDate(allMatches, ymd)
   const finished = dayMatches.filter((m) => resolveResult(state, m.id))
   const ledger = buildDayLedger(finished, state, users)
-  const headlines = pickHeadlines(ledger.ranking, ledger.matchRows, round)
+  const seasonRows = buildSeasonTable(allMatches, state, users)
+  const timeline = buildCompetitionTimeline(allMatches, state, users)
+  const seed = hashSeed(`${ymd}:fans:${round}`)
+  const upcoming = buildUpcomingChallenges(allMatches, state, users, ymd, seed)
+  const rivalry = buildRivalryDigest(allMatches, state, users, seed)
+  const headlines = pickHeadlines(ledger.ranking, ledger.matchRows, round, seasonRows, upcoming, rivalry)
   const visuals = pickVisuals(ymd, round)
   const editionDate = formatEditionDate(ymd)
   const apiBase = opts.apiBase || 'https://kouvadeiros-api.jboikos.workers.dev'
+  const pageUrl = `${apiBase}/newspaper?date=${ymd}&r=${round}`
   const html = renderHtml({
     ymd,
     editionDate,
     headlines,
     ledger,
+    seasonRows,
+    timeline,
+    upcoming,
+    rivalry,
     visuals,
     apiBase,
     unfinished: dayMatches.length - finished.length,
   })
-  const waText = renderWhatsApp({ editionDate, headlines, ledger, round })
+  const waText = renderWhatsApp({
+    editionDate,
+    headlines,
+    ledger,
+    seasonRows,
+    upcoming,
+    rivalry,
+    round,
+    pageUrl,
+  })
   return {
     ymd,
     editionDate,
@@ -350,7 +1009,10 @@ export function buildEdition(ymd, allMatches, state, users, opts = {}) {
     pending: dayMatches.length - finished.length,
     headlines,
     ranking: ledger.ranking,
+    seasonRows,
     matchRows: ledger.matchRows,
+    upcoming,
+    rivalry,
     visuals,
     round,
     html,
@@ -366,25 +1028,34 @@ function esc(s) {
     .replace(/"/g, '&quot;')
 }
 
-function renderHtml({ ymd, editionDate, headlines, ledger, visuals, unfinished, apiBase }) {
+function renderHtml({ ymd, editionDate, headlines, ledger, seasonRows, timeline, upcoming = [], rivalry = null, visuals, unfinished, apiBase }) {
   const heroP = ledger.ranking[0]
   const goat = ledger.ranking[ledger.ranking.length - 1]
   const round = visuals?.round || 0
 
-  const standings = ledger.ranking
+  const dayTable = ledger.ranking
     .map(
       (p, i) =>
         `<tr class="${i === 0 ? 'top' : i === ledger.ranking.length - 1 ? 'bot' : ''}"><td>${i + 1}</td><td>${esc(p.name)}</td><td class="pts">${p.pts}</td><td>${p.exact}</td></tr>`,
     )
     .join('')
 
+  const fullTable = (seasonRows || [])
+    .map(
+      (p, i) =>
+        `<tr class="${i === 0 ? 'top' : i === seasonRows.length - 1 ? 'bot' : ''}"><td>${i + 1}</td><td>${esc(p.name)}</td><td class="pts">${p.pts}</td><td>${p.exact}</td><td>${p.correct}</td><td>${p.dayWins}</td><td>${p.played}</td></tr>`,
+    )
+    .join('')
+
   const results = ledger.matchRows
     .map((m) => {
       const tips = m.players
-        .map(
-          (pl) =>
-            `<div class="tip ${pl.pts === 0 ? 'miss' : pl.exact ? 'hit' : ''}"><b>${esc(pl.name)}</b> ${esc(pl.tip)} <span>+${pl.pts}</span></div>`,
-        )
+        .map((pl) => {
+          if (pl.dq) {
+            return `<div class="tip dq"><b>${esc(pl.name)}</b> ΑΠΟΚΛΕΙΣΜΟΣ <span>DQ</span></div>`
+          }
+          return `<div class="tip ${pl.pts === 0 ? 'miss' : pl.exact ? 'hit' : ''}"><b>${esc(pl.name)}</b> ${esc(pl.tip)} <span>+${pl.pts}</span></div>`
+        })
         .join('')
       return `<div class="result"><div class="scoreline">${esc(m.label)} <strong>${esc(m.score)}</strong>${m.qual ? ` · ${esc(m.qual)}` : ''}</div>${tips}</div>`
     })
@@ -395,20 +1066,64 @@ function renderHtml({ ymd, editionDate, headlines, ledger, visuals, unfinished, 
     .join('')
 
   const straps = (headlines.straps || []).map((s) => `<li>${esc(s)}</li>`).join('')
+  const graphSvg = buildCompetitionSvg(timeline)
 
-  const heroImg = `${apiBase}/newspaper-media?date=${encodeURIComponent(ymd)}&slot=hero&r=${round}`
-  const kingImg = `${apiBase}/newspaper-media?date=${encodeURIComponent(ymd)}&slot=king&r=${round}`
-  const donutImg = `${apiBase}/newspaper-media?date=${encodeURIComponent(ymd)}&slot=donut&r=${round}`
-  const stripImg = `${apiBase}/newspaper-media?date=${encodeURIComponent(ymd)}&slot=strip&r=${round}`
-  const laughImg = `${apiBase}/newspaper-media?date=${encodeURIComponent(ymd)}&slot=laugh&r=${round}`
-  const roastImgs = [0, 1, 2].map(
-    (i) => `${apiBase}/newspaper-media?date=${encodeURIComponent(ymd)}&slot=roast${i}&r=${round}`,
-  )
-  const roastCaps = ledger.ranking.slice(0, 3).map((p, i) => {
-    const tag = i === 0 ? 'ΗΜΕΡΑΣ' : i === ledger.ranking.length - 1 || i === 2 ? 'ΝΤΟΝΑΤ/ΟΥΡΑ' : 'ΜΕΣΑΙΟΣ'
-    return `${p.name.toUpperCase()} · ${p.pts}πτ · ${tag}`
-  })
-  while (roastCaps.length < 3) roastCaps.push('ΙΣΟΤΙΜΟ ΔΗΛΗΤΗΡΙΟ')
+  const media = (slot) => `${apiBase}/newspaper-media?date=${encodeURIComponent(ymd)}&slot=${slot}&r=${round}`
+  const heroImg = media('hero')
+  const kingImg = media('king')
+  const donutImg = media('donut')
+  const page3Hero = media('page3')
+  const glamImgs = [0, 1, 2].map((i) => media(`glam${i}`))
+  const laughImg = media('laugh')
+
+  const glamCaps = [
+    'Cover energy · μη συγκρίνεις με τα tips σου',
+    'Πιο καυτή από exact score...',
+    'Αν τα tips σου ήταν έτσι!!!',
+  ]
+
+  const frontList = (headlines.frontTeasers || [])
+    .map((s) => `<li>${esc(s)}</li>`)
+    .join('')
+
+  const upcomingHtml = (upcoming || [])
+    .map((card) => {
+      const ch = (card.challenges || [])
+        .map(
+          (c) =>
+            `<p class="challenge"><span class="cname" style="color:${PLAYER_COLORS[c.id] || '#e30613'}">${esc(c.name).toUpperCase()}</span> ${esc(c.line)}</p>`,
+        )
+        .join('')
+      return `<article class="fix-card">
+        <div class="fix-head"><span class="comp">${esc(card.comp)}</span> ${esc(card.headline)}</div>
+        <div class="fix-meta">${esc(card.when)} · tips ${card.tipCount}/${card.tipNeed}</div>
+        ${ch}
+      </article>`
+    })
+    .join('')
+
+  const campaignHtml = (rivalry?.campaigns || [])
+    .filter((c) => c.total > 0)
+    .map((c) => {
+      const ranked = (rivalry.players || [])
+        .slice()
+        .sort((a, b) => (c.pts[b.id] || 0) - (c.pts[a.id] || 0))
+      const cells = ranked
+        .map((p) => {
+          const col = PLAYER_COLORS[p.id] || '#111'
+          return `<div class="camp-cell"><b style="color:${col}">${esc(p.name)}</b><span>${c.pts[p.id] || 0}p</span></div>`
+        })
+        .join('')
+      return `<div class="camp">
+        <div class="camp-title">${esc(c.id)} · ${esc(c.name)} <small>${c.played}/${c.total} · μένουν ${c.left}</small></div>
+        ${c.next ? `<div class="camp-next">⏭ ${esc(c.next)}</div>` : ''}
+        <div class="camp-row">${cells}</div>
+      </div>`
+    })
+    .join('')
+
+  const rivalryList = (rivalry?.straps || []).map((s) => `<li>${esc(s)}</li>`).join('')
+
 
   return `<!DOCTYPE html>
 <html lang="el">
@@ -466,20 +1181,30 @@ function renderHtml({ ymd, editionDate, headlines, ledger, visuals, unfinished, 
   }
   .splash {
     font-family: 'Anton', Impact, sans-serif;
-    font-size: clamp(56px, 18vw, 96px); line-height: .82;
+    font-size: clamp(42px, 14vw, 78px); line-height: .85;
     color: var(--red); letter-spacing: -0.02em; text-transform: uppercase;
-    -webkit-text-stroke: 3px #000;
+    -webkit-text-stroke: 2px #000;
     text-shadow: 4px 4px 0 #000; margin: 4px 0 8px;
   }
   .kicker {
     font-family: 'Oswald', sans-serif; font-weight: 700;
-    font-size: clamp(15px, 3.8vw, 20px); line-height: 1.15;
+    font-size: clamp(14px, 3.5vw, 18px); line-height: 1.2;
     background: var(--yell); display: inline; padding: 2px 4px;
     box-decoration-break: clone; -webkit-box-decoration-break: clone;
   }
   .quote {
     margin-top: 12px; font-size: 14px; font-weight: 900; line-height: 1.25;
     border-left: 5px solid var(--red); padding-left: 10px;
+  }
+  .myth {
+    margin: 0; padding: 14px 16px; background: #111; color: var(--yell);
+    font-size: 14px; font-weight: 700; line-height: 1.45; font-style: italic;
+    border-bottom: 4px solid #000;
+  }
+  .myth .tag {
+    display:inline-block; background:var(--red); color:#fff; font-style:normal;
+    font-size:10px; font-weight:900; padding:2px 8px; margin-bottom:8px;
+    letter-spacing:.08em; text-transform:uppercase;
   }
   .hero-art {
     position: relative; min-height: 260px; overflow: hidden; background:#111;
@@ -511,29 +1236,38 @@ function renderHtml({ ymd, editionDate, headlines, ledger, visuals, unfinished, 
     padding: 2px 6px; border: 1px solid #000;
   }
   .av-wrap.lose-wrap label { background:#111; color:var(--yell); }
-  .strip {
-    height: 72px; overflow:hidden; border-bottom: 4px solid #000; position:relative;
+  .page3 {
+    border-bottom: 4px solid #000;
   }
-  .strip img { width:100%; height:100%; object-fit:cover; filter: contrast(1.1); }
-  .strip .cap {
-    position:absolute; left:10px; bottom:8px; background:var(--red); color:#fff;
-    font-size:11px; font-weight:900; padding:3px 8px; text-transform:uppercase;
+  .page3-hero {
+    position:relative; min-height: 280px; overflow:hidden; background:#111;
+  }
+  .page3-hero img { width:100%; height:280px; object-fit:cover; object-position:center top; display:block; filter: saturate(1.2); }
+  .page3-hero .ribbon {
+    position:absolute; left:0; top:16px;
+    background:var(--yell); color:#000; font-family:'Archivo Black',Impact,sans-serif;
+    font-size:18px; padding:6px 14px; border:3px solid #000; transform:rotate(-2deg);
+    box-shadow: 4px 4px 0 #000;
+  }
+  .page3-hero .cap {
+    position:absolute; left:10px; right:10px; bottom:12px;
+    background:rgba(0,0,0,.82); color:#fff; font-size:13px; font-weight:900;
+    padding:10px 12px; border:2px solid var(--yell); line-height:1.3;
   }
   .tease-row {
     display:grid; grid-template-columns: 1fr 1fr 1fr; gap:0;
     border-bottom: 4px solid #000;
   }
   .tease {
-    position:relative; min-height: 120px; overflow:hidden; border-right: 3px solid #000;
+    position:relative; min-height: 150px; overflow:hidden; border-right: 3px solid #000;
   }
   .tease:last-child { border-right: none; }
-  .tease img { width:100%; height:100%; object-fit:cover; min-height:120px; display:block; }
+  .tease img { width:100%; height:100%; object-fit:cover; object-position:center top; min-height:150px; display:block; }
   .tease .tag {
     position:absolute; left:6px; right:6px; bottom:6px;
     background: var(--yell); color:#000; font-size:10px; font-weight:900;
     padding:4px 6px; border:2px solid #000; line-height:1.2; text-transform:uppercase;
   }
-  .tease.shame img { filter: grayscale(1) contrast(1.15); }
   .laugh-banner {
     display:grid; grid-template-columns: 1.2fr .8fr; border-bottom:4px solid #000;
   }
@@ -548,14 +1282,11 @@ function renderHtml({ ymd, editionDate, headlines, ledger, visuals, unfinished, 
     font-family:'Archivo Black',Impact,sans-serif; font-size:15px; line-height:1.25;
     display:flex; align-items:center;
   }
-  .grid { display:grid; grid-template-columns: 1.15fr .85fr; }
-  @media (max-width:560px){ .grid { grid-template-columns:1fr; } }
-  .col { padding: 12px; border-right: 3px solid #000; }
-  .col:last-child { border-right: none; background: #fafafa; }
-  @media (max-width:560px){ .col { border-right:none; border-bottom:3px solid #000; } }
+  .block { padding: 14px 12px; border-bottom: 4px solid #000; }
+  .block.alt { background:#f7f7f7; }
   h2 {
     font-family: 'Archivo Black', Impact, sans-serif;
-    font-size: 13px; letter-spacing: .08em; margin: 0 0 8px;
+    font-size: 13px; letter-spacing: .08em; margin: 0 0 10px;
     background: var(--red); color:#fff; display:inline-block; padding:3px 8px;
     text-transform: uppercase;
   }
@@ -566,12 +1297,23 @@ function renderHtml({ ymd, editionDate, headlines, ledger, visuals, unfinished, 
   th { font-size:10px; letter-spacing:.08em; text-transform:uppercase; background:#000; color:#fff; }
   tr.top td { background: #ffe60055; }
   tr.bot td { background: #e3061322; }
-  td.pts { font-family:'Anton',Impact,sans-serif; font-size:22px; color:var(--red); }
+  td.pts { font-family:'Anton',Impact,sans-serif; font-size:20px; color:var(--red); }
+  .comp-graph { width:100%; height:auto; display:block; background:#fff; border:3px solid #000; }
+  .graph-empty { padding:24px; text-align:center; font-weight:900; background:#111; color:var(--yell); border:3px solid #000; }
+  .legend { display:flex; gap:12px; flex-wrap:wrap; margin-top:8px; font-size:11px; font-weight:900; }
+  .legend span::before { content:''; display:inline-block; width:10px; height:10px; margin-right:5px; border-radius:50%; background:var(--c); border:1px solid #000; vertical-align:middle; }
+  .split { display:grid; grid-template-columns: 1fr 1fr; gap:0; border-bottom:4px solid #000; }
+  @media (max-width:560px){ .split { grid-template-columns:1fr; } }
+  .col { padding: 12px; border-right: 3px solid #000; }
+  .col:last-child { border-right: none; background: #fafafa; }
+  @media (max-width:560px){ .col { border-right:none; border-bottom:3px solid #000; } }
   .result { margin-bottom: 10px; padding-bottom:8px; border-bottom:2px dashed #999; }
   .scoreline { font-weight:900; font-size:14px; margin-bottom:4px; }
   .tip { font-size:12px; display:flex; justify-content:space-between; gap:8px; padding:2px 0; font-weight:700; }
   .tip.miss { color:#9b0000; }
   .tip.hit { color:#0a5c2b; }
+  .tip.dq { color:#666; background:#111; color:#ffe600; padding:4px 6px; border:2px solid #000; margin:3px 0; }
+  .tip.dq span { color:#e30613; }
   .roast { font-size:13px; line-height:1.3; margin:0 0 10px; font-weight:700; }
   .roast .name { color:var(--red); font-weight:900; background: var(--yell); padding:0 3px; }
   .amok {
@@ -579,7 +1321,7 @@ function renderHtml({ ymd, editionDate, headlines, ledger, visuals, unfinished, 
     width: min(220px, 70vw); height: min(220px, 70vw);
     background: var(--red); color: var(--yell);
     display:flex; align-items:center; justify-content:center; text-align:center;
-    font-family: 'Archivo Black', Impact, sans-serif; font-size: 15px; line-height: 1.25;
+    font-family: 'Archivo Black', Impact, sans-serif; font-size: 14px; line-height: 1.25;
     box-shadow: 6px 6px 0 #000; transform: rotate(-4deg);
   }
   .footer {
@@ -589,23 +1331,56 @@ function renderHtml({ ymd, editionDate, headlines, ledger, visuals, unfinished, 
   }
   .warn { background: var(--yell); color:#000; padding:8px 14px; font-size:12px; font-weight:900; border-bottom:3px solid #000; }
   .credit { font-size:9px; color:#666; margin-top:8px; font-weight:700; }
+
+  .fans-rail {
+    background: var(--yell); color:#000; padding:8px 12px; border-bottom:4px solid #000;
+    font-size:12px; font-weight:900; text-transform:uppercase; letter-spacing:.04em;
+  }
+  .teaser-box { padding:12px; border-bottom:4px solid #000; background:#111; color:#fff; }
+  .teaser-box h2 { background:var(--yell); color:#000; }
+  .teaser-box .straps { color:#fff; }
+  .teaser-box .straps li { color:#ffe600; }
+  .fix-card {
+    border:3px solid #000; margin:0 0 10px; padding:10px; background:#fff;
+    box-shadow: 4px 4px 0 #000;
+  }
+  .fix-head { font-family:'Archivo Black',Impact,sans-serif; font-size:14px; line-height:1.25; margin-bottom:4px; }
+  .fix-head .comp {
+    display:inline-block; background:var(--red); color:#fff; padding:2px 6px; margin-right:6px;
+    font-size:11px; transform:rotate(-2deg);
+  }
+  .fix-meta { font-size:11px; font-weight:900; color:#444; margin-bottom:8px; text-transform:uppercase; }
+  .challenge { font-size:13px; font-weight:700; line-height:1.3; margin:0 0 8px; }
+  .challenge .cname { background:var(--yell); padding:0 3px; }
+  .camp {
+    border:2px solid #000; padding:8px; margin-bottom:8px; background:#fff;
+  }
+  .camp-title { font-weight:900; font-size:13px; margin-bottom:4px; text-transform:uppercase; }
+  .camp-title small { font-size:10px; color:#666; font-weight:700; }
+  .camp-next { font-size:11px; font-weight:900; color:var(--red); margin-bottom:6px; }
+  .camp-row { display:flex; gap:6px; flex-wrap:wrap; }
+  .camp-cell {
+    flex:1; min-width:80px; border:2px solid #000; padding:6px; text-align:center;
+    font-size:11px; font-weight:900; background:#f3f3f3;
+  }
+  .camp-cell span { display:block; font-family:'Anton',Impact,sans-serif; font-size:20px; color:var(--red); }
 </style>
 </head>
 <body>
   <article class="page">
     <header class="mast">
       <div class="meta">Φύλλο<br/>#${round + 1}<br/>1 🍔</div>
-      <div class="brand">Ο Κουβάς<span>το πιο δηλητηριώδες φύλλο του Κουβαδέιρου</span></div>
+      <div class="brand">Ο Κουβάς<span>fans front page · τρελοκομείο · page 3</span></div>
       <div class="barcode" title="barcode"></div>
     </header>
     <div class="datebar">
       <span>${esc(editionDate)}</span>
-      <span>ΕΚΤΑΚΤΗ · ΓΥΡΟΣ ${round + 1} · ΜΟΝΟ ΓΙΑ ΦΙΛΟΥΣ</span>
+      <span>FANS FRONT PAGE · ΓΥΡΟΣ ${round + 1} · ΜΟΝΟ ΓΙΑ ΦΙΛΑΘΛΟΥΣ</span>
     </div>
-    ${unfinished ? `<div class="warn">${unfinished} αγώνες ακόμα ανοιχτοί — το δηλητήριο μπορεί να δυναμώσει</div>` : ''}
+    ${unfinished ? `<div class="warn">${unfinished} αγώνες ακόμα ανοιχτοί — το δηλητήριο μπορεί να δυναμώσει!!!</div>` : ''}
     <section class="hero">
       <div class="hero-copy">
-        <div class="yell">${esc(headlines.yell || 'ΔΑΓΚΩΝΕΙ!')}</div>
+        <div class="yell">${esc(headlines.yell || 'ΤΡΕΛΑ!!!')}</div>
         <h1 class="splash">${esc(headlines.splash)}</h1>
         <div class="kicker">${esc(headlines.kicker)}</div>
         <p class="quote">${esc(headlines.quote)}</p>
@@ -624,49 +1399,86 @@ function renderHtml({ ymd, editionDate, headlines, ledger, visuals, unfinished, 
         </div>
       </div>
     </section>
-    <div class="strip">
-      <img src="${esc(stripImg)}" alt="crowd"/>
-      <div class="cap">Ατμόσφαιρα Κουβά · χωρίς φίλτρο</div>
-    </div>
-    <div class="tease-row">
-      <div class="tease">
-        <img src="${esc(roastImgs[0])}" alt="roast1"/>
-        <div class="tag">${esc(roastCaps[0])}</div>
+
+    <aside class="myth">
+      <div class="tag">Μύθος / Μεταφορά · άσχετο; Ίσως...</div>
+      ${esc(headlines.myth || '')}
+    </aside>
+
+    <div class="fans-rail">⚽ FANS FRONT PAGE · tips · διαγκωνισμοί · upcoming insults · χωρίς έλεος</div>
+    <div class="fans-rail" style="background:#000;color:var(--yell)">⚖️ ΙΣΗ ΚΑΛΥΨΗ · ${esc(headlines.equalBilling || (ledger.ranking || []).map((p) => p.name).join(' · '))}</div>
+    ${frontList ? `<section class="teaser-box"><h2>ΣΤΟΠ · ΔΙΑΒΑΣΕ ΠΡΩΤΑ</h2><ul class="straps">${frontList}</ul></section>` : ''}
+
+    <section class="block">
+      <h2>Επόμενα · αντέχετε;;;</h2>
+      ${upcomingHtml || '<p class="credit">Κανένα επερχόμενο ματς στο ραντάρ… ύποπτο!!!</p>'}
+    </section>
+
+    <section class="block alt">
+      <h2>🌶️ Διαγκωνισμοί · από την εφαρμογή</h2>
+      <ul class="straps">${rivalryList || '<li>Ακόμα λίγα δεδομένα… παίξτε κι άλλο!!!</li>'}</ul>
+      <h2 style="margin-top:14px">Ενεργές διοργανώσεις</h2>
+      ${campaignHtml || '<p class="credit">Καμπάνιες σε αναμονή.</p>'}
+    </section>
+
+    <section class="page3">
+      <div class="page3-hero">
+        <img src="${esc(page3Hero)}" alt="page3"/>
+        <div class="ribbon">PAGE 3</div>
+        <div class="cap">${esc(headlines.page3Cap || '')}</div>
       </div>
-      <div class="tease shame">
-        <img src="${esc(roastImgs[1])}" alt="roast2"/>
-        <div class="tag">${esc(roastCaps[1])}</div>
+      <div class="tease-row">
+        <div class="tease"><img src="${esc(glamImgs[0])}" alt="glam1"/><div class="tag">${esc(glamCaps[0])}</div></div>
+        <div class="tease"><img src="${esc(glamImgs[1])}" alt="glam2"/><div class="tag">${esc(glamCaps[1])}</div></div>
+        <div class="tease"><img src="${esc(glamImgs[2])}" alt="glam3"/><div class="tag">${esc(glamCaps[2])}</div></div>
       </div>
-      <div class="tease">
-        <img src="${esc(roastImgs[2])}" alt="roast3"/>
-        <div class="tag">${esc(roastCaps[2])}</div>
-      </div>
-    </div>
+    </section>
+
     <div class="laugh-banner">
       <img src="${esc(laughImg)}" alt="laugh"/>
-      <div class="laugh-copy">${esc(headlines.amok || 'ΑΜΟΚ — κανείς δεν γλιτώνει απόψε.')}</div>
+      <div class="laugh-copy">${esc(headlines.quote || 'Ο Κουβάς γελάει. Εσύ;')}</div>
     </div>
-    <div class="grid">
+
+    <section class="block">
+      <h2>Γράφημα ανταγωνισμού</h2>
+      ${graphSvg}
+      <div class="legend">
+        ${(timeline.players || [])
+          .map((p) => `<span style="--c:${PLAYER_COLORS[p.id] || '#111'}">${esc(p.name)}</span>`)
+          .join('')}
+      </div>
+    </section>
+
+    <section class="block alt">
+      <h2>Πλήρης βαθμολογία σεζόν</h2>
+      <table>
+        <thead><tr><th>#</th><th>Προφήτης</th><th>Πτ</th><th>X</th><th>✓</th><th>Ημ.</th><th>Αγ.</th></tr></thead>
+        <tbody>${fullTable || '<tr><td colspan="7">Ακόμα άδειο... ύποπτο!!!</td></tr>'}</tbody>
+      </table>
+      <p class="credit">Πτ=πόντοι · X=exact · ✓=σωστό αποτέλεσμα · Ημ.=ημέρες στην κορυφή · Αγ.=αγώνες με tip</p>
+    </section>
+
+    <div class="split">
       <div class="col">
-        <h2>ΜΕΣΑ</h2>
+        <h2>ΜΕΣΑ · χωρίς επανάληψη</h2>
         <ul class="straps">${straps}</ul>
         <h2 style="margin-top:14px">Η ΕΞΟΝΤΩΣΗ</h2>
         ${roasts}
         <div class="amok">${esc(headlines.amok || '')}</div>
-        <p class="credit">Φωτο: Unsplash · επεξεργασία Ο Κουβάς</p>
+        <p class="credit">Φωτο: Unsplash · επεξεργασία Ο Κουβάς · 18+</p>
       </div>
       <div class="col">
         <h2>ΒΑΘΜΟΛΟΓΙΑ ΗΜΕΡΑΣ</h2>
         <table>
           <thead><tr><th>#</th><th>Προφήτης</th><th>Πτ</th><th>X</th></tr></thead>
-          <tbody>${standings}</tbody>
+          <tbody>${dayTable}</tbody>
         </table>
         <h2 style="margin-top:14px">ΑΠΟΤΕΛΕΣΜΑΤΑ</h2>
-        ${results || '<p>Τίποτα ακόμα. Ύποπτο.</p>'}
+        ${results || '<p>Τίποτα ακόμα. Ύποπτο...</p>'}
       </div>
     </div>
     <footer class="footer">
-      <span>Ακατάλληλο για ευαίσθητους</span>
+      <span>Ακατάλληλο για ευαίσθητους · και για κακά tips</span>
       <span>kouvadeiros.pages.dev</span>
     </footer>
   </article>
@@ -674,31 +1486,55 @@ function renderHtml({ ymd, editionDate, headlines, ledger, visuals, unfinished, 
 </html>`
 }
 
-function renderWhatsApp({ editionDate, headlines, ledger, round = 0 }) {
-  const table = ledger.ranking
-    .map((p, i) => `${i + 1}. *${p.name}* — *${p.pts}*πτ`)
-    .join('\n')
+function renderWhatsApp({ editionDate, headlines, ledger, seasonRows, upcoming = [], rivalry = null, round = 0, pageUrl }) {
+  const dayLine = ledger.ranking.map((p) => `${p.name} ${p.pts}`).join(' · ')
+  const seasonLine = (seasonRows || [])
+    .slice(0, 3)
+    .map((p, i) => `${i + 1}.${p.name} ${p.pts}`)
+    .join(' · ')
 
-  const results = ledger.matchRows
-    .map((m) => {
-      const tips = m.players.map((pl) => `  ${pl.name}: ${pl.tip} (+${pl.pts})`).join('\n')
-      return `*${m.label}*  ${m.score}${m.qual ? ' · ' + m.qual : ''}\n${tips}`
+  const next = (upcoming || [])
+    .slice(0, 2)
+    .map((c) => {
+      // Equal airtime: every player gets a dig — never only the first
+      const jabs = (c.challenges || [])
+        .map((ch) => `  • ${ch.name}: ${ch.line}`)
+        .join('\n')
+      return `⏭ *${c.label}* (${c.comp})\n${jabs || '_' + (c.headline || '') + '_'}`
     })
     .join('\n\n')
 
-  const straps = (headlines.straps || []).map((s) => `• ${s}`).join('\n')
+  const equalLine =
+    (headlines.equalBilling || '') ||
+    (ledger.ranking || []).map((p) => p.name).join(' · ')
+
+  const dig = (rivalry?.straps || []).slice(0, 2).map((s) => `• ${s}`).join('\n')
+
+  const dayResults = (ledger.matchRows || [])
+    .slice(0, 2)
+    .map((m) => {
+      const dqN = m.players.filter((p) => p.dq).length
+      const tips = (m.players || [])
+        .map((pl) => (pl.dq ? `${pl.name}=DQ` : `${pl.name}+${pl.pts}`))
+        .join(' · ')
+      return `• ${m.label} ${m.score}${dqN ? ` · ${dqN} DQ` : ''}${tips ? `\n  ${tips}` : ''}`
+    })
+    .join('\n')
 
   return (
-    `*Ο ΚΟΥΒΑΣ* · γύρος ${round + 1}\n_${editionDate}_\n\n` +
+    `*Ο ΚΟΥΒΑΣ* · FANS FRONT PAGE · γύρος ${round + 1} !!!\n_${editionDate}_\n\n` +
     `*${headlines.yell || ''} ${headlines.splash}*\n` +
     `${headlines.kicker}\n\n` +
+    `⚖️ *ΙΣΗ ΚΑΛΥΨΗ:* ${equalLine}\n\n` +
     `${headlines.quote}\n\n` +
-    `${straps}\n\n` +
+    (dayResults ? `*ΑΠΟΤΕΛΕΣΜΑΤΑ*\n${dayResults}\n\n` : '') +
+    (next ? `*CAN YOU TAKE THE CHALLENGE???*\n${next}\n\n` : '') +
+    (dig ? `*ΔΙΑΓΚΩΝΙΣΜΟΙ*\n${dig}\n\n` : '') +
+    `*Σήμερα:* ${dayLine || '—'}\n` +
+    `*Σεζόν:* ${seasonLine || '—'}\n\n` +
     `*${headlines.amok}*\n\n` +
-    `*ΒΑΘΜΟΛΟΓΙΑ ΗΜΕΡΑΣ*\n${table}\n\n` +
-    `*ΑΠΟΤΕΛΕΣΜΑΤΑ*\n${results}\n\n` +
-    `_Στείλ' το. Κανείς δεν γλιτώνει._\n` +
-    `kouvadeiros.pages.dev`
+    `🗞 Πρωτοσέλιδο (upcoming + rivalries + PAGE 3):\n${pageUrl}\n\n` +
+    `_Άνοιξέ το. Το WhatsApp είναι μόνο η γροθιά — μέσα είναι το μαχαίρι..._`
   )
 }
 
@@ -717,7 +1553,11 @@ export function resolveMediaSlot(ymd, slot, round = 0) {
   if (slot === 'donut') return v.donut
   if (slot === 'strip') return v.strip
   if (slot === 'laugh') return v.laugh
-  if (slot === 'roast0') return v.roast[0] || v.strip
+  if (slot === 'page3') return v.page3
+  if (slot === 'glam0') return v.glam[0] || v.page3
+  if (slot === 'glam1') return v.glam[1] || v.page3
+  if (slot === 'glam2') return v.glam[2] || v.page3
+  if (slot === 'roast0') return v.roast[0] || v.page3
   if (slot === 'roast1') return v.roast[1] || v.hero
   if (slot === 'roast2') return v.roast[2] || v.donut
   return v.hero

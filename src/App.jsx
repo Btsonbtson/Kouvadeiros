@@ -14,42 +14,90 @@ import { TeamLogo, TPill, PtsBadge, ScorePill, Card, SLbl, Spinner } from './com
 import H2HGraph from './components/H2HGraph'
 import Guide from './pages/Guide'
 import { playChatBell } from './lib/chatBell'
+import { assignTabBackgrounds } from './lib/tabBackgrounds'
 
 
 
 // ─── TOKENS ──────────────────────────────────────────────────────────────────
-const BG='#08090d', SURF='#111318', SURF2='#0d0f14', LINE='rgba(255,255,255,.08)'
-const MUTED='rgba(255,255,255,.4)', DIM='rgba(255,255,255,.22)', TEXT='rgba(255,255,255,.92)'
+const BG='#08090d', SURF='rgba(17,19,24,.55)', SURF2='rgba(13,15,20,.62)', LINE='rgba(255,255,255,.10)'
+const MUTED='rgba(255,255,255,.45)', DIM='rgba(255,255,255,.25)', TEXT='rgba(255,255,255,.94)'
 const GREEN='#00ff88', GOLD='#ffdd00', RED='#ff4d6d', BLUE='#4d9fff', ORA='#ff6b35'
-const PC={boikos:{p:'#ff2244',bg:'rgba(255,34,68,.15)',b:'rgba(255,34,68,.35)'},
-          mavromichalis:{p:'#4d9fff',bg:'rgba(77,159,255,.12)',b:'rgba(77,159,255,.3)'},
-          chousiadas:{p:'#ff6b35',bg:'rgba(255,107,53,.12)',b:'rgba(255,107,53,.3)'}}
+const PC={boikos:{p:'#ff2244',bg:'rgba(255,34,68,.18)',b:'rgba(255,34,68,.38)'},
+          mavromichalis:{p:'#ffdd00',bg:'rgba(255,221,0,.16)',b:'rgba(255,221,0,.38)'},
+          chousiadas:{p:'#00ff88',bg:'rgba(0,255,136,.14)',b:'rgba(0,255,136,.38)'}}
 const MEDALS=['🥇','🥈','🥉']
 
-// Odds for each game (manual, update as needed)
+/**
+ * Fixed stadium photo (does not scroll). Content scrolls over a light scrim.
+ * Same pattern as ΙΕΡΑ ΕΞΕΤΑΣΗ for every tab.
+ */
+function TabBackdrop({ bgUrl, children, style, fillChildren=false }) {
+  return (
+    <div style={{
+      position:'relative',
+      flex:1,
+      minHeight:0,
+      overflow:'hidden',
+      display:'flex',
+      flexDirection:'column',
+      ...style,
+    }}>
+      {bgUrl && <>
+        <div aria-hidden style={{
+          position:'absolute', inset:0, zIndex:0, pointerEvents:'none',
+          backgroundImage:`url("${bgUrl}")`,
+          backgroundSize:'cover',
+          backgroundPosition:'center',
+          backgroundRepeat:'no-repeat',
+        }}/>
+        <div aria-hidden style={{
+          position:'absolute', inset:0, zIndex:0, pointerEvents:'none',
+          background:'linear-gradient(180deg, rgba(8,9,13,.30) 0%, rgba(8,9,13,.40) 40%, rgba(8,9,13,.52) 100%)',
+        }}/>
+      </>}
+      <div style={{
+        position:'relative',
+        zIndex:1,
+        flex:1,
+        minHeight:0,
+        display: fillChildren ? 'flex' : undefined,
+        flexDirection: fillChildren ? 'column' : undefined,
+        overflowY: fillChildren ? 'hidden' : 'auto',
+        WebkitOverflowScrolling:'touch',
+      }}>
+        {children}
+      </div>
+    </div>
+  )
+}
+
+// Odds for each game (manual 1/X/2). Missing id → UI shows «Δεν υπάρχουν ακόμα».
+// Updated Aug 2026 from public book consensus (OddsMath / Wincomparator).
 const ODDS = {
-  'uel-paok-1':  {h:3.1, d:3.3, a:2.1},
-  'uel-paok-2':  {h:2.0, d:3.4, a:3.5},
-  'uecl-pao-1':  {h:4.2, d:3.5, a:1.7},
-  'uecl-pao-2':  {h:1.6, d:3.6, a:5.0},
-  'ucl-oly-1':   {h:1.9, d:3.4, a:3.8},
-  'ucl-oly-2':   {h:2.8, d:3.3, a:2.4},
-  'ucl-aek-1':   {h:2.1, d:3.4, a:3.2},
-  'ucl-aek-2':   {h:2.8, d:3.3, a:2.4},
-  'sl-1-1':      {h:1.7, d:3.5, a:5.0},
-  'sl-1-2':      {h:2.4, d:3.2, a:2.8},
-  'sl-1-3':      {h:1.4, d:4.2, a:7.5},
-  'sl-1-4':      {h:1.5, d:3.8, a:6.5},
-  'sl-1-5':      {h:2.2, d:3.3, a:3.1},
-  'sl-1-6':      {h:1.6, d:3.5, a:5.5},
-  'sl-1-7':      {h:2.0, d:3.4, a:3.6},
+  // UEFA — played
+  'uel-paok-1':  {h:3.10, d:3.30, a:2.10},
+  'uel-paok-2':  {h:2.00, d:3.40, a:3.50},
+  'uecl-pao-1':  {h:4.20, d:3.50, a:1.70},
+  'uecl-pao-2':  {h:1.60, d:3.60, a:5.00},
+  // UEFA — this week
+  'ucl-oly-1':   {h:1.55, d:4.20, a:5.70},   // OLY–NEC · 4/8
+  'uecl-pao-3':  {h:1.40, d:4.60, a:9.00},   // PAO–CSK · 5/8
+  'uel-paok-3':  {h:1.70, d:3.55, a:4.40},   // PAOK–AND · 6/8
+  // Super League · Αγωνιστική 1 (OddsMath 3/8/2026)
+  'sl-1-1':      {h:1.19, d:6.15, a:17.50},  // AEK–IRA
+  'sl-1-2':      {h:3.92, d:3.06, a:2.06},   // KAL–ARI
+  'sl-1-3':      {h:1.23, d:5.50, a:14.00},  // OLY–ATR
+  'sl-1-4':      {h:2.02, d:3.26, a:3.76},   // OFI–VOL
+  'sl-1-5':      {h:1.25, d:5.05, a:14.75},  // PAO–KIF
+  'sl-1-6':      {h:2.63, d:3.05, a:2.75},   // PNE–AST
+  'sl-1-7':      {h:1.29, d:4.90, a:11.50},  // PAOK–LEV
 }
 
 const SEEDED_PREDS={
   'uel-paok-1':{boikos:{h:2,a:1,qual:'DYN'},mavromichalis:{h:0,a:0,qual:'PAOK'},chousiadas:{h:2,a:1,qual:'DYN'}},
   'uecl-pao-1':{boikos:{h:0,a:3,qual:'PAO'},mavromichalis:{h:0,a:1,qual:'PAO'},chousiadas:{h:1,a:2,qual:'PAO'}},
 }
-const SEEDED_RES={'uel-paok-1':{h:2,a:3},'uecl-pao-1':{h:1,a:2},'uel-paok-2':{h:2,a:0,qual:'PAOK'},'uecl-pao-2':{h:2,a:2,qual:'PAO'}}
+const SEEDED_RES={'uel-paok-1':{h:2,a:3},'uecl-pao-1':{h:1,a:2},'uel-paok-2':{h:2,a:0,qual:'PAOK'},'uecl-pao-2':{h:2,a:2,qual:'PAO'},'ucl-oly-1':{h:0,a:0}}
 
 function isUEFATie(id){return UEFA_FIXTURES.some(f=>f.id===id)}
 
@@ -139,8 +187,8 @@ function PushPanel({match,result,onSaved,pipelineHint}){
 
 function OddsRow({matchId}){
   const odds=ODDS[matchId]
-  if(!odds) return null
-  const best=Math.max(odds.h,odds.d,odds.a)
+  const valid=odds&&[odds.h,odds.d,odds.a].every(v=>typeof v==='number'&&Number.isFinite(v)&&v>1)
+  const best=valid?Math.max(odds.h,odds.d,odds.a):0
   const pill=(label,val)=>{
     const hot=val===best
     return <div style={{flex:1,textAlign:'center',background:hot?'rgba(0,255,136,.1)':'rgba(255,255,255,.04)',borderRadius:8,padding:'6px 4px',border:`1px solid ${hot?'rgba(0,255,136,.3)':LINE}`}}>
@@ -150,11 +198,15 @@ function OddsRow({matchId}){
   }
   return <div style={{marginTop:8}}>
     <div style={{fontSize:9,fontWeight:700,color:DIM,letterSpacing:'.1em',textTransform:'uppercase',marginBottom:5}}>Αποδόσεις</div>
-    <div style={{display:'flex',gap:5}}>
-      {pill('1 (Γηπεδ.)',odds.h)}
-      {pill('X (Ισοπαλία)',odds.d)}
-      {pill('2 (Φιλοξ.)',odds.a)}
-    </div>
+    {!valid
+      ? <div style={{fontSize:12,fontWeight:600,color:MUTED,padding:'8px 10px',borderRadius:8,background:'rgba(255,255,255,.04)',border:`1px solid ${LINE}`,textAlign:'center'}}>
+          Δεν υπάρχουν ακόμα
+        </div>
+      : <div style={{display:'flex',gap:5}}>
+          {pill('1 (Γηπεδ.)',odds.h)}
+          {pill('X (Ισοπαλία)',odds.d)}
+          {pill('2 (Φιλοξ.)',odds.a)}
+        </div>}
   </div>
 }
 
@@ -210,7 +262,7 @@ function H2HChart({predictions,results}){
   const sorted=[...PLAYERS].sort((a,b)=>running[b]-running[a])
 
   return(
-    <div style={{background:SURF,border:`1px solid ${LINE}`,borderRadius:14,overflow:'hidden',marginBottom:12}}>
+    <div style={{background:SURF,border:`1px solid ${LINE}`,borderRadius:14,overflow:'hidden',marginBottom:12,backdropFilter:'blur(8px)',WebkitBackdropFilter:'blur(8px)'}}>
       {/* Header */}
       <div style={{padding:'14px 16px 12px',borderBottom:`1px solid ${LINE}`}}>
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
@@ -618,11 +670,11 @@ function BanterPage({chat,onSend,onRead}){
   const [txt,setTxt]=useState('');const ref=useRef()
   useEffect(()=>{ref.current?.scrollIntoView({behavior:'smooth'});onRead?.()},[chat])
   function send(){if(!txt.trim())return;onSend(txt);setTxt('')}
-  return <div style={{display:'flex',flexDirection:'column',height:'calc(100svh - 114px)'}}>
-    <div style={{padding:'10px 16px',borderBottom:`1px solid ${LINE}`,background:'#0a0b0f'}}>
+  return <div style={{display:'flex',flexDirection:'column',flex:1,minHeight:0,height:'100%'}}>
+    <div style={{padding:'10px 16px',borderBottom:`1px solid ${LINE}`,background:'rgba(10,11,15,.45)',backdropFilter:'blur(10px)',flexShrink:0}}>
       <div style={{fontSize:10,fontWeight:700,letterSpacing:'.1em',textTransform:'uppercase',color:MUTED}}>Kouvadeiros FC · Ιερά Εξέταση</div>
     </div>
-    <div style={{flex:1,padding:'14px 16px',overflowY:'auto',background:BG}}>
+    <div style={{flex:1,minHeight:0,padding:'14px 16px',overflowY:'auto',WebkitOverflowScrolling:'touch',background:'transparent'}}>
       {(chat||[]).map((m,i)=>{const pc=PC[m.p?.toLowerCase()]||PC.boikos;return <div key={i} style={{marginBottom:16,animation:'slide-up .15s ease'}}>
         <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:5}}>
           <div style={{width:26,height:26,borderRadius:'50%',background:pc.p,display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:800,color:BG}}>{m.p?.substring(0,1).toUpperCase()}</div>
@@ -634,7 +686,7 @@ function BanterPage({chat,onSend,onRead}){
       </div>})}
       <div ref={ref}/>
     </div>
-    <div style={{padding:'10px 16px',borderTop:`1px solid ${LINE}`,display:'flex',gap:8,background:'#0a0b0f'}}>
+    <div style={{padding:'10px 16px',borderTop:`1px solid ${LINE}`,display:'flex',gap:8,background:'rgba(10,11,15,.45)',backdropFilter:'blur(10px)',flexShrink:0}}>
       <input value={txt} onChange={e=>setTxt(e.target.value)} onKeyDown={e=>e.key==='Enter'&&send()} placeholder="Πες κάτι..."
         style={{flex:1,background:SURF,border:`1px solid ${LINE}`,borderRadius:9,padding:'10px 14px',color:TEXT,fontSize:13,outline:'none',fontWeight:500}}/>
       <button onClick={send} style={{width:42,height:42,borderRadius:9,background:GREEN,border:'none',color:BG,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontSize:19,fontWeight:700}}>↑</button>
@@ -767,6 +819,7 @@ export default function App({ user, onLogout }) {
   const [syncing, setSyncing] = useState(false)
   const [syncOk,  setSyncOk]  = useState(true)
   const [showGuide, setShowGuide] = useState(false)
+  const tabBgs = useMemo(() => assignTabBackgrounds(), [])
   const [showAddPlayer, setShowAddPlayer] = useState(false)
   const chatReadKey = `kouv_chat_read_${user?.id || 'anon'}`
   const [chatReadIdx, setChatReadIdx] = useState(() => {
@@ -1077,40 +1130,58 @@ export default function App({ user, onLogout }) {
   // ── DESKTOP SIDEBAR LAYOUT ──────────────────────────────────────────────────
   if (isDesktop) {
     return (
-      <div style={{display:'flex',flexDirection:'column',minHeight:'100vh',background:BG,fontFamily:"'Space Grotesk',system-ui,sans-serif",color:TEXT}}>
+      <div style={{display:'flex',flexDirection:'column',height:'100vh',overflow:'hidden',background:BG,fontFamily:"'Space Grotesk',system-ui,sans-serif",color:TEXT}}>
         {showAddPlayer && user?.role==='admin' && <AddPlayerModal onClose={()=>setShowAddPlayer(false)} onAdded={load}/>}
         <Header/>
-        <div style={{flex:1,display:'grid',gridTemplateColumns:'300px 1fr',maxWidth:1280,width:'100%',margin:'0 auto',padding:'24px 32px',gap:24,alignItems:'start'}}>
-          {/* Left sidebar: leaderboard + graph */}
-          <div style={{position:'sticky',top:80}}>
-            <LeaderSidebar predictions={state.predictions} results={scoringResults}/>
+        <TabBackdrop bgUrl={tabBgs[screen]} fillChildren={screen==='banter'}>
+          <div style={{
+            flex: screen==='banter' ? 1 : undefined,
+            minHeight: screen==='banter' ? 0 : undefined,
+            display:'grid',
+            gridTemplateColumns:'300px 1fr',
+            maxWidth:1280,
+            width:'100%',
+            margin:'0 auto',
+            padding: screen==='banter' ? '24px 32px 24px' : '24px 32px 40px',
+            gap:24,
+            alignItems: screen==='banter' ? 'stretch' : 'start',
+            boxSizing:'border-box',
+            height: screen==='banter' ? '100%' : undefined,
+          }}>
+            <div style={{position: screen==='banter' ? 'relative' : 'sticky', top: screen==='banter' ? undefined : 24, alignSelf:'start'}}>
+              <LeaderSidebar predictions={state.predictions} results={scoringResults}/>
+            </div>
+            <div style={{minWidth:0, display: screen==='banter' ? 'flex' : undefined, flexDirection:'column', minHeight: screen==='banter' ? 0 : undefined, flex: screen==='banter' ? 1 : undefined}}>
+              {pages[screen]}
+            </div>
           </div>
-          {/* Main content */}
-          <div style={{minWidth:0}}>
-            {pages[screen]}
-          </div>
-        </div>
+        </TabBackdrop>
       </div>
     )
   }
 
   // ── MOBILE / TABLET ─────────────────────────────────────────────────────────
   return (
-    <div style={{background:BG,minHeight:'100vh',display:'flex',flexDirection:'column',
+    <div style={{background:BG,height:'100svh',overflow:'hidden',display:'flex',flexDirection:'column',
       maxWidth:isTablet?768:'100%',margin:'0 auto',fontFamily:"'Space Grotesk',system-ui,sans-serif",color:TEXT}}>
       {showAddPlayer && user?.role==='admin' && <AddPlayerModal onClose={()=>setShowAddPlayer(false)} onAdded={load}/>}
       <Header/>
-      {/* Mobile/Tablet leaderboard + graph */}
-      <div style={{padding:'8px 16px 0'}}>
-        <LeaderSidebar predictions={state.predictions} results={scoringResults} compact/>
-        <div style={{background:'rgba(255,255,255,.03)',borderRadius:12,padding:'10px 12px',marginTop:6,border:'1px solid rgba(255,255,255,.08)'}}>
-          <div style={{fontSize:10,fontWeight:700,letterSpacing:'.08em',textTransform:'uppercase',color:'rgba(255,255,255,.4)',marginBottom:6}}>📈 Εξέλιξη Διαγωνισμού</div>
-          <H2HGraph predictions={state.predictions} results={scoringResults}/>
-        </div>
-      </div>
-      <div style={{flex:1,overflowY:'auto',paddingBottom:isTablet?72:64}}>
+      <TabBackdrop
+        bgUrl={tabBgs[screen]}
+        fillChildren={screen==='banter'}
+        style={{paddingBottom: isTablet?72:64}}
+      >
+        {screen!=='banter' && (
+          <div style={{padding:'8px 16px 0'}}>
+            <LeaderSidebar predictions={state.predictions} results={scoringResults} compact/>
+            <div style={{background:'rgba(8,9,13,.40)',backdropFilter:'blur(8px)',borderRadius:12,padding:'10px 12px',marginTop:6,border:'1px solid rgba(255,255,255,.10)'}}>
+              <div style={{fontSize:10,fontWeight:700,letterSpacing:'.08em',textTransform:'uppercase',color:'rgba(255,255,255,.45)',marginBottom:6}}>📈 Εξέλιξη Διαγωνισμού</div>
+              <H2HGraph predictions={state.predictions} results={scoringResults}/>
+            </div>
+          </div>
+        )}
         {pages[screen]}
-      </div>
+      </TabBackdrop>
       <BottomNav/>
     </div>
   )
@@ -1554,7 +1625,8 @@ function MatchPredictCard({match,result,scoringActual,predictions,allPredictions
 
   return (
     <div style={{background:SURF,border:`1px solid ${today?GREEN+'55':LINE}`,borderRadius:14,
-      marginBottom:10,overflow:'hidden',boxShadow:today?`0 0 20px ${GREEN}12`:undefined}}>
+      marginBottom:10,overflow:'hidden',backdropFilter:'blur(8px)',WebkitBackdropFilter:'blur(8px)',
+      boxShadow:today?`0 0 20px ${GREEN}12`:undefined}}>
       <div style={{height:2,background:`linear-gradient(90deg,${tC}cc,transparent)`}}/>
 
       {/* Header */}
@@ -1728,8 +1800,9 @@ function MatchPredictCard({match,result,scoringActual,predictions,allPredictions
                     borderRadius:9,padding:'7px 6px',textAlign:'center',
                     opacity:isProvisional&&sc?0.92:1}}>
                     <div style={{fontSize:9,fontWeight:700,color:pc.p,marginBottom:3,letterSpacing:'.04em'}}>{PLAYER_NAMES[playerKey].substring(0,4).toUpperCase()}</div>
-                    <div style={{fontSize:13,fontWeight:800,color:TEXT,fontVariantNumeric:'tabular-nums'}}>{pred?`${pred.h}–${pred.a}`:'–'}</div>
+                    <div style={{fontSize:13,fontWeight:800,color:TEXT,fontVariantNumeric:'tabular-nums'}}>{pred?`${pred.h}–${pred.a}`:(showAllPreds?'DQ':'–')}</div>
                     {shownQual&&<div style={{fontSize:9,color:MUTED,marginTop:1}}>→{shownQual}</div>}
+                    {!pred&&showAllPreds&&<div style={{fontSize:9,fontWeight:700,color:RED,marginTop:2}}>ΑΠΟΚΛΕΙΣΜΟΣ</div>}
                     {sc&&<div style={{fontSize:10,fontWeight:700,color:sc.points>=2?GREEN:sc.points===1?GOLD:DIM,marginTop:2}}>{sc.exact?'🎯':sc.correct?'✓':sc.qualCorrect?'🔑':'✗'}{sc.points}p{isProvisional?'~':''}{sc.qualPts?` ·${sc.qualPts}🔑`:''}</div>}
                   </div>
                 )
