@@ -27,15 +27,26 @@ const PC={boikos:{p:'#ff2244',bg:'rgba(255,34,68,.15)',b:'rgba(255,34,68,.35)'},
 const MEDALS=['🥇','🥈','🥉']
 
 // Odds for each game (manual, update as needed)
+// Sources: Stoiximan / Foxbet / Superbet market (as of 2026-08-02)
 const ODDS = {
+  // Q2 — completed
   'uel-paok-1':  {h:3.1, d:3.3, a:2.1},
   'uel-paok-2':  {h:2.0, d:3.4, a:3.5},
   'uecl-pao-1':  {h:4.2, d:3.5, a:1.7},
   'uecl-pao-2':  {h:1.6, d:3.6, a:5.0},
-  'ucl-oly-1':   {h:1.9, d:3.4, a:3.8},
-  'ucl-oly-2':   {h:2.8, d:3.3, a:2.4},
+  // UCL Q3 — Ολυμπιακός–NEC (Foxbet 1.56-4.10-5.60)
+  'ucl-oly-1':   {h:1.56, d:4.10, a:5.60},
+  'ucl-oly-2':   {h:2.90, d:3.40, a:2.35},
+  // UECL Q3 — Παναθηναϊκός–ΤΣΣΚΑ 1948 (Foxbet 1.37-4.60-9.50)
+  'uecl-pao-3':  {h:1.37, d:4.60, a:9.50},
+  'uecl-pao-4':  {h:3.30, d:3.30, a:2.50},
+  // UEL Q3 — ΠΑΟΚ–Άντερλεχτ (Foxbet 1.80-3.70-4.45)
+  'uel-paok-3':  {h:1.80, d:3.70, a:4.45},
+  'uel-paok-4':  {h:2.10, d:3.40, a:3.40},
+  // UCL PO — ΑΕΚ (αντίπαλος TBD)
   'ucl-aek-1':   {h:2.1, d:3.4, a:3.2},
   'ucl-aek-2':   {h:2.8, d:3.3, a:2.4},
+  // Super League Αγωνιστική 1
   'sl-1-1':      {h:1.7, d:3.5, a:5.0},
   'sl-1-2':      {h:2.4, d:3.2, a:2.8},
   'sl-1-3':      {h:1.4, d:4.2, a:7.5},
