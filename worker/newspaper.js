@@ -795,6 +795,7 @@ function pickHeadlines(ranking, matchRows, round = 0, seasonRows = [], upcoming 
   const goat = ranking[ranking.length - 1]
   const seed = hashSeed(`${ranking.map((p) => p.id + p.pts).join('|')}:${round}:mad`)
   const names = ranking.map((p) => p.name).join(', ')
+  const tableSplash = ranking.map((p) => `${p.name.toUpperCase()} ${p.pts}`).join(' · ')
 
   const yellPool = [
     'ΤΡΕΛΑ!!!',
