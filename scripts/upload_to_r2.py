@@ -57,9 +57,36 @@ def upload_r2(local_path: Path, key: str) -> None:
 
 
 def upload_kv(local_path: Path, key: str) -> None:
-    """Upload via wrangler to remote KV (same namespace as kouvadeiros-api)."""
+    """Upload to remote KV (same namespace as kouvadeiros-api)."""
     if not local_path.exists():
         raise FileNotFoundError(local_path)
+
+    token = os.getenv("CLOUDFLARE_API_TOKEN")
+    account = os.getenv("CF_ACCOUNT_ID") or os.getenv("CLOUDFLARE_ACCOUNT_ID")
+
+    if token and account:
+        import requests
+
+        url = (
+            f"https://api.cloudflare.com/client/v4/accounts/{account}"
+            f"/storage/kv/namespaces/{KV_NAMESPACE_ID}/values/{key}"
+        )
+        print(f"Uploading {local_path.name} → KV:{key} (API)")
+        resp = requests.put(
+            url,
+            headers={
+                "Authorization": f"Bearer {token}",
+                "Content-Type": "application/json",
+            },
+            data=local_path.read_bytes(),
+            timeout=60,
+        )
+        if not resp.ok:
+            detail = resp.text[:500]
+            raise RuntimeError(f"KV API upload failed ({resp.status_code}): {detail}")
+        print(f"Uploaded {local_path.name} → KV:{key}")
+        return
+
     cmd = [
         "npx",
         "wrangler",
@@ -74,7 +101,7 @@ def upload_kv(local_path: Path, key: str) -> None:
         "--remote",
     ]
     # Avoid printing absolute paths (Greek chars break Windows cp1252 consoles).
-    print(f"Uploading {local_path.name} → KV:{key}")
+    print(f"Uploading {local_path.name} → KV:{key} (wrangler)")
     # Windows needs shell=True so npx.cmd resolves from PATH.
     subprocess.check_call(cmd, cwd=str(ROOT), shell=(os.name == "nt"))
     print(f"Uploaded {local_path.name} → KV:{key}")

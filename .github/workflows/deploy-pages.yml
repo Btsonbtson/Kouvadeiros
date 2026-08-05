@@ -5,20 +5,22 @@ on:
     branches: [main]
   workflow_dispatch:
 
-# Cloudflare Git integration can redeploy without a Vite build and serve
-# /src/main.jsx (stuck on "Φορτώνει..."). This workflow always builds first.
+# Cloudflare Git integration deploys on push (build: npm run build → dist).
+# This workflow verifies every push serves a Vite bundle, not /src/main.jsx.
+# Manual wrangler deploy only when workflow_dispatch (needs CLOUDFLARE_API_TOKEN).
 concurrency:
   group: deploy-pages
   cancel-in-progress: true
 
 jobs:
-  deploy:
+  verify:
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: npm
       - name: Install
         run: npm ci
@@ -28,8 +30,36 @@ jobs:
         run: |
           grep -q '/assets/index-' dist/index.html
           ! grep -q '/src/main.jsx' dist/index.html
+
+  deploy:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install
+        run: npm ci
+      - name: Build
+        run: npm run build
+      - name: Verify production entry
+        run: |
+          grep -q '/assets/index-' dist/index.html
+          ! grep -q '/src/main.jsx' dist/index.html
+      - name: Check Cloudflare credentials
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "::error::Add CLOUDFLARE_API_TOKEN and CF_ACCOUNT_ID in repo Settings → Secrets → Actions."
+            echo "Token permissions: Account → Cloudflare Pages Edit."
+            exit 1
+          fi
       - name: Deploy to Cloudflare Pages
-        run: npx wrangler pages deploy dist --project-name=kouvadeiros --commit-dirty=true
+        run: npx wrangler@4 pages deploy dist --project-name=kouvadeiros --commit-dirty=true
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
