@@ -1193,12 +1193,9 @@ function pickHeadlines(ranking, matchRows, round = 0, seasonRows = [], upcoming 
       .join(' & ')
     const dq = dqById[p.id]
     if (dq) {
-      const tippers = ranking
-        .filter((x) => x.id !== p.id && !dqById[x.id])
-        .map((x) => x.name)
-        .join(' & ')
-      const tipperLine = tippers
-        ? `${tippers} τουλάχιστον πάτησαν submit...`
+      const tipperNames = ranking.filter((x) => x.id !== p.id && !dqById[x.id]).map((x) => x.name)
+      const tipperLine = tipperNames.length
+        ? `${tipperNames.join(' & ')} τουλάχιστον ${tipperNames.length === 1 ? 'πάτησε' : 'πάτησαν'} submit...`
         : `Κανείς δεν γλιτώνει από τη διαπόμπευση — ο Κουβάς έχει ονόματα.`
       captions[p.id] = pickFrom(
         [
