@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       force:
-        description: 'Force fetch even outside live match window (for testing FDORG_TOKEN)'
+        description: 'Force fetch even outside live match window (for testing FDORG_TOKEN / Gazzetta)'
         type: boolean
         default: false
 
@@ -24,30 +24,44 @@ jobs:
           # SofaScore fallback uses Playwright when JSON API is blocked (403)
           pip install playwright
           python -m playwright install chromium
-      - name: Check upload credentials
+      - name: Check secrets
+        id: creds
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
           CF_R2_ACCESS_KEY_ID: ${{ secrets.CF_R2_ACCESS_KEY_ID }}
           CF_R2_SECRET_ACCESS_KEY: ${{ secrets.CF_R2_SECRET_ACCESS_KEY }}
+          FDORG_TOKEN: ${{ secrets.FDORG_TOKEN }}
         run: |
+          UPLOAD=0
           if [ -n "$CF_R2_ACCESS_KEY_ID" ] && [ -n "$CF_R2_SECRET_ACCESS_KEY" ] && [ -n "$CF_ACCOUNT_ID" ]; then
-            echo "Upload path: R2 (S3 credentials configured)"
+            echo "Upload path: R2"
+            UPLOAD=1
           elif [ -n "$CLOUDFLARE_API_TOKEN" ] && [ -n "$CF_ACCOUNT_ID" ]; then
-            echo "Upload path: KV (Cloudflare API token configured)"
+            echo "Upload path: KV"
+            UPLOAD=1
           else
-            echo "::error::Configure either R2 secrets (CF_ACCOUNT_ID + CF_R2_ACCESS_KEY_ID + CF_R2_SECRET_ACCESS_KEY) or KV secrets (CLOUDFLARE_API_TOKEN + CF_ACCOUNT_ID)."
-            exit 1
+            echo "::warning::No Cloudflare upload secrets — will fetch only (no R2/KV write)."
+            echo "Add either CF_ACCOUNT_ID+CF_R2_* or CLOUDFLARE_API_TOKEN+CF_ACCOUNT_ID under repo Actions secrets."
           fi
-      - name: Fetch + upload to R2
+          if [ -z "$FDORG_TOKEN" ]; then
+            echo "::warning::FDORG_TOKEN secret missing — FDO may fail; Gazzetta still works (no key)."
+          else
+            echo "FDORG_TOKEN: present"
+          fi
+          echo "upload=$UPLOAD" >> "$GITHUB_OUTPUT"
+      - name: Fetch (+ upload if configured)
         # Skips automatically when no fixture is in 15′ warm-up → +200′ live window
-        # Manual runs can pass force=true to test FDORG_TOKEN anytime
+        # Manual runs can pass force=true to test providers anytime
         run: |
+          ARGS=()
           if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.force }}" = "true" ]; then
-            python scripts/upload_to_r2.py --force
-          else
-            python scripts/upload_to_r2.py
+            ARGS+=(--force)
           fi
+          if [ "${{ steps.creds.outputs.upload }}" != "1" ]; then
+            ARGS+=(--fetch-only)
+          fi
+          python scripts/upload_to_r2.py "${ARGS[@]}"
         env:
           FDO_API_KEY: ${{ secrets.FDORG_TOKEN }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

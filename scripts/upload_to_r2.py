@@ -153,6 +153,11 @@ def main() -> None:
     parser.add_argument("--skip-fetch", action="store_true")
     parser.add_argument("--kv-only", action="store_true", help="Skip R2; write to Workers KV")
     parser.add_argument(
+        "--fetch-only",
+        action="store_true",
+        help="Fetch and write data/*.json but do not upload to R2/KV",
+    )
+    parser.add_argument(
         "--force",
         action="store_true",
         help="Run even outside live match windows",
@@ -160,7 +165,7 @@ def main() -> None:
     args = parser.parse_args()
 
     if not args.force and not args.skip_fetch and not in_live_score_band():
-        print("Skip live sync — no match in warm-up/+120′ window (use --force to override)")
+        print("Skip live sync — no match in warm-up/+200′ window (use --force to override)")
         return
 
     if not args.skip_fetch:
@@ -171,6 +176,11 @@ def main() -> None:
     for p in (today, live):
         if not p.exists():
             raise SystemExit(f"Missing {p} — run without --skip-fetch first")
+
+    if args.fetch_only:
+        print(f"Fetch-only OK → {today} · {live} (no upload)")
+        print("Done.")
+        return
 
     use_kv = args.kv_only or not r2_configured()
     if use_kv:
