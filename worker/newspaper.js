@@ -127,9 +127,12 @@ function getTieLeg1Id(match) {
 }
 
 export function scoreMatch(pred, actual, opts = {}) {
-  // No tip on file = disqualified for this match (never treat missing as 0–0)
-  if (!pred || actual == null) return null
-  if (typeof pred.h !== 'number' || typeof pred.a !== 'number') return null
+  if (actual == null) return null
+  const missing = !pred || typeof pred.h !== 'number' || typeof pred.a !== 'number'
+  if (missing) {
+    if (!opts.allowDq) return null
+    return { exact: false, correct: false, qualCorrect: false, scorePts: -1, qualPts: 0, points: -1, dq: true }
+  }
   const exact = pred.h === actual.h && pred.a === actual.a
   const correct = matchResult(pred.h, pred.a) === matchResult(actual.h, actual.a)
   const awardQual = opts.awardQual !== false && !!actual.qual
@@ -137,11 +140,21 @@ export function scoreMatch(pred, actual, opts = {}) {
   const qualCorrect = !!(awardQual && qualTip && actual.qual && qualTip === actual.qual)
   const scorePts = (exact ? 1 : 0) + (correct ? 1 : 0)
   const qualPts = qualCorrect ? 1 : 0
-  return { exact, correct, qualCorrect, scorePts, qualPts, points: scorePts + qualPts }
+  return { exact, correct, qualCorrect, scorePts, qualPts, points: scorePts + qualPts, dq: false }
+}
+
+function matchHadAnyTip(predictions, matchId) {
+  const tips = predictions?.[matchId] || {}
+  return Object.values(tips).some((t) => t && typeof t.h === 'number' && typeof t.a === 'number')
 }
 
 function scorePlayerMatchWorker(match, pred, actual, predictions, playerId) {
-  if (!pred || actual == null) return null
+  if (actual == null) return null
+  const missing = !pred || typeof pred.h !== 'number' || typeof pred.a !== 'number'
+  if (missing) {
+    if (!matchHadAnyTip(predictions, match?.id)) return null
+    return scoreMatch(null, actual, { allowDq: true })
+  }
   const meta = parseTieMeta(match)
   if (meta.leg === 1) return scoreMatch(pred, actual, { awardQual: false })
   if (meta.leg === 2 && actual.qual) {
@@ -197,11 +210,11 @@ export function buildDayLedger(matches, state, users) {
     for (const p of players) {
       const pred = preds[p.id]
       const dq = !pred || typeof pred.h !== 'number' || typeof pred.a !== 'number'
-      const sc = dq ? null : scorePlayerMatchWorker(match, pred, actual, state.predictions || {}, p.id)
-      const pts = dq ? null : (sc?.points ?? 0)
-      if (!dq) dayPts[p.id] += pts
+      const sc = scorePlayerMatchWorker(match, pred, actual, state.predictions || {}, p.id)
+      const pts = sc?.points ?? null
+      if (sc) dayPts[p.id] += sc.points
       if (sc?.exact) dayExact[p.id] += 1
-      if (!dq && pts === 0) dayMiss[p.id] += 1
+      if (sc && !sc.dq && pts === 0) dayMiss[p.id] += 1
       const leg1Id = getTieLeg1Id(match)
       const tipQual =
         parseTieMeta(match).leg === 2
@@ -210,11 +223,11 @@ export function buildDayLedger(matches, state, users) {
       row.players.push({
         id: p.id,
         name: p.name,
-        tip: dq
-          ? 'ΑΠΟΚΛΕΙΣΜΟΣ'
+        tip: dq || sc?.dq
+          ? 'ΑΠΟΚΛΕΙΣΜΟΣ −1'
           : `${pred.h}–${pred.a}${tipQual ? ' →' + tipQual : ''}`,
-        pts,
-        dq,
+        pts: sc?.dq ? -1 : pts,
+        dq: !!(dq || sc?.dq),
         exact: !!sc?.exact,
         correct: !!sc?.correct,
       })

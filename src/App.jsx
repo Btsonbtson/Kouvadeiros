@@ -1877,22 +1877,23 @@ function MatchPredictCard({match,result,scoringActual,predictions,allPredictions
             <div style={{display:'flex',gap:5}}>
               {PLAYERS.map(playerKey=>{
                 const pred=predictions[playerKey]
-                const sc=pred?scorePlayerMatch(match,pred,actualForScore,allPredictions||{},ALL_FIXTURES,playerKey):null
+                const sc=actualForScore?scorePlayerMatch(match,pred,actualForScore,allPredictions||{},ALL_FIXTURES,playerKey):null
                 const pc=PC[playerKey]
                 const shownQual=isLeg1
                   ? pred?.qual
                   : resolveQualTip(allPredictions||{},ALL_FIXTURES,match,playerKey)
+                const isDq=!!sc?.dq||(!pred&&showAllPreds&&!!actualForScore)
                 return (
                   <div key={playerKey} style={{flex:1,
-                    background:sc?.exact?`${GREEN}15`:sc?.correct?`${GOLD}0a`:'rgba(255,255,255,.04)',
-                    border:`1px solid ${sc?.exact?GREEN+'44':sc?.correct?GOLD+'22':LINE}`,
+                    background:sc?.dq?`${RED}12`:sc?.exact?`${GREEN}15`:sc?.correct?`${GOLD}0a`:'rgba(255,255,255,.04)',
+                    border:`1px solid ${sc?.dq?RED+'44':sc?.exact?GREEN+'44':sc?.correct?GOLD+'22':LINE}`,
                     borderRadius:9,padding:'7px 6px',textAlign:'center',
                     opacity:isProvisional&&sc?0.92:1}}>
                     <div style={{fontSize:9,fontWeight:700,color:pc.p,marginBottom:3,letterSpacing:'.04em'}}>{PLAYER_NAMES[playerKey].substring(0,4).toUpperCase()}</div>
                     <div style={{fontSize:13,fontWeight:800,color:TEXT,fontVariantNumeric:'tabular-nums'}}>{pred?`${pred.h}–${pred.a}`:(showAllPreds?'DQ':'–')}</div>
                     {shownQual&&<div style={{fontSize:9,color:MUTED,marginTop:1}}>→{shownQual}</div>}
-                    {!pred&&showAllPreds&&<div style={{fontSize:9,fontWeight:700,color:RED,marginTop:2}}>ΑΠΟΚΛΕΙΣΜΟΣ</div>}
-                    {sc&&<div style={{fontSize:10,fontWeight:700,color:sc.points>=2?GREEN:sc.points===1?GOLD:DIM,marginTop:2}}>{sc.exact?'🎯':sc.correct?'✓':sc.qualCorrect?'🔑':'✗'}{sc.points}p{isProvisional?'~':''}{sc.qualPts?` ·${sc.qualPts}🔑`:''}</div>}
+                    {isDq&&<div style={{fontSize:9,fontWeight:700,color:RED,marginTop:2}}>ΑΠΟΚΛΕΙΣΜΟΣ</div>}
+                    {sc&&<div style={{fontSize:10,fontWeight:700,color:sc.dq?RED:sc.points>=2?GREEN:sc.points===1?GOLD:DIM,marginTop:2}}>{sc.dq?'DQ −1p':`${sc.exact?'🎯':sc.correct?'✓':sc.qualCorrect?'🔑':'✗'}${sc.points}p`}{!sc.dq&&isProvisional?'~':''}{sc.qualPts?` ·${sc.qualPts}🔑`:''}</div>}
                   </div>
                 )
               })}

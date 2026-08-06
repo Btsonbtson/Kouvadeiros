@@ -104,6 +104,13 @@ export default function Guide({ onBack }) {
                 </div>
                 <div style={{ fontSize:22, fontWeight:900, color:MUTED }}>0p</div>
               </div>
+              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', paddingTop:10, borderTop:`1px solid rgba(255,255,255,.06)` }}>
+                <div>
+                  <div style={{ fontSize:13, fontWeight:700, color:TEXT }}>⛔ DQ — χωρίς πρόβλεψη</div>
+                  <div style={{ fontSize:11, color:MUTED, marginTop:2 }}>Δεν έβαλες tip πριν το κλείδωμα · −1 πέναλτι</div>
+                </div>
+                <div style={{ fontSize:22, fontWeight:900, color:'#ff2244' }}>−1p</div>
+              </div>
             </div>
 
             <div style={{ fontSize:12, fontWeight:700, color:MUTED, letterSpacing:'.07em', textTransform:'uppercase', marginBottom:10 }}>BONUS UEFA — Πρόκριση & παράταση</div>

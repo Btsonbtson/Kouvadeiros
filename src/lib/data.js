@@ -330,15 +330,39 @@ export function resolveQualTip(predictions, fixtures, match, playerId) {
   return predictions?.[leg1.id]?.[playerId]?.qual || null
 }
 
+/** Missing / incomplete tip = DQ (never treat as 0–0). */
+export function isMissingTip(pred) {
+  return !pred || typeof pred.h !== 'number' || typeof pred.a !== 'number'
+}
+
+/** True if at least one player filed a scoreline tip for this match. */
+export function matchHadAnyTip(predictions, matchId) {
+  const tips = predictions?.[matchId] || {}
+  return Object.values(tips).some((t) => !isMissingTip(t))
+}
+
+function dqScore(actual) {
+  return {
+    exact: false,
+    correct: false,
+    qualCorrect: false,
+    scorePts: -1,
+    qualPts: 0,
+    points: -1,
+    dq: true,
+    provisional: !!actual?.provisional,
+  }
+}
+
 /**
  * Core scorer.
  * opts.qualTip — tip to compare for πρόκριση (usually from Leg 1)
  * opts.awardQual — false on Leg 1 (never award until Leg 2 settles)
+ * opts.allowDq — missing tip → −1 when true
  */
 export function scoreMatch(pred, actual, opts = {}) {
-  // No tip before lock = DQ for that match (missing ≠ default 0–0)
-  if (!pred || actual == null) return null
-  if (typeof pred.h !== 'number' || typeof pred.a !== 'number') return null
+  if (actual == null) return null
+  if (isMissingTip(pred)) return opts.allowDq ? dqScore(actual) : null
   const exact   = pred.h === actual.h && pred.a === actual.a
   const correct = matchResult(pred.h, pred.a) === matchResult(actual.h, actual.a)
   const awardQual = opts.awardQual !== false && !!actual.qual
@@ -353,6 +377,7 @@ export function scoreMatch(pred, actual, opts = {}) {
     scorePts,
     qualPts,
     points: scorePts + qualPts,
+    dq: false,
     provisional: !!actual.provisional,
   }
 }
@@ -361,9 +386,14 @@ export function scoreMatch(pred, actual, opts = {}) {
  * Full UEFA-aware score for one player on one fixture.
  * Leg 1: scoreline only (πρόκριση tip stored, not scored yet).
  * Leg 2: scoreline from Leg 2 tip + πρόκριση from Leg 1 tip vs result.qual.
+ * Missing tip → −1 DQ only if someone else tipped (match counted in the league).
  */
 export function scorePlayerMatch(match, pred, actual, predictions, fixtures, playerId) {
-  if (!pred || actual == null) return null
+  if (actual == null) return null
+  if (isMissingTip(pred)) {
+    if (!matchHadAnyTip(predictions, match?.id)) return null
+    return dqScore(actual)
+  }
   if (match?.leg === 1) {
     return scoreMatch(pred, actual, { awardQual: false })
   }
@@ -390,7 +420,7 @@ export function buildPlayerMatchLedger(fixtures, predictions, results, playerId)
       competition: m.t,
       round: m.round || m.md || '',
       leg: m.leg || null,
-      tip: pred ? `${pred.h}–${pred.a}` : '—',
+      tip: !isMissingTip(pred) ? `${pred.h}–${pred.a}` : 'DQ',
       tipQual: m.leg === 2 ? tipQual : (pred?.qual || tipQual || null),
       actual: `${actual.h}–${actual.a}`,
       actualQual: actual.qual || null,
@@ -400,6 +430,7 @@ export function buildPlayerMatchLedger(fixtures, predictions, results, playerId)
       scorePts: sc.scorePts,
       qualPts: sc.qualPts,
       points: sc.points,
+      dq: !!sc.dq,
     })
   }
   return rows
@@ -437,7 +468,7 @@ export function mergeScoringResults(results = {}, liveScores = {}, finishedHints
 
 export function computeLeaderboard(fixtures, predictions, results) {
   const t = {}
-  PLAYERS.forEach(p => { t[p] = { pts:0, exact:0, correct:0, qual:0, played:0 } })
+  PLAYERS.forEach(p => { t[p] = { pts:0, exact:0, correct:0, qual:0, dq:0, played:0 } })
   fixtures.forEach(m => {
     const actual = results?.[m.id]
     if (actual == null) return
@@ -446,6 +477,7 @@ export function computeLeaderboard(fixtures, predictions, results) {
       if (!sc) return
       t[p].pts    += sc.points
       t[p].played += 1
+      if (sc.dq)         t[p].dq++
       if (sc.exact)      t[p].exact++
       if (sc.correct)    t[p].correct++
       if (sc.qualCorrect) t[p].qual++

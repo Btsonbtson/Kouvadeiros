@@ -14,16 +14,19 @@ const GZ_HEADERS = {
 
 const FOOTBALL = 'Ποδόσφαιρο'
 
-/** English MATCHES names / Greek Gazzetta names → shared tokens */
+/**
+ * Canonical club keys. Never use ultra-short aliases that collide (e.g. "παο" ⊂ "παοκ").
+ * Cyrillic-only strings are avoided — they strip to "" under Greek/Latin norm and break matching.
+ */
 const TEAM_ALIASES = {
   paok: ['paok', 'παοκ'],
   anderlecht: ['anderlecht', 'άντερλεχτ', 'αντερλεχτ', 'rsc anderlecht'],
-  panathinaikos: ['panathinaikos', 'παναθηναϊκός', 'παναθηναικος', 'παο'],
-  'cska 1948': ['cska 1948', 'cska', 'τσκα', 'фк цска', 'цска 1948'],
+  panathinaikos: ['panathinaikos', 'παναθηναϊκός', 'παναθηναικος', 'παναθηναϊκος'],
+  'cska 1948': ['cska 1948', 'cska1948', 'τσσκα 1948', 'τσσκα', 'τσκα 1948'],
   olympiacos: ['olympiacos', 'olympiakos', 'ολυμπιακός', 'ολυμπιακος'],
-  'nec nijmegen': ['nec', 'nijmegen', 'νέιμεγκεν', 'νειμεγκεν'],
-  'dynamo kyiv': ['dynamo', 'kyiv', 'kiev', 'ντινάμο'],
-  'aek athens': ['aek', 'αεκ'],
+  'nec nijmegen': ['nec nijmegen', 'nijmegen', 'νέιμεγκεν', 'νειμεγκεν', 'ναϊμέγκεν', 'ναιμεγκεν'],
+  'dynamo kyiv': ['dynamo kyiv', 'dynamo kiev', 'ντινάμο κίεβου', 'ντιναμο κιεβου'],
+  'aek athens': ['aek athens', 'aek', 'αεκ'],
   paksi: ['paksi', 'paks', 'πάξι', 'παξι'],
 }
 
@@ -53,29 +56,26 @@ function norm(s) {
     .trim()
 }
 
-function tokensForTeam(name) {
+/** Resolve a display name to a TEAM_ALIASES key, or null. */
+function canonicalTeamKey(name) {
   const n = norm(name)
-  const out = new Set(n.split(' ').filter((w) => w.length > 2))
-  for (const aliases of Object.values(TEAM_ALIASES)) {
-    if (aliases.some((a) => n.includes(norm(a)) || norm(a).includes(n))) {
-      for (const a of aliases) out.add(norm(a))
-    }
-  }
-  // Also match alias keys
+  if (!n) return null
   for (const [key, aliases] of Object.entries(TEAM_ALIASES)) {
-    if (n.includes(norm(key)) || aliases.some((a) => n.includes(norm(a)))) {
-      out.add(norm(key))
-      for (const a of aliases) out.add(norm(a))
-    }
+    const forms = [key, ...aliases].map(norm).filter((x) => x.length >= 3)
+    if (forms.some((f) => n === f || n.includes(f) || f.includes(n))) return key
   }
-  return [...out]
+  return null
 }
 
+/** Same club (via alias map), or strict full-name equality — never empty-token / substring wildcards. */
 function teamHit(matchName, gazzettaName) {
-  const a = tokensForTeam(matchName)
-  const b = tokensForTeam(gazzettaName)
-  if (!a.length || !b.length) return false
-  return a.some((t) => b.some((u) => u.includes(t) || t.includes(u)))
+  const a = canonicalTeamKey(matchName)
+  const b = canonicalTeamKey(gazzettaName)
+  if (a && b) return a === b
+  const na = norm(matchName)
+  const nb = norm(gazzettaName)
+  if (!na || !nb || na.length < 3 || nb.length < 3) return false
+  return na === nb
 }
 
 export async function fetchGazzettaSchedule(dateParam = gazzettaDateParam()) {
@@ -117,20 +117,24 @@ function parseMinute(raw) {
   return m ? parseInt(m[1], 10) : 0
 }
 
+function findScheduleRow(match, scheduleById) {
+  if (!match?.homeTeam || !match?.awayTeam) return null
+  const hits = []
+  for (const row of Object.values(scheduleById || {})) {
+    if (teamHit(match.homeTeam, row.home) && teamHit(match.awayTeam, row.away)) hits.push(row)
+  }
+  if (!hits.length) return null
+  // Prefer men's senior ties — skip obvious women's boards when a better hit exists
+  const senior = hits.filter((r) => !/\(w\)|γυναικ/i.test(`${r.home} ${r.away} ${r.league_name}`))
+  return (senior.length ? senior : hits)[0]
+}
+
 /**
  * Resolve a KOUVADEIROS MATCHES entry against Gazzetta schedule + live feed.
  * Returns ESPN-compatible score object or null.
  */
 export function resolveGazzettaScore(match, scheduleById, liveRaw) {
-  if (!match?.homeTeam || !match?.awayTeam) return null
-
-  let sched = null
-  for (const row of Object.values(scheduleById || {})) {
-    if (teamHit(match.homeTeam, row.home) && teamHit(match.awayTeam, row.away)) {
-      sched = row
-      break
-    }
-  }
+  const sched = findScheduleRow(match, scheduleById)
   if (!sched) return null
 
   const mid = String(sched.match_id)
@@ -182,12 +186,34 @@ export function resolveGazzettaScore(match, scheduleById, liveRaw) {
   return null
 }
 
+/** Merge schedule boards for today + each match kickoff (Athens dates). */
+async function fetchSchedulesForMatches(matches) {
+  const dates = new Set([gazzettaDateParam()])
+  for (const m of matches || []) {
+    if (!m?.kickoff || m.timeTbd) continue
+    dates.add(gazzettaDateParam(new Date(m.kickoff)))
+  }
+  const merged = {}
+  await Promise.all(
+    [...dates].map(async (d) => {
+      try {
+        const part = await fetchGazzettaSchedule(d)
+        Object.assign(merged, part)
+      } catch {
+        /* ignore one bad date */
+      }
+    }),
+  )
+  return merged
+}
+
 export async function pollGazzettaForMatches(matches) {
-  const scheduleById = await fetchGazzettaSchedule()
+  const list = matches || []
+  const scheduleById = await fetchSchedulesForMatches(list)
   const liveRaw = await fetchGazzettaLiveRaw()
   const scores = {}
   let liveCount = 0
-  for (const match of matches || []) {
+  for (const match of list) {
     const s = resolveGazzettaScore(match, scheduleById, liveRaw)
     if (s) {
       scores[match.id] = s

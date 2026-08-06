@@ -295,10 +295,19 @@ function grTime(iso) {
 function matchResult(h, a) {
   return h > a ? 'H' : h < a ? 'A' : 'D'
 }
+function isMissingTip(pred) {
+  return !pred || typeof pred.h !== 'number' || typeof pred.a !== 'number'
+}
+function matchHadAnyTip(predictions, matchId) {
+  const tips = predictions?.[matchId] || {}
+  return Object.values(tips).some((t) => !isMissingTip(t))
+}
 function scoreMatch(pred, actual, opts = {}) {
-  // No tip on file = disqualified for this match (never treat missing as 0–0)
-  if (!pred || actual == null) return null
-  if (typeof pred.h !== 'number' || typeof pred.a !== 'number') return null
+  if (actual == null) return null
+  if (isMissingTip(pred)) {
+    if (!opts.allowDq) return null
+    return { exact: false, correct: false, qualCorrect: false, scorePts: -1, qualPts: 0, points: -1, dq: true }
+  }
   const exact = pred.h === actual.h && pred.a === actual.a
   const correct = matchResult(pred.h, pred.a) === matchResult(actual.h, actual.a)
   const awardQual = opts.awardQual !== false && !!actual.qual
@@ -306,7 +315,7 @@ function scoreMatch(pred, actual, opts = {}) {
   const qualCorrect = !!(awardQual && qualTip && actual.qual && qualTip === actual.qual)
   const scorePts = (exact ? 1 : 0) + (correct ? 1 : 0)
   const qualPts = qualCorrect ? 1 : 0
-  return { exact, correct, qualCorrect, scorePts, qualPts, points: scorePts + qualPts }
+  return { exact, correct, qualCorrect, scorePts, qualPts, points: scorePts + qualPts, dq: false }
 }
 
 function mergeResults(state) {
