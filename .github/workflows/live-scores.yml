@@ -4,6 +4,11 @@ on:
     # GitHub free tier: effective minimum ~every 5 minutes
     - cron: '*/5 * * * *'
   workflow_dispatch:
+    inputs:
+      force:
+        description: 'Force fetch even outside live match window (for testing FDORG_TOKEN)'
+        type: boolean
+        default: false
 
 jobs:
   sync:
@@ -36,7 +41,13 @@ jobs:
           fi
       - name: Fetch + upload to R2
         # Skips automatically when no fixture is in 15′ warm-up → +200′ live window
-        run: python scripts/upload_to_r2.py
+        # Manual runs can pass force=true to test FDORG_TOKEN anytime
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.force }}" = "true" ]; then
+            python scripts/upload_to_r2.py --force
+          else
+            python scripts/upload_to_r2.py
+          fi
         env:
           FDO_API_KEY: ${{ secrets.FDORG_TOKEN }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

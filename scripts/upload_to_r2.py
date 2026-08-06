@@ -139,7 +139,7 @@ def run_pipeline() -> None:
 
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     pipeline = KouvadeirosLivePipeline(
-        fdo_api_key=os.getenv("FDO_API_KEY"),
+        fdo_api_key=os.getenv("FDO_API_KEY") or os.getenv("FDORG_TOKEN"),
         output_dir=str(DATA_DIR),
     )
     print("Fetching today…")

@@ -414,6 +414,13 @@ async function fetchESPNScore(match) {
     const data = await res.json()
     const home = match.homeTeam.toLowerCase()
     const away = match.awayTeam.toLowerCase()
+    const significant = (s) =>
+      s
+        .toLowerCase()
+        .split(/[\s.\-/]+/)
+        .filter((w) => w.length > 2 && !['fc', 'cf', 'sc', 'the', 'and'].includes(w))
+    const nameHit = (needleWords, haystackNames) =>
+      needleWords.some((w) => haystackNames.some((n) => n.includes(w) || w.includes(n.split(/[\s.\-/]+/)[0] || '')))
     const evt =
       (data.events || []).find((e) => {
         const comps = e.competitions?.[0]?.competitors || []
@@ -422,12 +429,8 @@ async function fetchESPNScore(match) {
             n.toLowerCase(),
           ),
         )
-        const homeWords = home.split(' ').filter((w) => w.length > 2)
-        const awayWords = away.split(' ').filter((w) => w.length > 2)
-        const homeMatch = homeWords.some((w) => allNames.some((n) => n.includes(w) || w.includes(n.split(' ')[0])))
-        const awayMatch = awayWords.some((w) => allNames.some((n) => n.includes(w) || w.includes(n.split(' ')[0])))
-        return homeMatch && awayMatch
-      }) || (data.events || [])[0]
+        return nameHit(significant(home), allNames) && nameHit(significant(away), allNames)
+      }) || null
     if (!evt) return null
     const comp = evt.competitions?.[0]
     const status = comp?.status?.type?.name

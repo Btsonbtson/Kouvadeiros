@@ -43,21 +43,34 @@ class FootballDataOrgProvider:
     """
 
     def __init__(self, api_key: Optional[str] = None):
-        self.api_key = api_key or os.getenv("FDO_API_KEY", "")
+        # Accept either FDO_API_KEY or FDORG_TOKEN (GitHub / Wrangler naming).
+        self.api_key = (
+            api_key
+            or os.getenv("FDO_API_KEY", "")
+            or os.getenv("FDORG_TOKEN", "")
+        ).strip()
         if not self.api_key:
             logger.warning(
-                "FDO_API_KEY not set. Unauthenticated requests are rate-limited to 1/min. "
+                "FDO_API_KEY / FDORG_TOKEN not set. football-data.org requires "
+                "header X-Auth-Token — unauthenticated calls are rejected. "
                 "Register free at https://www.football-data.org/client/register"
             )
         self.session = requests.Session()
-        self.session.headers.update({
-            "X-Auth-Token": self.api_key,
-            "Accept": "application/json",
-        })
+        headers = {"Accept": "application/json"}
+        # Never send an empty X-Auth-Token — that triggers FDO's "proper use" email.
+        if self.api_key:
+            headers["X-Auth-Token"] = self.api_key
+        self.session.headers.update(headers)
         self._last_request_at: float = 0.0
 
     def _get(self, path: str, params: Optional[dict] = None) -> dict:
         """Rate-limited GET with retry on 429."""
+        if not self.api_key:
+            raise PermissionError(
+                "FDO API key missing. Set GitHub secret FDORG_TOKEN (or env FDO_API_KEY) "
+                "and ensure requests send HTTP header X-Auth-Token."
+            )
+
         elapsed = time.time() - self._last_request_at
         if elapsed < RATE_LIMIT_DELAY:
             time.sleep(RATE_LIMIT_DELAY - elapsed)
@@ -75,10 +88,11 @@ class FootballDataOrgProvider:
                 wait = int(resp.headers.get("X-RequestCounter-Reset", 60))
                 logger.warning(f"Rate limited. Waiting {wait}s…")
                 time.sleep(wait)
-            elif resp.status_code == 403:
+            elif resp.status_code in (401, 403):
                 raise PermissionError(
-                    f"FDO API key missing or insufficient permissions for {url}. "
-                    "Some competitions require a paid plan."
+                    f"FDO auth failed ({resp.status_code}) for {url}. "
+                    "Check FDORG_TOKEN / FDO_API_KEY and that the client sends "
+                    "header X-Auth-Token. Some competitions need a paid plan."
                 )
             else:
                 raise RuntimeError(f"FDO API error {resp.status_code}: {resp.text[:200]}")

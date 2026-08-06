@@ -10,6 +10,7 @@ export const FALLBACK_RESULTS = {
   'uel-paok-2': { h: 2, a: 0, qual: 'PAOK' },
   'uecl-pao-2': { h: 2, a: 2, qual: 'PAO' },
   'ucl-oly-1': { h: 0, a: 0 },
+  'uecl-pao-3': { h: 1, a: 1 },
 }
 
 const PLAYER_COLORS = {
@@ -769,6 +770,53 @@ function pickMyth(seed, names) {
   return pickFrom(myths, seed >> 9)
 }
 
+/** Whisper-column: half-said plots, implications, equal dirt on all three. */
+function buildRumors(ranking, seed = 0) {
+  const byId = Object.fromEntries((ranking || []).map((p) => [p.id, p]))
+  const B = byId.boikos?.name || 'Boikos'
+  const M = byId.mavromichalis?.name || 'Mavromichalis'
+  const C = byId.chousiadas?.name || 'Chousiadas'
+
+  const plotBank = [
+    `Heard: ${C} + ${M}… coffee. Topic? Not coffee. Topic: ${B}.`,
+    `${C} → ${M}: «θα τα πούμε». Μετά… τίποτα. Ύποπτο.`,
+    `Δύο βλέμματα. Ένα στόχος. Το κόκκινο. Λένε για tips. Λένε…`,
+    `${M} χαμογέλασε στο όνομα ${B}. ${C} όχι. Χειρότερο.`,
+    `${C} & ${M} «συγκρίνουν σημειώσεις». Γιατί άραγε;`,
+  ]
+
+  const whispers = [
+    // against Boikos (the plot)
+    { from: C, about: B, line: pickFrom([`${B}; …ας πούμε ότι «προσπαθεί».`, `${B} — μεγάλα λόγια. Μικρά exact.`, `Άκουσα για ${B}. Δεν επαναλαμβάνω. Ακόμα.`, `${B}… «τυχαία». Ναι. Τυχαία.`], seed) },
+    { from: M, about: B, line: pickFrom([`${B}… «τυχερός». Έτσι είπαν. Εγώ; Χμμ.`, `Αν ο ${B} «δεν είδε» το μήνυμα… βολικό.`, `${B} κοιμάται ήρεμος. Εμείς ξυπνάμε.`, `${B} μετράει πόντους. Εμείς μετράμε… αυτόν.`], seed + 3) },
+    // against Mavro
+    { from: B, about: M, line: pickFrom([`${M}; κίτρινος… και λίγο θολός στα tips.`, `${M} «θα χτυπήσω». Μισή πρόταση. Μισή αλήθεια.`, `Λένε για ${M}. Εγώ χαμογελάω. Μόνο.`, `${M} και «συμμαχίες». Αστείο.`], seed + 7) },
+    { from: C, about: M, line: pickFrom([`${M} — σύμμαχος; Ναι. Μέχρι το επόμενο exact.`, `${M} μου είπε κάτι για ${B}. Διέγραψε το μήνυμα.`, `Με τον ${M}… συνεννόηση. Όχι φιλία.`, `${M} χαμογελάει πολύ. Πολύ.`], seed + 11) },
+    // against Chous
+    { from: B, about: C, line: pickFrom([`${C} πράσινος. Πολύ πράσινος. Ύποπτα ήρεμος.`, `${C} «δεν ξέρω τίποτα». Κλασικό.`, `Ο ${C} μετράει πόντους. Και… φίλους;`, `${C} λίγα λόγια. Πολλές… συναντήσεις.`], seed + 13) },
+    { from: M, about: C, line: pickFrom([`${C} πρότεινε «κοινή γραμμή». Ενάντια σε ποιον; Μάντεψε.`, `${C}… λίγα λόγια. Πολλές προθέσεις.`, `Άκουσα τον ${C}. Μετά δεν άκουσα τίποτα. Βολικό.`, `${C} είπε «όχι συνωμοσία». Είπε πολλά.`], seed + 17) },
+  ]
+
+  // Always include one plot rumor + one whisper per direction (equal dirt)
+  const plot = pickFrom(plotBank, seed >> 2)
+  const picked = []
+  const usedFromAbout = new Set()
+  for (let i = 0; i < whispers.length; i++) {
+    const w = whispers[(seed + i * 5) % whispers.length]
+    const key = `${w.from}->${w.about}`
+    if (usedFromAbout.has(key)) continue
+    usedFromAbout.add(key)
+    picked.push(w)
+    if (picked.length >= 6) break
+  }
+
+  return {
+    plot,
+    items: picked.slice(0, 6),
+    disclaimer: 'ΦΗΜΕΣ · ανωνύμως · μισές αλήθειες · ο Κουβάς δεν επιβεβαιώνει… ούτε διαψεύδει.',
+  }
+}
+
 function pickHeadlines(ranking, matchRows, round = 0, seasonRows = [], upcoming = [], rivalry = null) {
   if (!ranking.length || !matchRows.length) {
     return {
@@ -783,6 +831,7 @@ function pickHeadlines(ranking, matchRows, round = 0, seasonRows = [], upcoming 
       myth: 'Ο Όλυμπος έκλεισε για συντήρηση. Ελάτε αύριο. Ίσως.',
       page3Cap: 'ΚΟΡΙΤΣΙΑ ΤΗΣ ΗΜΕΡΑΣ · χωρίς tips, μόνο χάος',
       equalBilling: 'Boikos · Mavromichalis · Chousiadas — ίσο μερίδιο, ίσο δηλητήριο',
+      rumors: buildRumors([], round || 0),
       frontTeasers: [
         '⚖️ ΙΣΗ ΚΑΛΥΨΗ: Boikos · Mavromichalis · Chousiadas',
         'FANS FRONT PAGE · ακόμα κι αν σήμερα είναι κενό… τα επόμενα σε κυνηγάνε!!!',
@@ -961,6 +1010,7 @@ function pickHeadlines(ranking, matchRows, round = 0, seasonRows = [], upcoming 
     myth: pickMyth(seed, names),
     page3Cap,
     equalBilling,
+    rumors: buildRumors(ranking, seed),
     frontTeasers: frontTeasers.slice(0, 3),
   }
 }
@@ -1124,6 +1174,20 @@ function renderHtml({ ymd, editionDate, headlines, ledger, seasonRows, timeline,
     .join('')
 
   const rivalryList = (rivalry?.straps || []).map((s) => `<li>${esc(s)}</li>`).join('')
+
+  const rumors = headlines.rumors || buildRumors(ledger.ranking || [], round)
+  const rumorItems = (rumors.items || [])
+    .map(
+      (r) =>
+        `<p class="rumor"><span class="who">${esc(r.from)} · για ${esc(r.about)}…</span>${esc(r.line)} <span class="dots">…</span></p>`,
+    )
+    .join('')
+  const rumorsHtml = `<section class="rumors">
+      <h2>🤫 Rumors / Φήμες</h2>
+      <div class="rumor-plot">${esc(rumors.plot || '')}</div>
+      ${rumorItems}
+      <p class="credit">${esc(rumors.disclaimer || '')}</p>
+    </section>`
 
 
   return `<!DOCTYPE html>
@@ -1365,6 +1429,22 @@ function renderHtml({ ymd, editionDate, headlines, ledger, seasonRows, timeline,
     font-size:11px; font-weight:900; background:#f3f3f3;
   }
   .camp-cell span { display:block; font-family:'Anton',Impact,sans-serif; font-size:20px; color:var(--red); }
+  .rumors {
+    padding: 14px 12px; border-bottom: 4px solid #000; background: #0a0a0a; color: #eee;
+  }
+  .rumors h2 { background: #111; color: var(--yell); border: 2px solid var(--yell); }
+  .rumor-plot {
+    font-family: 'Oswald', Impact, sans-serif; font-size: 15px; font-weight: 700;
+    color: var(--yell); border-left: 4px solid var(--red); padding: 8px 10px; margin: 0 0 12px;
+    background: #1a1a1a; font-style: italic;
+  }
+  .rumor {
+    font-size: 13px; font-weight: 700; line-height: 1.35; margin: 0 0 10px;
+    padding: 8px 10px; border: 1px dashed #444; background: #141414;
+  }
+  .rumor .who { color: var(--yell); font-size: 10px; letter-spacing: .06em; text-transform: uppercase; display:block; margin-bottom: 4px; }
+  .rumor .dots { color: #888; }
+  .rumors .credit { color: #666; }
 </style>
 </head>
 <body>
@@ -1421,6 +1501,8 @@ function renderHtml({ ymd, editionDate, headlines, ledger, seasonRows, timeline,
       <h2 style="margin-top:14px">Ενεργές διοργανώσεις</h2>
       ${campaignHtml || '<p class="credit">Καμπάνιες σε αναμονή.</p>'}
     </section>
+
+    ${rumorsHtml}
 
     <section class="page3">
       <div class="page3-hero">
@@ -1511,6 +1593,17 @@ function renderWhatsApp({ editionDate, headlines, ledger, seasonRows, upcoming =
 
   const dig = (rivalry?.straps || []).slice(0, 2).map((s) => `• ${s}`).join('\n')
 
+  const rumors = headlines.rumors || {}
+  const rumorBlock =
+    rumors.plot || (rumors.items || []).length
+      ? `*🤫 RUMORS*\n_${rumors.plot || ''}_\n` +
+        (rumors.items || [])
+          .slice(0, 4)
+          .map((r) => `• ${r.from}→${r.about}: ${r.line}`)
+          .join('\n') +
+        '\n\n'
+      : ''
+
   const dayResults = (ledger.matchRows || [])
     .slice(0, 2)
     .map((m) => {
@@ -1528,6 +1621,7 @@ function renderWhatsApp({ editionDate, headlines, ledger, seasonRows, upcoming =
     `${headlines.kicker}\n\n` +
     `⚖️ *ΙΣΗ ΚΑΛΥΨΗ:* ${equalLine}\n\n` +
     `${headlines.quote}\n\n` +
+    rumorBlock +
     (dayResults ? `*ΑΠΟΤΕΛΕΣΜΑΤΑ*\n${dayResults}\n\n` : '') +
     (next ? `*CAN YOU TAKE THE CHALLENGE???*\n${next}\n\n` : '') +
     (dig ? `*ΔΙΑΓΚΩΝΙΣΜΟΙ*\n${dig}\n\n` : '') +
