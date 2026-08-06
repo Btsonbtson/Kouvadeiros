@@ -113,6 +113,7 @@ class KouvadeirosMatch:
 
     # Metadata
     venue: Optional[str] = None
+    minute: Optional[int] = None  # live clock when IN_PROGRESS (Gazzetta / providers)
     fetched_at_utc: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     raw_source: Optional[dict] = field(default=None, repr=False)
 
@@ -132,6 +133,8 @@ class KouvadeirosMatch:
             "venue": self.venue,
             "fetched_at_utc": self.fetched_at_utc,
         }
+        if self.minute is not None:
+            d["minute"] = self.minute
         return d
 
     def to_json(self, indent: int = 2) -> str:

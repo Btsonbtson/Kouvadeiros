@@ -3,30 +3,38 @@
  */
 import { ALL_FIXTURES, TEAMS } from './data.js'
 
+function norm(s) {
+  return String(s || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '')
+    // Keep Latin + Greek letters (Gazzetta uses Ελληνικά)
+    .replace(/[^a-z0-9\u0370-\u03ff\u1f00-\u1fff ]+/gi, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
 const NAME_TO_KEY = {
-  aek: 'AEK', 'aek athens': 'AEK',
-  iraklis: 'IRA', 'iraklis 1908': 'IRA',
-  kalamata: 'KAL',
-  aris: 'ARI', 'aris thessaloniki': 'ARI',
-  olympiacos: 'OLY', olympiakos: 'OLY',
-  atromitos: 'ATR',
-  panathinaikos: 'PAO',
-  kifisia: 'KIF', kifissia: 'KIF',
-  paok: 'PAOK',
-  levadiakos: 'LEV',
-  panetolikos: 'PNE', panaitolikos: 'PNE',
-  asteras: 'AST', 'asteras tripolis': 'AST', 'asteras aktor': 'AST',
-  ofi: 'OFI', 'ofi crete': 'OFI',
-  volos: 'VOL', 'volos nfc': 'VOL',
+  aek: 'AEK', 'aek athens': 'AEK', αεκ: 'AEK',
+  iraklis: 'IRA', 'iraklis 1908': 'IRA', ηρακλης: 'IRA',
+  kalamata: 'KAL', καλαματα: 'KAL',
+  aris: 'ARI', 'aris thessaloniki': 'ARI', αρης: 'ARI',
+  olympiacos: 'OLY', olympiakos: 'OLY', ολυμπιακος: 'OLY',
+  atromitos: 'ATR', ατρομητος: 'ATR',
+  panathinaikos: 'PAO', παναθηναικος: 'PAO', παναθηναϊκος: 'PAO',
+  kifisia: 'KIF', kifissia: 'KIF', κηφισια: 'KIF',
+  paok: 'PAOK', παοκ: 'PAOK',
+  levadiakos: 'LEV', λεβαδειακος: 'LEV',
+  panetolikos: 'PNE', panaitolikos: 'PNE', παναιτωλικος: 'PNE',
+  asteras: 'AST', 'asteras tripolis': 'AST', 'asteras aktor': 'AST', αστερας: 'AST',
+  ofi: 'OFI', 'ofi crete': 'OFI', οφη: 'OFI',
+  volos: 'VOL', 'volos nfc': 'VOL', βολος: 'VOL',
   'dynamo kyiv': 'DYN', 'dynamo kiev': 'DYN', 'fc dynamo kyiv': 'DYN',
   'nec nijmegen': 'NEC', nec: 'NEC',
   paks: 'PKS', paksi: 'PKS', 'paksi se': 'PKS',
-  anderlecht: 'AND', 'rsc anderlecht': 'AND',
+  anderlecht: 'AND', 'rsc anderlecht': 'AND', αντερλεχτ: 'AND',
   'cska 1948': 'CSK', 'cska sofia 1948': 'CSK', 'cska 1948 sofia': 'CSK',
-}
-
-function norm(s) {
-  return String(s || '').toLowerCase().normalize('NFD').replace(/\p{M}/gu, '').replace(/[^a-z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim()
+  'φκ τσκα 1948': 'CSK', τσκα: 'CSK',
 }
 
 export function resolveTeamKey(name, shortName) {

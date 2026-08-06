@@ -10,3 +10,5 @@ venv/
 scraper/**/__pycache__/
 .wrangler/
 wrangler.pages.remote.toml
+
+logs/
