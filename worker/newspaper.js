@@ -78,7 +78,9 @@ function hashSeed(str) {
 }
 
 function pickFrom(arr, seed) {
-  return arr[seed % arr.length]
+  if (!arr?.length) return undefined
+  // Coerce via >>> so signed shifts (seed >> n) never yield arr[negative] === undefined
+  return arr[(seed >>> 0) % arr.length]
 }
 
 function uniqPick(arr, seed, n) {
@@ -268,12 +270,12 @@ export function buildSeasonTable(allMatches, state, users) {
     for (const p of players) {
       const pred = state.predictions?.[match.id]?.[p.id]
       const sc = scorePlayerMatchWorker(match, pred, actual, state.predictions || {}, p.id)
-      if (!pred) continue
+      if (!sc) continue
       stats[p.id].played += 1
-      stats[p.id].pts += sc?.points ?? 0
-      if (sc?.exact) stats[p.id].exact += 1
-      if (sc?.correct) stats[p.id].correct += 1
-      if ((sc?.points ?? 0) === 0) stats[p.id].misses += 1
+      stats[p.id].pts += sc.points
+      if (sc.exact) stats[p.id].exact += 1
+      if (sc.correct) stats[p.id].correct += 1
+      if (!sc.dq && sc.points === 0) stats[p.id].misses += 1
     }
   }
 
@@ -783,12 +785,149 @@ function pickMyth(seed, names) {
   return pickFrom(myths, seed >> 9)
 }
 
+/** Players who ate DQ (−1) for missing tips today. */
+function collectDqOffenders(matchRows = []) {
+  const map = new Map()
+  for (const row of matchRows || []) {
+    for (const pl of row.players || []) {
+      if (!pl?.dq) continue
+      const prev = map.get(pl.id) || { id: pl.id, name: pl.name, count: 0, matches: [] }
+      prev.count += 1
+      prev.matches.push(row.label || row.id)
+      map.set(pl.id, prev)
+    }
+  }
+  return [...map.values()].sort((a, b) => b.count - a.count || a.name.localeCompare(b.name))
+}
+
+/**
+ * Extra-poison lines when someone blanked a tip AFTER WhatsApp reminders (30′ + 20′).
+ * Named offenders (esp. Boikos / Chousiadas) get the full acid bath.
+ */
+function dqReminderPoison(offenders, seed = 0) {
+  if (!offenders?.length) return null
+  const names = offenders.map((o) => o.name)
+  const list = names.join(' & ')
+  const boikos = offenders.find((o) => o.id === 'boikos')
+  const chous = offenders.find((o) => o.id === 'chousiadas')
+  const duo = boikos && chous
+
+  const yell = pickFrom(
+    [
+      'ΑΠΟΥΣΙΕΣ!!!',
+      'ΚΩΦΕΥΣΑΝ!!!',
+      'ΔΥΟ ΥΠΕΝΘΥΜΙΣΕΙΣ!!!',
+      'DQ ΔΗΛΗΤΗΡΙΟ!!!',
+      'ΤΙΠΟΤΑ ΣΤΟ SLOT!!!',
+    ],
+    seed,
+  )
+
+  const splash = duo
+    ? pickFrom(
+        [
+          `CHOUSIADAS + BOIKOS · ΔΙΑΒΑΣΑΝ ΤΑ WA… ΚΑΙ ΧΑΣΜΟΥΡΗΘΗΚΑΝ`,
+          `ΥΠΕΝΘΥΜΙΣΕΙΣ 30′ & 20′ · ΑΥΤΟΙ: ΑΓΝΟΙΑ ΟΛΥΜΠΙΑΚΟΥ ΕΠΙΠΕΔΟΥ`,
+          `ΔΥΟ ΜΗΝΥΜΑΤΑ · ΜΗΔΕΝ TIPS · ΟΙ «ΠΡΟΦΗΤΕΣ» ΚΟΙΜΟΝΤΟΥΣΑΝ`,
+        ],
+        seed >> 2,
+      )
+    : pickFrom(
+        [
+          `${list.toUpperCase()} · ΥΠΕΝΘΥΜΙΣΤΗΚΕ · ΑΓΝΟΗΣΕ · DQ −1`,
+          `ΤΟ WHATSAPP ΟΥΡΛΙΑΖΕ · ${list.toUpperCase()}… ΣΙΩΠΗ`,
+          `${list.toUpperCase()} · 30′ · 20′ · ΚΑΙ ΜΕΤΑ… ΤΙΠΟΤΑ`,
+        ],
+        seed >> 2,
+      )
+
+  const quotePool = [
+    `«${list}: δύο υπενθυμίσεις WhatsApp (30′ και 20′). Μηδέν tip. Ο Κουβάς δεν ξεχνάει. Ούτε συγχωρεί.»`,
+    `«Δύο καμπάνες. Ένα άδειο slot. ${list} — όχι θύματα συστήματος. Αυτουργοί της απουσίας.»`,
+    `«Το τηλέφωνο χτύπησε. Ξαναχτύπησε. ${list}… απουσίαζαν από το δικό τους πρωτάθλημα.»`,
+    `«Υπενθύμιση ≠ διακόσμηση. Είναι κατηγορητήριο. Υπόδικοι: ${list}. Ποινή: DQ −1.»`,
+  ]
+  if (duo) {
+    quotePool.push(
+      `«Chousiadas και Boikos: το WhatsApp τους ικέτευε στις 30′ και στις 20′. Αυτοί; Ούτε κουμπί. Ούτε σκορ. Μόνο ντροπή.»`,
+      `«Δύο «θρύλοι». Δύο υπενθυμίσεις. Μηδέν προβλέψεις. Chousiadas + Boikos — το δίδυμο της κώφωσης.»`,
+      `«Αν το reminder ήταν κεραυνός, θα είχαν κάψει ήδη. Αλλά όχι — Chousiadas και Boikos το άφησαν να περάσει σαν spam.»`,
+    )
+  }
+  if (boikos) {
+    quotePool.push(
+      `«Boikos — admin του χάους, αφεντικό των υπενθυμίσεων… και ο ίδιος άδειος στο tip. Η ειρωνεία αυτοκτόνησε.»`,
+      `«Ο Boikos στέλνει τα WA στους άλλους. Στον εαυτό του; Mute. DQ −1 με υπογραφή.»`,
+    )
+  }
+  if (chous) {
+    quotePool.push(
+      `«Chousiadas: «δεν χτύπησε». Χτύπησε δύο φορές. Στις 30′. Στις 20′. Το tip; Ακόμα στο συρτάρι.»`,
+      `«Chousiadas είδε το μπλε τικ. Δεν είδε το σκορ. Ο Κουβάς είδε και τα δύο.»`,
+    )
+  }
+
+  const straps = offenders.flatMap((o, i) => {
+    const lines = [
+      `⛔ DQ: ${o.name} άδειος στο tip (${o.matches.join(', ')}) — μετά από ΥΠΕΝΘΥΜΙΣΕΙΣ 30′ & 20′. Όχι ατύχημα. Επιλογή.`,
+      `📱 ${o.name}: το WhatsApp παρακαλούσε. Αυτός… σιωπή. Αποτέλεσμα: ΑΠΟΚΛΕΙΣΜΟΣ −1. Ο Κουβάς χειροκροτεί ειρωνικά.`,
+      `🔔 Δύο καμπάνες. Μηδέν πρόβλεψη. ${o.name} μπαίνει στο πάνθεον των κωφών προφητών.`,
+    ]
+    if (o.id === 'boikos') {
+      lines.push(
+        `👑 Boikos: έστησε τις υπενθυμίσεις… και μετά τις αγνόησε ο ίδιος. Admin energy · tip energy = 0. DQ −1.`,
+        `🔴 Boikos, ο φύλακας του κουδουνιού: το κουδούνι χτύπησε· ο tip-master κοιμόταν. Ντροπή με στολή admin.`,
+      )
+    }
+    if (o.id === 'chousiadas') {
+      lines.push(
+        `🟢 Chousiadas: δύο WA, μηδέν κουράγιο, πλήρες DQ. «Δεν είδα το μήνυμα» — κλασική δικαιολογία νεκροταφείου.`,
+        `☠️ Chousiadas άφησε το tip να πεθάνει αγνοώντας 30′ και 20′. Ο Κουβάς του στέλνει λουλούδια. Μαύρα.`,
+      )
+    }
+    return [pickFrom(lines, seed + i * 13 + o.name.length)]
+  })
+
+  if (duo) {
+    straps.unshift(
+      pickFrom(
+        [
+          `💀 ΕΙΔΙΚΗ ΕΚΔΟΣΗ: Chousiadas + Boikos — ΥΠΕΝΘΥΜΙΣΤΗΚΑΝ, ΑΓΝΟΗΣΑΝ, DQ. Το πρωτάθλημα παίχτηκε χωρίς αυτούς. Σωστά.`,
+          `🚨 BREAKING: δύο reminders · δύο απουσίες · Chousiadas & Boikos στο εδώλιο. Μάρτυρας: το WhatsApp. Δικαστής: ο Κουβάς.`,
+        ],
+        seed >> 3,
+      ),
+    )
+  }
+
+  const amok = duo
+    ? pickFrom(
+        [
+          `ΑΜΟΚ ΥΠΕΝΘΥΜΙΣΕΩΝ!!! Chousiadas & Boikos άδειασαν τα slots τους. Το WA έκλαιγε. Αυτοί όχι.`,
+          `ΤΡΕΛΟΚΟΜΕΙΟ: οι υπενθυμίσεις δούλεψαν· τα tips όχι. Chousiadas + Boikos — πρωταθλητές απουσίας.`,
+        ],
+        seed >> 7,
+      )
+    : pickFrom(
+        [
+          `ΑΜΟΚ!!! ${list} άδειασαν tip μετά από δύο καμπάνες. Ο Κουβάς μετράει −1 και γελάει.`,
+          `ΣΥΝΑΓΕΡΜΟΣ: υπενθυμίσεις στάλθηκαν. Tips δεν μπήκαν. Υπεύθυνοι: ${list}.`,
+        ],
+        seed >> 7,
+      )
+
+  return { yell, splash, quote: pickFrom(quotePool, seed >> 5), straps, amok, names: list, offenders }
+}
+
 /** Whisper-column: half-said plots, implications, equal dirt on all three. */
-function buildRumors(ranking, seed = 0) {
+function buildRumors(ranking, seed = 0, dqOffenders = []) {
   const byId = Object.fromEntries((ranking || []).map((p) => [p.id, p]))
   const B = byId.boikos?.name || 'Boikos'
   const M = byId.mavromichalis?.name || 'Mavromichalis'
   const C = byId.chousiadas?.name || 'Chousiadas'
+  const dqIds = new Set((dqOffenders || []).map((o) => o.id))
+  const dqBoikos = dqIds.has('boikos')
+  const dqChous = dqIds.has('chousiadas')
 
   const plotBank = [
     `Heard: ${C} + ${M}… coffee. Topic? Not coffee. Topic: ${B}.`,
@@ -797,17 +936,79 @@ function buildRumors(ranking, seed = 0) {
     `${M} χαμογέλασε στο όνομα ${B}. ${C} όχι. Χειρότερο.`,
     `${C} & ${M} «συγκρίνουν σημειώσεις». Γιατί άραγε;`,
   ]
+  if (dqBoikos && dqChous) {
+    plotBank.unshift(
+      `BREAKING whisper: ${C} + ${B} «δεν είδαν» τα WA… δύο φορές ο καθένας. Σύμπτωση; Ο Κουβάς λέει ΟΧΙ.`,
+      `ΦΗΜΗ: ${C} & ${B} έκαναν mute στις υπενθυμίσεις και μετά… άδειο tip. Το μπέργκερ ήδη ψήνεται.`,
+    )
+  }
 
   const whispers = [
     // against Boikos (the plot)
-    { from: C, about: B, line: pickFrom([`${B}; …ας πούμε ότι «προσπαθεί».`, `${B} — μεγάλα λόγια. Μικρά exact.`, `Άκουσα για ${B}. Δεν επαναλαμβάνω. Ακόμα.`, `${B}… «τυχαία». Ναι. Τυχαία.`], seed) },
-    { from: M, about: B, line: pickFrom([`${B}… «τυχερός». Έτσι είπαν. Εγώ; Χμμ.`, `Αν ο ${B} «δεν είδε» το μήνυμα… βολικό.`, `${B} κοιμάται ήρεμος. Εμείς ξυπνάμε.`, `${B} μετράει πόντους. Εμείς μετράμε… αυτόν.`], seed + 3) },
+    {
+      from: C,
+      about: B,
+      line: pickFrom(
+        dqBoikos
+          ? [
+              `${B}; δύο υπενθυμίσεις… μηδέν tip. Admin χωρίς πρόβλεψη. Κλασικό.`,
+              `${B} έστησε το κουδούνι. Μετά το αγνόησε. DQ με υπογραφή.`,
+              `Άκουσα: ο ${B} «δεν πρόλαβε». Πρόλαβε να διαβάσει το WA. Όχι να πατήσει submit.`,
+              `${B}… «τυχαία» απουσία μετά από 30′ και 20′. Ναι. Τυχαία.`,
+            ]
+          : [`${B}; …ας πούμε ότι «προσπαθεί».`, `${B} — μεγάλα λόγια. Μικρά exact.`, `Άκουσα για ${B}. Δεν επαναλαμβάνω. Ακόμα.`, `${B}… «τυχαία». Ναι. Τυχαία.`],
+        seed,
+      ),
+    },
+    {
+      from: M,
+      about: B,
+      line: pickFrom(
+        dqBoikos
+          ? [
+              `${B} «δεν είδε» το μήνυμα. Δύο μηνύματα. Βολικό μέχρις DQ.`,
+              `Ο ${B} στέλνει reminders στους άλλους. Στον εαυτό του; Σιγή νεκροταφείου.`,
+              `${B} κοιμόταν ήρεμος όσο το WA ούρλιαζε. Εμείς ξυπνήσαμε. Αυτός DQ.`,
+              `${B} μετράει πόντους… αρνητικούς. −1 με άρωμα υπενθύμισης.`,
+            ]
+          : [`${B}… «τυχερός». Έτσι είπαν. Εγώ; Χμμ.`, `Αν ο ${B} «δεν είδε» το μήνυμα… βολικό.`, `${B} κοιμάται ήρεμος. Εμείς ξυπνάμε.`, `${B} μετράει πόντους. Εμείς μετράμε… αυτόν.`],
+        seed + 3,
+      ),
+    },
     // against Mavro
     { from: B, about: M, line: pickFrom([`${M}; κίτρινος… και λίγο θολός στα tips.`, `${M} «θα χτυπήσω». Μισή πρόταση. Μισή αλήθεια.`, `Λένε για ${M}. Εγώ χαμογελάω. Μόνο.`, `${M} και «συμμαχίες». Αστείο.`], seed + 7) },
     { from: C, about: M, line: pickFrom([`${M} — σύμμαχος; Ναι. Μέχρι το επόμενο exact.`, `${M} μου είπε κάτι για ${B}. Διέγραψε το μήνυμα.`, `Με τον ${M}… συνεννόηση. Όχι φιλία.`, `${M} χαμογελάει πολύ. Πολύ.`], seed + 11) },
     // against Chous
-    { from: B, about: C, line: pickFrom([`${C} πράσινος. Πολύ πράσινος. Ύποπτα ήρεμος.`, `${C} «δεν ξέρω τίποτα». Κλασικό.`, `Ο ${C} μετράει πόντους. Και… φίλους;`, `${C} λίγα λόγια. Πολλές… συναντήσεις.`], seed + 13) },
-    { from: M, about: C, line: pickFrom([`${C} πρότεινε «κοινή γραμμή». Ενάντια σε ποιον; Μάντεψε.`, `${C}… λίγα λόγια. Πολλές προθέσεις.`, `Άκουσα τον ${C}. Μετά δεν άκουσα τίποτα. Βολικό.`, `${C} είπε «όχι συνωμοσία». Είπε πολλά.`], seed + 17) },
+    {
+      from: B,
+      about: C,
+      line: pickFrom(
+        dqChous
+          ? [
+              `${C} πράσινος. Πολύ πράσινος. Και τελείως άδειος στο tip μετά από δύο WA.`,
+              `${C} «δεν χτύπησε». Χτύπησε. Δύο φορές. DQ −1 λέει την αλήθεια.`,
+              `Ο ${C} μετράει δικαιολογίες. Οι υπενθυμίσεις μετράνε ενοχές.`,
+              `${C} λίγα λόγια. Καθόλου tips. Πολλή… απουσία.`,
+            ]
+          : [`${C} πράσινος. Πολύ πράσινος. Ύποπτα ήρεμος.`, `${C} «δεν ξέρω τίποτα». Κλασικό.`, `Ο ${C} μετράει πόντους. Και… φίλους;`, `${C} λίγα λόγια. Πολλές… συναντήσεις.`],
+        seed + 13,
+      ),
+    },
+    {
+      from: M,
+      about: C,
+      line: pickFrom(
+        dqChous
+          ? [
+              `${C} πρότεινε «κοινή γραμμή». Μετά άδειασε το δικό του tip. Γενναίο.`,
+              `${C}… είδε το μπλε τικ στις 30′ και στις 20′. Submit; Ποτέ.`,
+              `Άκουσα τον ${C}. Μετά δεν άκουσα tip. Μόνο DQ. Βολικό.`,
+              `${C} είπε «όχι αμέλεια». Το WhatsApp κατέθεσε αντίθετα.`,
+            ]
+          : [`${C} πρότεινε «κοινή γραμμή». Ενάντια σε ποιον; Μάντεψε.`, `${C}… λίγα λόγια. Πολλές προθέσεις.`, `Άκουσα τον ${C}. Μετά δεν άκουσα τίποτα. Βολικό.`, `${C} είπε «όχι συνωμοσία». Είπε πολλά.`],
+        seed + 17,
+      ),
+    },
   ]
 
   // Always include one plot rumor + one whisper per direction (equal dirt)
@@ -844,7 +1045,7 @@ function pickHeadlines(ranking, matchRows, round = 0, seasonRows = [], upcoming 
       myth: 'Ο Όλυμπος έκλεισε για συντήρηση. Ελάτε αύριο. Ίσως.',
       page3Cap: 'ΚΟΡΙΤΣΙΑ ΤΗΣ ΗΜΕΡΑΣ · χωρίς tips, μόνο χάος',
       equalBilling: 'Boikos · Mavromichalis · Chousiadas — ίσο μερίδιο, ίσο δηλητήριο',
-      rumors: buildRumors([], round || 0),
+      rumors: buildRumors([], round || 0, []),
       frontTeasers: [
         '⚖️ ΙΣΗ ΚΑΛΥΨΗ: Boikos · Mavromichalis · Chousiadas',
         'FANS FRONT PAGE · ακόμα κι αν σήμερα είναι κενό… τα επόμενα σε κυνηγάνε!!!',
@@ -858,6 +1059,9 @@ function pickHeadlines(ranking, matchRows, round = 0, seasonRows = [], upcoming 
   const seed = hashSeed(`${ranking.map((p) => p.id + p.pts).join('|')}:${round}:mad`)
   const names = ranking.map((p) => p.name).join(', ')
   const tableSplash = ranking.map((p) => `${p.name.toUpperCase()} ${p.pts}`).join(' · ')
+  const dqOffenders = collectDqOffenders(matchRows)
+  const dqPoison = dqReminderPoison(dqOffenders, seed)
+  const dqById = Object.fromEntries(dqOffenders.map((o) => [o.id, o]))
 
   const yellPool = [
     'ΤΡΕΛΑ!!!',
@@ -871,7 +1075,8 @@ function pickHeadlines(ranking, matchRows, round = 0, seasonRows = [], upcoming 
     'ΜΑΤΩΜΕΝΟ!!!',
     'ΟΥΑΟΥ!!!',
   ]
-  const yell = yellPool[seed % yellPool.length]
+  // When tips were blanked after reminders, lead with the acid
+  const yell = dqPoison ? dqPoison.yell : yellPool[seed % yellPool.length]
 
   const splashPool = [
     tableSplash,
@@ -879,29 +1084,51 @@ function pickHeadlines(ranking, matchRows, round = 0, seasonRows = [], upcoming 
     `ΚΑΝΕΙΣ ΑΘΩΟΣ — ${ranking.map((p) => p.name.toUpperCase()).join(' / ')}`,
     `ΤΡΕΙΣ ΠΡΟΦΗΤΕΣ · ${ranking.map((p) => `${p.pts}ΠΤ`).join(' · ')}`,
   ]
-  const splash = splashPool[(seed >> 4) % splashPool.length]
+  const splash = dqPoison ? dqPoison.splash : splashPool[(seed >> 4) % splashPool.length]
 
   const kickerBits = ranking.map((p, i) => {
     const medal = i === 0 ? '👑' : i === ranking.length - 1 ? '🍩' : '🌶️'
-    return `${medal} ${p.name} ${p.pts}πτ σήμερα`
+    const dqTag = dqById[p.id] ? ` · ${dqById[p.id].count}×DQ μετά από WA` : ''
+    return `${medal} ${p.name} ${p.pts}πτ σήμερα${dqTag}`
   })
-  const kicker = `${kickerBits.join('  ·  ')} ...και αύριο; Μυστήριο!!!`
+  const kicker = dqPoison
+    ? `${kickerBits.join('  ·  ')} ...υπενθυμίσεις στάλθηκαν · tips ΟΧΙ!!!`
+    : `${kickerBits.join('  ·  ')} ...και αύριο; Μυστήριο!!!`
 
-  const quote = pickFrom(
-    [
-      `«${names}... τρεις προφήτες, μία κωμωδία, μηδέν έλεος.»`,
-      `«Ο Κουβάς ψιθυρίζει: ${hero.name} γέλασε... ${goat.name} ακόμα μετράει τα λάθη!!!»`,
-      `«Ίση μεταχείριση; Ναι. Ίσο δηλητήριο!!! ${names} — εξηγήστε τα tips. Τώρα.»`,
-      `«Απόψε το τρελοκομείο άνοιξε νωρίς. Οι νοσοκόμες; Οι προβλέψεις σας...»`,
-      `«Μην κοιτάς μόνο το σκορ. Κοίτα... ποιος έκλεισε τα μάτια και πάτησε «αποστολή».»`,
-    ],
-    seed >> 5,
-  )
+  const quote = dqPoison
+    ? dqPoison.quote
+    : pickFrom(
+        [
+          `«${names}... τρεις προφήτες, μία κωμωδία, μηδέν έλεος.»`,
+          `«Ο Κουβάς ψιθυρίζει: ${hero.name} γέλασε... ${goat.name} ακόμα μετράει τα λάθη!!!»`,
+          `«Ίση μεταχείριση; Ναι. Ίσο δηλητήριο!!! ${names} — εξηγήστε τα tips. Τώρα.»`,
+          `«Απόψε το τρελοκομείο άνοιξε νωρίς. Οι νοσοκόμες; Οι προβλέψεις σας...»`,
+          `«Μην κοιτάς μόνο το σκορ. Κοίτα... ποιος έκλεισε τα μάτια και πάτησε «αποστολή».»`,
+        ],
+        seed >> 5,
+      )
 
-  // Straps: one spicy line per match — no tip dump repeat
-  const straps = matchRows.map((row) => {
+  // Straps: one spicy line per match — DQ no-shows get reminder poison
+  const matchStraps = matchRows.map((row) => {
     const best = [...row.players].sort((a, b) => b.pts - a.pts)[0]
     const worst = [...row.players].sort((a, b) => a.pts - b.pts)[0]
+    const dqs = (row.players || []).filter((p) => p.dq)
+    if (dqs.length) {
+      const dqNames = dqs.map((p) => p.name).join(' & ')
+      const namedDuo =
+        dqs.some((p) => p.id === 'boikos') && dqs.some((p) => p.id === 'chousiadas')
+      return pickFrom(
+        [
+          `${row.label} ${row.score}: ${dqNames} ΑΠΟΥΣΙΑΣΑΝ από το tip — ΜΕΤΑ από υπενθυμίσεις 30′ & 20′. DQ −1. Χωρίς έλεος.`,
+          `⛔ ${row.label}: το WA ούρλιαξε δύο φορές. ${dqNames}… κώφωση ολυμπιακού επιπέδου. ΑΠΟΚΛΕΙΣΜΟΣ.`,
+          namedDuo
+            ? `${row.label} ${row.score} — Chousiadas + Boikos: διάβασαν τις υπενθυμίσεις· ξέχασαν να υπάρχουν. Ο Κουβάς υπέγραψε DQ.`
+            : `${row.label}: ${dqNames} άδειοι. Υπενθυμίσεις στάλθηκαν. Tips όχι. Ποινή: −1 και δημόσια διαπόμπευση.`,
+          `${row.label} ${row.score}${row.qual ? ' →' + row.qual : ''}... ${best?.name || '—'} έπαιξε· ${dqNames} έκαναν ghost στο ίδιο τους το πρωτάθλημα!!!`,
+        ],
+        seed + row.id.length,
+      )
+    }
     return pickFrom(
       [
         `${row.label} ${row.score}${row.qual ? ' →' + row.qual : ''}... ${best.name} χαμογελά (+${best.pts}), ${worst.name} ήδη γράφει απολογία!!!`,
@@ -914,14 +1141,39 @@ function pickHeadlines(ranking, matchRows, round = 0, seasonRows = [], upcoming 
 
   const seasonLeader = seasonRows[0]
   const seasonLast = seasonRows[seasonRows.length - 1]
-  if (seasonLeader && seasonLast && seasonLeader.id !== seasonLast.id) {
-    straps.push(
-      `ΓΕΝΙΚΗ ΒΑΘΜΟΛΟΓΙΑ: ${seasonLeader.name} μπροστά με ${seasonLeader.pts}πτ... ${seasonLast.name} κυνηγάει το μπέργκερ με ${seasonLast.pts}. Ακόμα δεν τελείωσε!!!`,
-    )
-  }
+  const seasonStrap =
+    seasonLeader && seasonLast && seasonLeader.id !== seasonLast.id
+      ? `ΓΕΝΙΚΗ ΒΑΘΜΟΛΟΓΙΑ: ${seasonLeader.name} μπροστά με ${seasonLeader.pts}πτ... ${seasonLast.name} κυνηγάει το μπέργκερ με ${seasonLast.pts}. Ακόμα δεν τελείωσε!!!`
+      : null
+
+  // Lead with reminder shame, then every match, then season
+  const straps = [...(dqPoison?.straps || []), ...matchStraps, ...(seasonStrap ? [seasonStrap] : [])]
 
   const playerLines = ranking.map((p, i) => {
     const role = i === 0 ? 'ΗΜΕΡΑΣ' : i === ranking.length - 1 ? 'ΝΤΟΝΑΤ' : 'ΜΕΣΑΙΟΣ'
+    const dq = dqById[p.id]
+    if (dq) {
+      const special =
+        p.id === 'boikos'
+          ? [
+              `Boikos (${role}): ${dq.count}×DQ μετά από τις δικές του υπενθυμίσεις. Admin χωρίς tip. Ο Κουβάς χειροκροτεί… ειρωνικά.`,
+              `Boikos — ${p.pts}πτ σήμερα, ${dq.count} άδειο slot. Το WA χτύπησε στις 30′ και στις 20′. Αυτός; Mute. Ντροπή με στολή.`,
+            ]
+          : p.id === 'chousiadas'
+            ? [
+                `Chousiadas (${role}): ${dq.count}×DQ. «Δεν χτύπησε» — χτύπησε δύο φορές. Το tip πέθανε μόνο του.`,
+                `Chousiadas — ${p.pts}πτ, ${dq.count} ΑΠΟΚΛΕΙΣΜΟΣ. Μπλε τικ στις υπενθυμίσεις · μαύρο κενό στο σκορ.`,
+              ]
+            : []
+      return pickFrom(
+        [
+          ...special,
+          `${p.name} (${role}): ${p.pts}πτ · ${dq.count}×DQ μετά από WA 30′/20′... Ο Κουβάς σε είδε. Και σε κάρφωσε.`,
+          `${p.name} — υπενθυμίστηκε, αγνόησε, αποκλείστηκε. ${dq.matches.join(', ')}. Χωρίς έλεος.`,
+        ],
+        seed + i * 17 + p.name.length,
+      )
+    }
     return pickFrom(
       [
         `${p.name} (${role}): ${p.pts}πτ, ${p.exact} exact, ${p.misses} άκυρα... Ο Κουβάς σε είδε. Και γέλασε.`,
@@ -939,6 +1191,29 @@ function pickHeadlines(ranking, matchRows, round = 0, seasonRows = [], upcoming 
       .filter((x) => x.id !== p.id)
       .map((x) => x.name)
       .join(' & ')
+    const dq = dqById[p.id]
+    if (dq) {
+      const tippers = ranking
+        .filter((x) => x.id !== p.id && !dqById[x.id])
+        .map((x) => x.name)
+        .join(' & ')
+      const tipperLine = tippers
+        ? `${tippers} τουλάχιστον πάτησαν submit...`
+        : `Κανείς δεν γλιτώνει από τη διαπόμπευση — ο Κουβάς έχει ονόματα.`
+      captions[p.id] = pickFrom(
+        [
+          `${p.name} (${p.pts}πτ) — ${dq.count}×DQ παρά τις υπενθυμίσεις!!! ${tipperLine}`,
+          p.id === 'boikos'
+            ? `Boikos έκλεισε με ${p.pts} και ${dq.count} ΑΠΟΚΛΕΙΣΜΟ(ΥΣ). Έστησε το κουδούνι· μετά το αγνόησε. Ιστορία.`
+            : p.id === 'chousiadas'
+              ? `Chousiadas στα ${p.pts}: ${dq.count}× άδειο tip μετά από 30′ & 20′ WA. Η δικαιολογία πέθανε πριν το tip.`
+              : `${p.name} (${p.pts}πτ) — αγνόησε δύο καμπάνες. Ο Κουβάς χρέωσε −1 και κράτησε αποδείξεις.`,
+          `${p.name}: το WhatsApp ικέτευε. Αυτός όχι. DQ · δημόσια διαπόμπευση · τέλος συζήτησης.`,
+        ],
+        seed + i,
+      )
+      continue
+    }
     if (i === 0) {
       captions[p.id] = pickFrom(
         [
@@ -969,14 +1244,16 @@ function pickHeadlines(ranking, matchRows, round = 0, seasonRows = [], upcoming 
     }
   }
 
-  const amok = pickFrom(
-    [
-      `ΑΜΟΚ!!! ${ranking.map((p) => `${p.name} ${p.pts}`).join(' · ')}. Κανείς δεν γλιτώνει απόψε...`,
-      `ΤΡΕΛΟΚΟΜΕΙΟ ΑΝΟΙΧΤΟ: ${names}. Οι γιατροί παραιτήθηκαν. Μείνανε μόνο τα tips!!!`,
-      `ΣΥΝΑΓΕΡΜΟΣ... ${hero.name} πανηγυρίζει, ${goat.name} μετράει. Ο Κουβάς πουλάει εισιτήρια.`,
-    ],
-    seed >> 11,
-  )
+  const amok = dqPoison
+    ? dqPoison.amok
+    : pickFrom(
+        [
+          `ΑΜΟΚ!!! ${ranking.map((p) => `${p.name} ${p.pts}`).join(' · ')}. Κανείς δεν γλιτώνει απόψε...`,
+          `ΤΡΕΛΟΚΟΜΕΙΟ ΑΝΟΙΧΤΟ: ${names}. Οι γιατροί παραιτήθηκαν. Μείνανε μόνο τα tips!!!`,
+          `ΣΥΝΑΓΕΡΜΟΣ... ${hero.name} πανηγυρίζει, ${goat.name} μετράει. Ο Κουβάς πουλάει εισιτήρια.`,
+        ],
+        seed >> 11,
+      )
 
   const glamNames = ['ΝΙΚΗ', 'ΑΦΡΟΔΙΤΗ', 'ΕΛΕΝΗ', 'ΙΡΙΣ', 'ΣΕΛΗΝΗ', 'ΚΛΕΙΩ']
   const page3Cap = pickFrom(
@@ -992,19 +1269,29 @@ function pickHeadlines(ranking, matchRows, round = 0, seasonRows = [], upcoming 
   const equalBilling = ranking
     .map((p, i) => {
       const tag = i === 0 ? 'ΗΜΕΡΑΣ' : i === ranking.length - 1 ? 'ΝΤΟΝΑΤ' : 'ΜΕΣΑΙΟΣ'
-      return `${p.name} ${p.pts}πτ (${tag})`
+      const dq = dqById[p.id]
+      const shame = dq ? ` · ${dq.count}×DQ` : ''
+      return `${p.name} ${p.pts}πτ (${tag}${shame})`
     })
     .join(' · ')
 
   const frontTeasers = [
     `⚖️ ΙΣΗ ΚΑΛΥΨΗ: ${equalBilling}`,
     pickFrom(
-      [
-        'FANS FRONT PAGE: διάβασε, θύμωσε, βάλε tip — ή μείνε ΝΤΟΝΑΤ!!!',
-        'Το φύλλο των φιλάθλων… όχι των ευγενών. Welcome to the madhouse.',
-        'Αν δεν σε έθιξε αυτό το φύλλο — δεν διάβασες αρκετά!!!',
-        'Μέσα: λίγα ματς μπροστά, λίγοι διαγκωνισμοί, μηδέν επανάληψη. Πάμε.',
-      ],
+      dqPoison
+        ? [
+            `⛔ DQ ΣΗΜΕΡΑ: ${dqPoison.names} — υπενθυμίσεις 30′/20′ στάλθηκαν · tips ΟΧΙ · ποινή −1!!!`,
+            'FANS FRONT PAGE: διάβασε τις υπενθυμίσεις… ή μπες στο πρωτοσέλιδο ως ΑΠΟΥΣΙΑ!!!',
+            dqOffenders.some((o) => o.id === 'boikos') && dqOffenders.some((o) => o.id === 'chousiadas')
+              ? 'Chousiadas + Boikos: δύο WA, μηδέν κουράγιο, πλήρες δηλητήριο. Welcome to the madhouse.'
+              : 'Αν αγνόησες το reminder — αυτό το φύλλο είναι η καταδίκη σου!!!',
+          ]
+        : [
+            'FANS FRONT PAGE: διάβασε, θύμωσε, βάλε tip — ή μείνε ΝΤΟΝΑΤ!!!',
+            'Το φύλλο των φιλάθλων… όχι των ευγενών. Welcome to the madhouse.',
+            'Αν δεν σε έθιξε αυτό το φύλλο — δεν διάβασες αρκετά!!!',
+            'Μέσα: λίγα ματς μπροστά, λίγοι διαγκωνισμοί, μηδέν επανάληψη. Πάμε.',
+          ],
       seed >> 17,
     ),
   ]
@@ -1016,20 +1303,16 @@ function pickHeadlines(ranking, matchRows, round = 0, seasonRows = [], upcoming 
     splash,
     kicker,
     quote,
-    straps: (() => {
-      // Keep a spicy line for EVERY match of the day, then optional season strap
-      const matchStraps = straps.slice(0, matchRows.length)
-      const extra = straps.slice(matchRows.length, matchRows.length + 1)
-      return [...matchStraps, ...extra]
-    })(),
+    straps,
     captions,
     playerLines,
     amok,
     myth: pickMyth(seed, names),
     page3Cap,
     equalBilling,
-    rumors: buildRumors(ranking, seed),
+    rumors: buildRumors(ranking, seed, dqOffenders),
     frontTeasers: frontTeasers.slice(0, 3),
+    dqOffenders,
   }
 }
 
@@ -1121,7 +1404,7 @@ function renderHtml({ ymd, editionDate, headlines, ledger, seasonRows, timeline,
       const tips = m.players
         .map((pl) => {
           if (pl.dq) {
-            return `<div class="tip dq"><b>${esc(pl.name)}</b> ΑΠΟΚΛΕΙΣΜΟΣ <span>DQ</span></div>`
+            return `<div class="tip dq"><b>${esc(pl.name)}</b> ΑΠΟΚΛΕΙΣΜΟΣ −1 <span>DQ</span><em>υπενθυμίσεις 30′+20′ · tip: ΚΕΝΟ</em></div>`
           }
           return `<div class="tip ${pl.pts === 0 ? 'miss' : pl.exact ? 'hit' : ''}"><b>${esc(pl.name)}</b> ${esc(pl.tip)} <span>+${pl.pts}</span></div>`
         })
@@ -1395,8 +1678,9 @@ function renderHtml({ ymd, editionDate, headlines, ledger, seasonRows, timeline,
   .tip { font-size:12px; display:flex; justify-content:space-between; gap:8px; padding:2px 0; font-weight:700; }
   .tip.miss { color:#9b0000; }
   .tip.hit { color:#0a5c2b; }
-  .tip.dq { color:#666; background:#111; color:#ffe600; padding:4px 6px; border:2px solid #000; margin:3px 0; }
+  .tip.dq { color:#666; background:#111; color:#ffe600; padding:4px 6px; border:2px solid #000; margin:3px 0; flex-wrap:wrap; }
   .tip.dq span { color:#e30613; }
+  .tip.dq em { display:block; width:100%; font-size:10px; font-style:normal; color:#fff; opacity:.85; margin-top:2px; }
   .roast { font-size:13px; line-height:1.3; margin:0 0 10px; font-weight:700; }
   .roast .name { color:var(--red); font-weight:900; background: var(--yell); padding:0 3px; }
   .amok {
@@ -1627,7 +1911,7 @@ function renderWhatsApp({ editionDate, headlines, ledger, seasonRows, upcoming =
     .map((m) => {
       const dqN = m.players.filter((p) => p.dq).length
       const tips = (m.players || [])
-        .map((pl) => (pl.dq ? `${pl.name}=DQ` : `${pl.name}+${pl.pts}`))
+        .map((pl) => (pl.dq ? `${pl.name}=DQ−1 (αγνόησε WA)` : `${pl.name}+${pl.pts}`))
         .join(' · ')
       return `• ${m.label} ${m.score}${dqN ? ` · ${dqN} DQ` : ''}${tips ? `\n  ${tips}` : ''}`
     })
@@ -1638,12 +1922,31 @@ function renderWhatsApp({ editionDate, headlines, ledger, seasonRows, upcoming =
     .map((s) => `• ${s}`)
     .join('\n')
 
+  const dqOff = headlines.dqOffenders || []
+  const dqShame =
+    dqOff.length
+      ? `*⛔ DQ · ΑΓΝΟΗΣΑΝ ΤΙΣ ΥΠΕΝΘΥΜΙΣΕΙΣ (30′ + 20′)*\n` +
+        dqOff
+          .map((o) => {
+            const venom =
+              o.id === 'boikos'
+                ? 'admin χωρίς tip — ειρωνεία αυτοκτονίας'
+                : o.id === 'chousiadas'
+                  ? '«δεν χτύπησε» ×2 — χτύπησε · tip ποτέ'
+                  : 'δύο καμπάνες · μηδέν πρόβλεψη'
+            return `• *${o.name}* ×${o.count} DQ — ${venom}\n  (${o.matches.join(', ')})`
+          })
+          .join('\n') +
+        `\n\n`
+      : ''
+
   return (
     `*Ο ΚΟΥΒΑΣ* · FANS FRONT PAGE · γύρος ${round + 1} !!!\n_${editionDate}_\n\n` +
     `*${headlines.yell || ''} ${headlines.splash}*\n` +
     `${headlines.kicker}\n\n` +
     `⚖️ *ΙΣΗ ΚΑΛΥΨΗ:* ${equalLine}\n\n` +
     `${headlines.quote}\n\n` +
+    dqShame +
     rumorBlock +
     (dayResults ? `*ΑΠΟΤΕΛΕΣΜΑΤΑ ΗΜΕΡΑΣ*\n${dayResults}\n\n` : '') +
     (dayComments ? `*ΣΧΟΛΙΟ ΑΓΩΝΩΝ*\n${dayComments}\n\n` : '') +
