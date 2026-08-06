@@ -7,6 +7,8 @@ on:
       - 'worker/**'
       - '.github/workflows/deploy-worker.yml'
   workflow_dispatch:
+  repository_dispatch:
+    types: [deploy-worker]
 
 concurrency:
   group: deploy-worker
@@ -29,6 +31,8 @@ jobs:
             echo "::error::Need CLOUDFLARE_API_TOKEN and CF_ACCOUNT_ID in repo Actions secrets."
             exit 1
           fi
+          echo "CF_ACCOUNT_ID length: ${#CLOUDFLARE_ACCOUNT_ID}"
+          echo "CLOUDFLARE_API_TOKEN length: ${#CLOUDFLARE_API_TOKEN}"
       - name: Deploy kouvadeiros-api
         run: npx wrangler@4 deploy -c worker/wrangler-api.toml
         env:
