@@ -1296,8 +1296,13 @@ export default {
     if (path === '/set-live' && request.method === 'POST') {
       const user = await getUser(request, env)
       if (!user || user.role !== 'admin') return json({ error: 'Admin only' }, 403)
-      const { matchId, h, a, min, final } = await request.json()
+      const { matchId, h, a, min, final, clear } = await request.json()
       const state = await getState(env)
+      if (clear) {
+        delete state[`live_${matchId}`]
+        await setState(env, state)
+        return json({ ok: true, cleared: true })
+      }
       if (final) {
         if (!state.results) state.results = {}
         state.results[matchId] = { h, a, source: 'manual', fetchedAt: new Date().toISOString() }
@@ -1305,6 +1310,7 @@ export default {
         await setState(env, state)
         return json({ ok: true, result: { h, a }, final: true })
       }
+      if (h == null || a == null) return json({ error: 'h and a required (or clear:true)' }, 400)
       state[`live_${matchId}`] = { h, a, min: min || 0 }
       await setState(env, state)
       return json({ ok: true, live: { h, a, min }, final: false })
