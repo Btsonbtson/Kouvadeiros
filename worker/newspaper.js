@@ -1003,7 +1003,12 @@ function pickHeadlines(ranking, matchRows, round = 0, seasonRows = [], upcoming 
     splash,
     kicker,
     quote,
-    straps: straps.slice(0, 3),
+    straps: (() => {
+      // Keep a spicy line for EVERY match of the day, then optional season strap
+      const matchStraps = straps.slice(0, matchRows.length)
+      const extra = straps.slice(matchRows.length, matchRows.length + 1)
+      return [...matchStraps, ...extra]
+    })(),
     captions,
     playerLines,
     amok,
@@ -1523,7 +1528,8 @@ function renderHtml({ ymd, editionDate, headlines, ledger, seasonRows, timeline,
     </div>
 
     <section class="block">
-      <h2>Γράφημα ανταγωνισμού</h2>
+      <h2>Γράφημα ανταγωνισμού · προοδευτική βαθμολογία</h2>
+      <p class="credit" style="margin:0 0 8px">Κάθε σημείο = αγώνας με επίσημο σκορ. Οι γραμμές δείχνουν την κούρσα από την αρχή της σεζόν μέχρι σήμερα.</p>
       ${graphSvg}
       <div class="legend">
         ${(timeline.players || [])
@@ -1605,7 +1611,6 @@ function renderWhatsApp({ editionDate, headlines, ledger, seasonRows, upcoming =
       : ''
 
   const dayResults = (ledger.matchRows || [])
-    .slice(0, 2)
     .map((m) => {
       const dqN = m.players.filter((p) => p.dq).length
       const tips = (m.players || [])
@@ -1615,6 +1620,11 @@ function renderWhatsApp({ editionDate, headlines, ledger, seasonRows, upcoming =
     })
     .join('\n')
 
+  const dayComments = (headlines.straps || [])
+    .filter((s) => !(s || '').startsWith('ΓΕΝΙΚΗ'))
+    .map((s) => `• ${s}`)
+    .join('\n')
+
   return (
     `*Ο ΚΟΥΒΑΣ* · FANS FRONT PAGE · γύρος ${round + 1} !!!\n_${editionDate}_\n\n` +
     `*${headlines.yell || ''} ${headlines.splash}*\n` +
@@ -1622,24 +1632,35 @@ function renderWhatsApp({ editionDate, headlines, ledger, seasonRows, upcoming =
     `⚖️ *ΙΣΗ ΚΑΛΥΨΗ:* ${equalLine}\n\n` +
     `${headlines.quote}\n\n` +
     rumorBlock +
-    (dayResults ? `*ΑΠΟΤΕΛΕΣΜΑΤΑ*\n${dayResults}\n\n` : '') +
+    (dayResults ? `*ΑΠΟΤΕΛΕΣΜΑΤΑ ΗΜΕΡΑΣ*\n${dayResults}\n\n` : '') +
+    (dayComments ? `*ΣΧΟΛΙΟ ΑΓΩΝΩΝ*\n${dayComments}\n\n` : '') +
     (next ? `*CAN YOU TAKE THE CHALLENGE???*\n${next}\n\n` : '') +
     (dig ? `*ΔΙΑΓΚΩΝΙΣΜΟΙ*\n${dig}\n\n` : '') +
     `*Σήμερα:* ${dayLine || '—'}\n` +
     `*Σεζόν:* ${seasonLine || '—'}\n\n` +
     `*${headlines.amok}*\n\n` +
-    `🗞 Πρωτοσέλιδο (upcoming + rivalries + PAGE 3):\n${pageUrl}\n\n` +
+    `📈 *Γράφημα ανταγωνισμού* (προοδευτική βαθμολογία) + PAGE 3 μέσα:\n${pageUrl}\n\n` +
     `_Άνοιξέ το. Το WhatsApp είναι μόνο η γροθιά — μέσα είναι το μαχαίρι..._`
   )
 }
 
-export function shouldSendNewspaper(allMatches, state, ymd, now = Date.now(), graceMin = 150) {
+/** Issue Ο Κουβάς ~graceMin after the last game of the Athens day finishes. */
+export function shouldSendNewspaper(allMatches, state, ymd, now = Date.now(), graceMin = 20) {
   const day = matchesForDate(allMatches, ymd)
   if (!day.length) return false
-  const finished = day.filter((m) => resolveResult(state, m.id))
-  if (finished.length < day.length) return false
-  const lastKo = Math.max(...day.map((m) => new Date(m.kickoff).getTime()))
-  return now >= lastKo + graceMin * 60000
+  const withResults = day.map((m) => ({ m, r: resolveResult(state, m.id) }))
+  if (withResults.some((x) => !x.r)) return false
+
+  // Prefer result.fetchedAt (≈ FT); else estimate FT ≈ kickoff + 100′
+  const lastGameEnd = Math.max(
+    ...withResults.map(({ m, r }) => {
+      const ko = new Date(m.kickoff).getTime()
+      const fetched = r?.fetchedAt ? Date.parse(r.fetchedAt) : NaN
+      if (Number.isFinite(fetched) && fetched >= ko) return fetched
+      return ko + 100 * 60000
+    }),
+  )
+  return now >= lastGameEnd + graceMin * 60000
 }
 
 export function resolveMediaSlot(ymd, slot, round = 0) {

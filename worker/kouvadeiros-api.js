@@ -1,5 +1,5 @@
 // KOUVADEIROS Worker v8
-// Reminders: 60' + 30' before kickoff · Lock/reveal: 15' before
+// Reminders: 30' + 20' before kickoff · Lock/reveal: 15' before
 // ΘΑΥΜΑ/ΩΣΑΝΑ late goal detection · Ο Κουβάς end-of-day tabloid
 
 import {
@@ -9,6 +9,12 @@ import {
   FALLBACK_RESULTS,
   resolveMediaSlot,
 } from './newspaper.js'
+import {
+  pollGazzettaForMatches,
+  getGazzettaHealth,
+  setGazzettaHealth,
+  gazzettaIsHealthy,
+} from './gazzetta.js'
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -148,7 +154,7 @@ const MATCHES = [
 ]
 
 /** WhatsApp reminder offsets (minutes before kickoff) */
-const REMIND_TARGETS = [60, 30]
+const REMIND_TARGETS = [30, 20]
 /** Lock + reveal all predictions (minutes before kickoff) */
 const LOCK_TARGET = 15
 
@@ -455,13 +461,14 @@ async function fetchESPNScore(match) {
   }
 }
 
-// ── CRON: */5 * * * * ────────────────────────────────────────────────────────
+// ── CRON: every 1′ (* * * * *) — Gazzetta + reminders / live scores ──────────
 export default {
   async scheduled(event, env, ctx) {
     const now = Date.now()
     const state = await getState(env)
     const phones = state.phones || {}
     const users = await getAllUsers(env)
+    // Keep 5′ buckets for WhatsApp dedup so 1′ cron doesn't re-fire the same reminder
     const windowKey = `cron:${Math.floor(now / 300000)}`
     const sent = JSON.parse((await env.KOUV.get(windowKey)) || '{}')
     let stateChanged = false
@@ -471,28 +478,62 @@ export default {
     const playerNames = {}
     for (const u of Object.values(users)) playerNames[u.id] = u.name
 
-    // Ops band: reminders/lock from 65′ before KO; live scores only 0–120′ after KO.
+    // Ops band: reminders/lock from 40′ before KO; live scores through +200′ after KO.
     // Skip the whole match loop when nothing is in that band (idle days).
     const anyOps = MATCHES.some((m) => {
       if (m.timeTbd) return false
       const minsUntil = (new Date(m.kickoff).getTime() - now) / 60000
-      // Reminders from 65′ before; live scores through +200′ after KO
-      return minsUntil <= 65 && minsUntil >= -200
+      // Reminders from ~40′ before (covers 30′/20′); live scores through +200′ after KO
+      return minsUntil <= 40 && minsUntil >= -200
     })
 
     if (anyOps) {
+    // Gazzetta first (default ON) — one schedule+live poll for all matches in band
+    let gzScores = {}
+    const gzHealth = await getGazzettaHealth(env)
+    if (gzHealth.enabled !== false) {
+      try {
+        const bandMatches = MATCHES.filter((m) => {
+          if (m.timeTbd) return false
+          const minsUntil = (new Date(m.kickoff).getTime() - now) / 60000
+          return minsUntil <= 15 && minsUntil >= -200
+        })
+        const poll = await pollGazzettaForMatches(bandMatches.length ? bandMatches : MATCHES)
+        gzScores = poll.scores || {}
+        await setGazzettaHealth(env, {
+          ...gzHealth,
+          enabled: true,
+          lastOk: new Date(now).toISOString(),
+          lastError: null,
+          lastPoll: new Date(now).toISOString(),
+          scheduleCount: poll.scheduleCount,
+          liveFeedCount: poll.liveFeedCount,
+          matchedLive: poll.matchedLive,
+          matchedTotal: poll.matchedTotal,
+        })
+      } catch (e) {
+        console.log('gazzetta poll error', e?.message || e)
+        await setGazzettaHealth(env, {
+          ...gzHealth,
+          enabled: gzHealth.enabled !== false,
+          lastError: String(e?.message || e),
+          lastPoll: new Date(now).toISOString(),
+        })
+      }
+    }
+
     for (const match of MATCHES) {
       if (match.timeTbd) continue
       const kickoff = new Date(match.kickoff).getTime()
       const minsUntil = (kickoff - now) / 60000
-      if (minsUntil > 65 || minsUntil < -200) continue
+      if (minsUntil > 40 || minsUntil < -200) continue
 
       // ── AUTO SCORE + ΘΑΥΜΑ/ΩΣΑΝΑ — 15′ warm-up → +200′ (until final) ──
       const minsAfter = -minsUntil
       if (minsAfter >= -15 && minsAfter <= 200) {
         const already = state.results?.[match.id]
         if (!already || already.source === 'auto') {
-          const score = await fetchESPNScore(match)
+          const score = gzScores[match.id] || (await fetchESPNScore(match))
           if (score) {
             const prev = state.results?.[match.id]
             const prevH = prev?.h ?? null
@@ -591,30 +632,37 @@ export default {
         }
       }
 
-      // ── REMINDER WINDOWS (60' and 30' before) ────────────────────────────
+      // ── REMINDER WINDOWS (30' and 20' before — then lock/reveal at 15') ──
+      // Catch after crossing the mark (not ±2.5′) so a cron tick cannot skip the window.
       for (const target of REMIND_TARGETS) {
-        if (Math.abs(minsUntil - target) > 2.5) continue
-        const rKey = `r${target}:${match.id}`
-        if (sent[rKey]) continue
-        const urgency = target === 60 ? '🟡' : '🔴'
-        for (const [, user] of Object.entries(users)) {
+        if (!(minsUntil <= target && minsUntil > target - 8)) continue
+        const urgency = target === 30 ? '🟡' : '🔴'
+        for (const user of Object.values(users)) {
           const phone = phones[user.id]
           if (!phone) continue
           if (state.predictions?.[match.id]?.[user.id]) continue
+          const urKey = `wa:remind:${match.id}:${target}:${user.id}`
+          if (await env.KOUV.get(urKey)) continue
           const msg =
             `${urgency} *KOUVADEIROS — Υπενθύμιση!*\n\n` +
             `⚽ *${match.label}*\nΕκκίνηση: *${grTime(match.kickoff)}* (σε ~${Math.round(minsUntil)} λεπτά)\n\n` +
             `📱 Απάντα:\n\`PRED ${match.id} 2-1${qualHintForMatch(match)}\`\n\n` +
             `⏰ Κλείδωμα προβλέψεων 15′ πριν τη σέντρα!`
-          await sendWA(env, phone, msg)
+          const wa = await sendWA(env, phone, msg)
+          if (wa.ok) {
+            await env.KOUV.put(urKey, new Date(now).toISOString(), { expirationTtl: 60 * 60 * 36 })
+            console.log('remind ok', target, match.id, user.id)
+          } else {
+            console.log('remind fail', target, match.id, user.id, wa.error || wa)
+          }
         }
-        sent[rKey] = true
       }
 
       // ── LOCK + REVEAL (15' before kickoff) ───────────────────────────────
-      if (Math.abs(minsUntil - LOCK_TARGET) <= 2.5) {
-        const lKey = `lock:${match.id}`
-        if (!sent[lKey] && !state.revealed?.[match.id]) {
+      if (minsUntil <= LOCK_TARGET && minsUntil > LOCK_TARGET - 8) {
+        const lKey = `wa:lock:${match.id}`
+        const alreadyLock = await env.KOUV.get(lKey)
+        if (!alreadyLock && !state.revealed?.[match.id]) {
           if (!state.revealed) state.revealed = {}
           state.revealed[match.id] = true
           stateChanged = true
@@ -627,16 +675,46 @@ export default {
           const predText = lines.length ? lines.join('\n') : '⚠️ Κανείς δεν έκανε πρόβλεψη!'
           const msg =
             `🔒 *ΚΛΕΙΔΩΜΑ!*\n\n⚽ *${match.label}*\nΠροβλέψεις κλειδωμένες · 15′ πριν τη σέντρα\n\n📊 *Προβλέψεις:*\n${predText}\n\nΠοιος θα έχει δίκιο; 🍔`
-          for (const [, user] of Object.entries(users)) {
+          let lockOk = false
+          for (const user of Object.values(users)) {
             const phone = phones[user.id]
-            if (phone) await sendWA(env, phone, msg)
+            if (!phone) continue
+            const wa = await sendWA(env, phone, msg)
+            if (wa.ok) lockOk = true
           }
-          sent[lKey] = true
+          if (lockOk) {
+            await env.KOUV.put(lKey, new Date(now).toISOString(), { expirationTtl: 60 * 60 * 36 })
+            console.log('lock ok', match.id)
+          }
         }
       }
     }
     } else {
-      console.log('cron idle — no match in ops band (65′ before → 200′ after KO)')
+      console.log('cron idle — no match in ops band (40′ before → 200′ after KO)')
+      // Keep Gazzetta health green even on idle days (cheap poll)
+      const gzHealth = await getGazzettaHealth(env)
+      if (gzHealth.enabled !== false) {
+        try {
+          const poll = await pollGazzettaForMatches([])
+          await setGazzettaHealth(env, {
+            ...gzHealth,
+            enabled: true,
+            lastOk: new Date(now).toISOString(),
+            lastError: null,
+            lastPoll: new Date(now).toISOString(),
+            scheduleCount: poll.scheduleCount,
+            liveFeedCount: poll.liveFeedCount,
+            matchedLive: 0,
+            matchedTotal: 0,
+          })
+        } catch (e) {
+          await setGazzettaHealth(env, {
+            ...gzHealth,
+            lastError: String(e?.message || e),
+            lastPoll: new Date(now).toISOString(),
+          })
+        }
+      }
     }
 
     // ── Ο ΚΟΥΒΑΣ — end-of-day tabloid (once per Athens calendar day) ──
@@ -677,7 +755,7 @@ export default {
         const msg =
           `🎉 *Καλωσόρισες στο KOUVADEIROS 2026/27!*\n\nΓεια σου ${user.name}! 🌶️\n\n` +
           `📱 Κάνε προβλέψεις:\n• Μέσα από την εφαρμογή\n• Μέσω WhatsApp: \`PRED [match-id] [σκορ]\`\n\n` +
-          `🔔 Υπενθυμίσεις: *1 ώρα* και *30 λεπτά* πριν κάθε αγώνα\n` +
+          `🔔 Υπενθυμίσεις: *30′* και *20′* πριν κάθε αγώνα (κλείδωμα στις 15′)\n` +
           `🔒 Κλείδωμα + αποκάλυψη: *15 λεπτά* πριν τη σέντρα\n` +
           `⚡ Αν βγει ΘΑΥΜΑ ή ΩΣΑΝΑ... θα το μάθεις αμέσως!\n\n` +
           `Καλή επιτυχία! Και το burger παίζει 🍔\n\n_kouvadeiros.pages.dev_`
@@ -749,19 +827,49 @@ export default {
       const { matchId } = await request.json()
       const match = MATCHES.find((m) => m.id === matchId)
       if (!match) return json({ error: 'Unknown match' }, 400)
-      const score = await fetchESPNScore(match)
+      let score = null
+      const gzHealth = await getGazzettaHealth(env)
+      if (gzHealth.enabled !== false) {
+        try {
+          const poll = await pollGazzettaForMatches([match])
+          score = poll.scores?.[matchId] || null
+          await setGazzettaHealth(env, {
+            ...gzHealth,
+            enabled: true,
+            lastOk: new Date().toISOString(),
+            lastError: null,
+            lastPoll: new Date().toISOString(),
+            scheduleCount: poll.scheduleCount,
+            liveFeedCount: poll.liveFeedCount,
+            matchedLive: poll.matchedLive,
+            matchedTotal: poll.matchedTotal,
+          })
+        } catch (e) {
+          await setGazzettaHealth(env, {
+            ...gzHealth,
+            lastError: String(e?.message || e),
+            lastPoll: new Date().toISOString(),
+          })
+        }
+      }
+      if (!score) score = await fetchESPNScore(match)
       const state = await getState(env)
       if (!state.results) state.results = {}
       if (score?.isFinal) {
         state.results[matchId] = buildAutoResult(matchId, score, state.results[matchId])
         delete state[`live_${matchId}`]
         await setState(env, state)
-        return json({ ok: true, result: state.results[matchId], final: true })
+        return json({ ok: true, result: state.results[matchId], final: true, source: score.source || 'espn' })
       }
       if (score && score.h !== undefined) {
         state[`live_${matchId}`] = { h: score.h, a: score.a, min: score.minute || 0 }
         await setState(env, state)
-        return json({ ok: true, live: { h: score.h, a: score.a, min: score.minute }, final: false })
+        return json({
+          ok: true,
+          live: { h: score.h, a: score.a, min: score.minute },
+          final: false,
+          source: score.source || 'espn',
+        })
       }
       if (FALLBACK_RESULTS[matchId]) {
         state.results[matchId] = {
@@ -774,6 +882,106 @@ export default {
         return json({ ok: true, result: state.results[matchId] })
       }
       return json({ ok: false, status: 'pending' })
+    }
+
+    // Admin: Gazzetta live feed status / toggle / force poll (cloud — no local Python)
+    if (path === '/gazzetta' && request.method === 'GET') {
+      const user = await getUser(request, env)
+      if (!user || user.role !== 'admin') return json({ error: 'Admin only' }, 403)
+      let health = await getGazzettaHealth(env)
+      // First visit / never polled → warm up so the Admin light can go green
+      if (health.enabled !== false && !health.lastOk && !health.lastError) {
+        try {
+          const poll = await pollGazzettaForMatches(MATCHES)
+          health = {
+            ...health,
+            enabled: true,
+            lastOk: new Date().toISOString(),
+            lastError: null,
+            lastPoll: new Date().toISOString(),
+            scheduleCount: poll.scheduleCount,
+            liveFeedCount: poll.liveFeedCount,
+            matchedLive: poll.matchedLive,
+            matchedTotal: poll.matchedTotal,
+          }
+          await setGazzettaHealth(env, health)
+        } catch (e) {
+          health = {
+            ...health,
+            lastError: String(e?.message || e),
+            lastPoll: new Date().toISOString(),
+          }
+          await setGazzettaHealth(env, health)
+        }
+      }
+      return json({
+        ok: true,
+        healthy: gazzettaIsHealthy(health),
+        ...health,
+        note: 'Runs on Cloudflare cron every 1′ (default ON). Toggle does not start local Python.',
+      })
+    }
+
+    if (path === '/gazzetta' && request.method === 'POST') {
+      const user = await getUser(request, env)
+      if (!user || user.role !== 'admin') return json({ error: 'Admin only' }, 403)
+      const body = await request.json().catch(() => ({}))
+      let health = await getGazzettaHealth(env)
+
+      if (typeof body.enabled === 'boolean') {
+        health = { ...health, enabled: body.enabled }
+      }
+
+      if (body.poll !== false) {
+        // Always poll on POST unless explicitly poll:false (toggle-only)
+        if (health.enabled === false && body.poll !== true) {
+          await setGazzettaHealth(env, health)
+          return json({ ok: true, healthy: false, ...health, skippedPoll: true })
+        }
+        try {
+          const poll = await pollGazzettaForMatches(MATCHES)
+          health = {
+            ...health,
+            enabled: health.enabled !== false,
+            lastOk: new Date().toISOString(),
+            lastError: null,
+            lastPoll: new Date().toISOString(),
+            scheduleCount: poll.scheduleCount,
+            liveFeedCount: poll.liveFeedCount,
+            matchedLive: poll.matchedLive,
+            matchedTotal: poll.matchedTotal,
+          }
+          // Apply live scores for in-window matches
+          const state = await getState(env)
+          let changed = false
+          const now = Date.now()
+          for (const match of MATCHES) {
+            const score = poll.scores?.[match.id]
+            if (!score || score.h === undefined) continue
+            const minsUntil = (new Date(match.kickoff).getTime() - now) / 60000
+            if (minsUntil > 15 || minsUntil < -200) continue
+            if (score.isFinal) {
+              if (!state.results) state.results = {}
+              state.results[match.id] = buildAutoResult(match.id, score, state.results[match.id])
+              delete state[`live_${match.id}`]
+              changed = true
+            } else {
+              state[`live_${match.id}`] = { h: score.h, a: score.a, min: score.minute || 0 }
+              changed = true
+            }
+          }
+          if (changed) await setState(env, state)
+        } catch (e) {
+          health = {
+            ...health,
+            lastError: String(e?.message || e),
+            lastPoll: new Date().toISOString(),
+          }
+        }
+      }
+
+      await setGazzettaHealth(env, health)
+      return json({ ok: true, healthy: gazzettaIsHealthy(health), ...health })
     }
 
     if (path === '/chat' && request.method === 'PATCH') {
@@ -890,7 +1098,18 @@ export default {
       return new Response('<?xml version="1.0"?><Response/>', { headers: { 'Content-Type': 'text/xml' } })
     }
 
-    if (path === '/ping') return json({ ok: true, version: 10, remind: REMIND_TARGETS, lock: LOCK_TARGET, newspaper: true, equalRoast: true, ts: new Date().toISOString() })
+    if (path === '/ping')
+      return json({
+        ok: true,
+        version: 11,
+        remind: REMIND_TARGETS,
+        lock: LOCK_TARGET,
+        newspaper: true,
+        equalRoast: true,
+        gazzetta: true,
+        ts: new Date().toISOString(),
+      })
+
 
     // Photorealistic stills — redirect to Unsplash (Twilio + <img> follow 302)
     if (path === '/newspaper-media' && request.method === 'GET') {

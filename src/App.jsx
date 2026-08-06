@@ -821,6 +821,8 @@ export default function App({ user, onLogout }) {
   const [showGuide, setShowGuide] = useState(false)
   const tabBgs = useMemo(() => assignTabBackgrounds(), [])
   const [showAddPlayer, setShowAddPlayer] = useState(false)
+  const [gazzetta, setGazzetta] = useState({ healthy: false, enabled: true, loading: true })
+  const [gazzettaBusy, setGazzettaBusy] = useState(false)
   const chatReadKey = `kouv_chat_read_${user?.id || 'anon'}`
   const [chatReadIdx, setChatReadIdx] = useState(() => {
     try { return parseInt(localStorage.getItem(chatReadKey) || '-1', 10) } catch { return -1 }
@@ -868,6 +870,57 @@ export default function App({ user, onLogout }) {
     window.addEventListener('pointerdown', soft, { once: true })
     return () => window.removeEventListener('pointerdown', soft)
   }, [])
+
+  // Admin: Gazzetta cloud feed health (runs on Worker cron — default ON)
+  const refreshGazzetta = useCallback(async () => {
+    if (user?.role !== 'admin') return
+    try {
+      const s = await api.gazzettaStatus()
+      setGazzetta({
+        healthy: !!s.healthy,
+        enabled: s.enabled !== false,
+        loading: false,
+        lastOk: s.lastOk,
+        lastError: s.lastError,
+        liveFeedCount: s.liveFeedCount,
+        matchedLive: s.matchedLive,
+      })
+    } catch {
+      setGazzetta((g) => ({ ...g, healthy: false, loading: false }))
+    }
+  }, [user?.role])
+
+  useEffect(() => {
+    if (user?.role !== 'admin') return
+    refreshGazzetta()
+    const t = setInterval(refreshGazzetta, 30000)
+    return () => clearInterval(t)
+  }, [user?.role, refreshGazzetta])
+
+  const toggleGazzetta = async () => {
+    if (user?.role !== 'admin' || gazzettaBusy) return
+    setGazzettaBusy(true)
+    try {
+      const next = !(gazzetta.enabled !== false)
+      // Enable → poll now; disable → toggle only
+      const s = next
+        ? await api.gazzettaControl({ enabled: true, poll: true })
+        : await api.gazzettaControl({ enabled: false, poll: false })
+      setGazzetta({
+        healthy: !!s.healthy,
+        enabled: s.enabled !== false,
+        loading: false,
+        lastOk: s.lastOk,
+        lastError: s.lastError,
+        liveFeedCount: s.liveFeedCount,
+        matchedLive: s.matchedLive,
+      })
+    } catch {
+      setGazzetta((g) => ({ ...g, healthy: false }))
+    } finally {
+      setGazzettaBusy(false)
+    }
+  }
 
   // Bell when a new Ιερά Εξέταση message arrives (not your own)
   const chatLenRef = useRef((state.chat || []).length)
@@ -1072,26 +1125,62 @@ export default function App({ user, onLogout }) {
       )}
 
       {/* Right controls */}
-      <div style={{display:'flex',alignItems:'center',gap:isDesktop?12:8}}>
-        <div style={{width:7,height:7,borderRadius:'50%',background:syncOk?GREEN:RED,animation:syncing?'pulse-d .7s infinite':undefined}}/>
+      <div style={{display:'flex',alignItems:'center',gap:isDesktop?10:6,flexShrink:0,minWidth:0}}>
+        <div style={{width:7,height:7,borderRadius:'50%',flexShrink:0,background:syncOk?GREEN:RED,animation:syncing?'pulse-d .7s infinite':undefined}}/>
+        {user?.role==='admin' && (
+          <button
+            type="button"
+            onClick={toggleGazzetta}
+            disabled={gazzettaBusy || gazzetta.loading}
+            title={
+              gazzetta.enabled === false
+                ? 'Gazzetta OFF — πάτα για ενεργοποίηση (cloud cron)'
+                : gazzetta.healthy
+                  ? `Gazzetta ON · live feed ${gazzetta.liveFeedCount ?? '—'} · matched ${gazzetta.matchedLive ?? 0}`
+                  : `Gazzetta πρόβλημα${gazzetta.lastError ? ': ' + gazzetta.lastError : ''} — πάτα για refresh`
+            }
+            style={{
+              display:'flex', alignItems:'center', gap:5, flexShrink:0,
+              padding: isDesktop ? '5px 10px' : '4px 7px',
+              borderRadius: 8,
+              border: `1px solid ${gazzetta.enabled === false ? 'rgba(255,77,109,.45)' : gazzetta.healthy ? 'rgba(0,255,136,.45)' : 'rgba(255,77,109,.55)'}`,
+              background: gazzetta.enabled === false ? 'rgba(255,77,109,.12)' : gazzetta.healthy ? 'rgba(0,255,136,.12)' : 'rgba(255,77,109,.18)',
+              color: gazzetta.enabled === false || !gazzetta.healthy ? '#ff4d6d' : '#00ff88',
+              cursor: gazzettaBusy ? 'wait' : 'pointer',
+              fontSize: isDesktop ? 11 : 9,
+              fontWeight: 800,
+              letterSpacing: '.03em',
+              textTransform: 'uppercase',
+              opacity: gazzettaBusy ? 0.7 : 1,
+              whiteSpace: 'nowrap',
+            }}
+          >
+            <span style={{
+              width: 7, height: 7, borderRadius: '50%', flexShrink: 0,
+              background: gazzetta.enabled === false || !gazzetta.healthy ? '#ff4d6d' : '#00ff88',
+              boxShadow: gazzetta.healthy && gazzetta.enabled !== false ? '0 0 6px #00ff88' : undefined,
+            }}/>
+            {isDesktop ? 'Gazzetta' : 'GZ'}
+          </button>
+        )}
         {user?.role==='admin' && (
           <button onClick={()=>setShowAddPlayer(true)} title="Προσθήκη παίκτη"
-            style={{background:'none',border:'none',cursor:'pointer',color:MUTED,display:'flex',alignItems:'center',padding:'4px 6px',borderRadius:8,fontSize:isDesktop?16:14}}>
+            style={{background:'none',border:'none',cursor:'pointer',color:MUTED,display:'flex',alignItems:'center',padding:'4px 6px',borderRadius:8,fontSize:isDesktop?16:14,flexShrink:0}}>
           ➕
         </button>
         )}
         <button onClick={()=>setShowGuide(true)} title="Οδηγός & Κανόνες"
-          style={{background:'none',border:'none',cursor:'pointer',color:MUTED,display:'flex',alignItems:'center',padding:'4px 6px',borderRadius:8,fontSize:isDesktop?17:15}}>
+          style={{background:'none',border:'none',cursor:'pointer',color:MUTED,display:'flex',alignItems:'center',padding:'4px 6px',borderRadius:8,fontSize:isDesktop?17:15,flexShrink:0}}>
           ℹ️
         </button>
-        <div style={{display:'flex',alignItems:'center',gap:7}}>
+        <div style={{display:'flex',alignItems:'center',gap:7,flexShrink:0}}>
           <div style={{width:isDesktop?32:26,height:isDesktop?32:26,borderRadius:'50%',background:pc.p,
             display:'flex',alignItems:'center',justifyContent:'center',fontSize:isDesktop?13:11,fontWeight:900,color:'#08090d'}}>
             {user.name.substring(0,1)}
           </div>
           {isDesktop && <span style={{fontSize:12,fontWeight:700,color:pc.p}}>{user.name}</span>}
         </div>
-        <button onClick={handleLogout} style={{background:'rgba(255,77,109,.12)',border:'1px solid rgba(255,77,109,.3)',cursor:'pointer',color:'#ff4d6d',display:'flex',alignItems:'center',padding:'5px 10px',borderRadius:8,fontSize:12,fontWeight:700,gap:4}}>
+        <button onClick={handleLogout} style={{background:'rgba(255,77,109,.12)',border:'1px solid rgba(255,77,109,.3)',cursor:'pointer',color:'#ff4d6d',display:'flex',alignItems:'center',padding:isDesktop?'5px 10px':'5px 8px',borderRadius:8,fontSize:12,fontWeight:700,gap:4,flexShrink:0}}>
           🚪 {isDesktop?'Έξοδος':''}
         </button>
       </div>

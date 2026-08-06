@@ -75,7 +75,7 @@ export default function Guide({ onBack }) {
               </div>
             </div>
             <div style={{ fontSize:12, color:MUTED, lineHeight:1.6 }}>
-              💡 <strong style={{color:TEXT}}>Tip:</strong> Θα λάβεις WhatsApp υπενθυμίσεις <strong style={{color:TEXT}}>1 ώρα</strong> και <strong style={{color:TEXT}}>30 λεπτά</strong> πριν κάθε αγώνα για τον οποίο δεν έχεις κάνει πρόβλεψη.
+              💡 <strong style={{color:TEXT}}>Tip:</strong> Θα λάβεις WhatsApp υπενθυμίσεις <strong style={{color:TEXT}}>30′</strong> και <strong style={{color:TEXT}}>20′</strong> πριν κάθε αγώνα για τον οποίο δεν έχεις κάνει πρόβλεψη (κλείδωμα στις 15′).
             </div>
           </Section>
         </>}
@@ -166,13 +166,13 @@ export default function Guide({ onBack }) {
             <div style={{ background:'rgba(0,255,136,.06)', border:`1px solid rgba(0,255,136,.2)`, borderRadius:10, padding:'14px', marginBottom:14 }}>
               <div style={{ fontSize:13, fontWeight:700, color:GREEN, marginBottom:8 }}>Πότε στέλνουμε μήνυμα;</div>
               <div style={{ fontSize:12, color:MUTED, lineHeight:1.7 }}>
-                Αν <strong style={{color:TEXT}}>δεν έχεις κάνει πρόβλεψη</strong> για κάποιον αγώνα, λαμβάνεις αυτόματο WhatsApp μήνυμα <strong style={{color:TEXT}}>1 ώρα</strong> και ξανά <strong style={{color:TEXT}}>30 λεπτά</strong> πριν την εκκίνηση.
+                Αν <strong style={{color:TEXT}}>δεν έχεις κάνει πρόβλεψη</strong> για κάποιον αγώνα, λαμβάνεις αυτόματο WhatsApp μήνυμα <strong style={{color:TEXT}}>30′</strong> και ξανά <strong style={{color:TEXT}}>20′</strong> πριν την εκκίνηση — ώστε να προλάβεις πριν το κλείδωμα στις <strong style={{color:TEXT}}>15′</strong> (τότε φαίνονται όλες οι προβλέψεις).
               </div>
             </div>
             <div style={{ background:'rgba(255,77,109,.06)', border:`1px solid rgba(255,77,109,.25)`, borderRadius:10, padding:'14px', marginBottom:14 }}>
               <div style={{ fontSize:13, fontWeight:700, color:RED, marginBottom:8 }}>📰 Ο Κουβάς</div>
               <div style={{ fontSize:12, color:MUTED, lineHeight:1.7 }}>
-                Μετά το τελευταίο ματς της ημέρας (~2½ ώρες μετά τη σέντρα), στέλνουμε σε <strong style={{color:TEXT}}>όλους τους παίκτες</strong> το πρωτοσέλιδο «Ο Κουβάς»: αποτελέσματα, πόντοι ημέρας και ισότιμο δηλητήριο για τον καθένα. Link + φωτο μέσα στο WhatsApp.
+                Μετά το <strong style={{color:TEXT}}>τελευταίο ματς της ημέρας</strong> (~20′ μετά τη λήξη), στέλνουμε σε <strong style={{color:TEXT}}>όλους τους παίκτες</strong> το πρωτοσέλιδο «Ο Κουβάς»: σχόλια για κάθε αποτέλεσμα της ημέρας, βαθμολογία, και το <strong style={{color:TEXT}}>προοδευτικό γράφημα ανταγωνισμού</strong>. Link + φωτο μέσα στο WhatsApp.
               </div>
             </div>
             <div style={{ background:'rgba(255,107,53,.06)', border:`1px solid rgba(255,107,53,.25)`, borderRadius:10, padding:'14px', marginBottom:14 }}>

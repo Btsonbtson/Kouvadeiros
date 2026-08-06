@@ -47,6 +47,9 @@ export const api = {
   addPlayer:  (data)    => call('POST','/add-player',data),
   /** Admin: send Ο Κουβάς sample (default adminOnly) */
   newspaperTest: (opts={}) => call('POST','/newspaper-test', opts),
+  /** Admin: Gazzetta cloud feed status / toggle / poll */
+  gazzettaStatus: () => call('GET', '/gazzetta'),
+  gazzettaControl: (body={}) => call('POST', '/gazzetta', body),
 }
 export function getStoredUser(){try{return JSON.parse(localStorage.getItem('kouv_user')||'null')}catch{return null}}
 export function storeUser(u){localStorage.setItem('kouv_user',JSON.stringify(u))}

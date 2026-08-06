@@ -8,7 +8,7 @@ binding = "KOUV"
 id = "5988821db92146b08969e4b27ec8854e"
 
 [triggers]
-crons = ["*/5 * * * *"]
+crons = ["* * * * *"]
 
 # Secrets (set via wrangler secret put):
 #   TWILIO_SID
