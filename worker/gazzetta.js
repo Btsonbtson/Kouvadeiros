@@ -128,15 +128,15 @@ function estimateFromKickoff(match, now = Date.now(), hintPhase = null) {
 
   if (hintPhase === '1H' || (hintPhase == null && elapsed < 45)) {
     const m = Math.max(1, Math.min(45, elapsed || 1))
-    return { minute: m, label: `${m}′`, phase: '1H' }
+    return { minute: m, label: `${m}'`, phase: '1H' }
   }
   if (hintPhase === 'HT' || (hintPhase == null && elapsed >= 45 && elapsed < 60)) {
     return { minute: 45, label: 'ΗΜ', phase: 'HT' }
   }
   // 2nd half (or past HT window)
   const m = Math.min(105, 45 + Math.max(0, elapsed - 60))
-  if (m > 90) return { minute: m, label: `90+${m - 90}′`, phase: '2H' }
-  return { minute: Math.max(46, m), label: `${Math.max(46, m)}′`, phase: '2H' }
+  if (m > 90) return { minute: m, label: `90+${m - 90}'`, phase: '2H' }
+  return { minute: Math.max(46, m), label: `${Math.max(46, m)}'`, phase: '2H' }
 }
 
 function resolveLiveClock(live, match, now = Date.now()) {
@@ -151,9 +151,9 @@ function resolveLiveClock(live, match, now = Date.now()) {
     const phase = /2[oο]/i.test(status) || fromFeed > 45 ? '2H' : '1H'
     const raw = String(rawMin)
     if (/\d+\s*\+\s*\d+/.test(raw)) {
-      return { minute: fromFeed, label: raw.replace("'", '′').trim(), phase }
+      return { minute: fromFeed, label: raw.replace(/′/g, "'").trim(), phase }
     }
-    return { minute: fromFeed, label: `${fromFeed}′`, phase }
+    return { minute: fromFeed, label: `${fromFeed}'`, phase }
   }
   if (/1[oο]/i.test(status) && /ημιχ/i.test(status)) {
     return estimateFromKickoff(match, now, '1H')

@@ -487,22 +487,22 @@ export function computeLeaderboard(fixtures, predictions, results) {
     .map((p, i) => ({ player: p, rank: i+1, ...t[p] }))
 }
 
-/** Display clock under live score — never show a fake 0′. */
+/** Display clock under live score — never show a fake 0'. */
 export function formatLiveClock(live, match, now = Date.now()) {
   if (!live) return ''
   const label = live.label || live.clock
   if (label && label !== "0'" && label !== '0′' && label !== '0') return String(label)
   if (live.phase === 'HT') return 'ΗΜ'
   const m = Number(live.min)
-  if (Number.isFinite(m) && m > 0) return `${m}′`
+  if (Number.isFinite(m) && m > 0) return `${m}'`
   if (match?.kickoff && !match.timeTbd) {
     const elapsed = Math.floor((now - new Date(match.kickoff).getTime()) / 60000)
     if (elapsed < 0) return 'LIVE'
-    if (elapsed < 45) return `${Math.max(1, elapsed)}′`
+    if (elapsed < 45) return `${Math.max(1, elapsed)}'`
     if (elapsed < 60) return 'ΗΜ'
     const m2 = Math.min(105, 45 + (elapsed - 60))
-    if (m2 > 90) return `90+${m2 - 90}′`
-    return `${Math.max(46, m2)}′`
+    if (m2 > 90) return `90+${m2 - 90}'`
+    return `${Math.max(46, m2)}'`
   }
   return 'LIVE'
 }

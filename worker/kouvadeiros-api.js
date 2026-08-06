@@ -320,7 +320,7 @@ function scoreMatch(pred, actual, opts = {}) {
 
 function buildLivePayload(score) {
   const min = score?.minute > 0 ? score.minute : null
-  const label = score?.label || (min ? `${min}′` : 'LIVE')
+  const label = score?.label || (min ? `${min}'` : 'LIVE')
   const out = { h: score.h, a: score.a, min: min ?? 0, label }
   if (score?.phase) out.phase = score.phase
   return out
