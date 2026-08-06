@@ -117,6 +117,54 @@ function parseMinute(raw) {
   return m ? parseInt(m[1], 10) : 0
 }
 
+/**
+ * Gazzetta often omits minute + match_status at half-time (is_live=1, both null).
+ * Prefer feed clock; otherwise estimate from kickoff (45′ + ~15′ HT + 45′).
+ */
+function estimateFromKickoff(match, now = Date.now(), hintPhase = null) {
+  if (!match?.kickoff) return { minute: null, label: 'LIVE', phase: 'LIVE' }
+  const elapsed = Math.floor((now - new Date(match.kickoff).getTime()) / 60000)
+  if (elapsed < 0) return { minute: null, label: 'LIVE', phase: 'LIVE' }
+
+  if (hintPhase === '1H' || (hintPhase == null && elapsed < 45)) {
+    const m = Math.max(1, Math.min(45, elapsed || 1))
+    return { minute: m, label: `${m}′`, phase: '1H' }
+  }
+  if (hintPhase === 'HT' || (hintPhase == null && elapsed >= 45 && elapsed < 60)) {
+    return { minute: 45, label: 'ΗΜ', phase: 'HT' }
+  }
+  // 2nd half (or past HT window)
+  const m = Math.min(105, 45 + Math.max(0, elapsed - 60))
+  if (m > 90) return { minute: m, label: `90+${m - 90}′`, phase: '2H' }
+  return { minute: Math.max(46, m), label: `${Math.max(46, m)}′`, phase: '2H' }
+}
+
+function resolveLiveClock(live, match, now = Date.now()) {
+  const status = String(live?.match_status || '').trim()
+  const rawMin = live?.minute
+  const fromFeed = parseMinute(rawMin)
+
+  if (/ημιχρ|half\s*time|(^|\b)ht(\b|$)/i.test(status)) {
+    return { minute: 45, label: 'ΗΜ', phase: 'HT' }
+  }
+  if (fromFeed > 0) {
+    const phase = /2[oο]/i.test(status) || fromFeed > 45 ? '2H' : '1H'
+    const raw = String(rawMin)
+    if (/\d+\s*\+\s*\d+/.test(raw)) {
+      return { minute: fromFeed, label: raw.replace("'", '′').trim(), phase }
+    }
+    return { minute: fromFeed, label: `${fromFeed}′`, phase }
+  }
+  if (/1[oο]/i.test(status) && /ημιχ/i.test(status)) {
+    return estimateFromKickoff(match, now, '1H')
+  }
+  if (/2[oο]/i.test(status) && /ημιχ/i.test(status)) {
+    return estimateFromKickoff(match, now, '2H')
+  }
+  // Live but blank clock (common at HT on Gazzetta)
+  return estimateFromKickoff(match, now, null)
+}
+
 function findScheduleRow(match, scheduleById) {
   if (!match?.homeTeam || !match?.awayTeam) return null
   const hits = []
@@ -143,17 +191,20 @@ export function resolveGazzettaScore(match, scheduleById, liveRaw) {
     const h = parseInt(live.home_score, 10)
     const a = parseInt(live.away_score, 10)
     if (Number.isNaN(h) || Number.isNaN(a)) return null
+    const clock = resolveLiveClock(live, match)
     return {
       status: 'STATUS_IN_PROGRESS',
       isFinal: false,
-      isHT: String(live.match_status || '').includes('ΗΜΙΧ') && String(live.match_status).startsWith('1'),
+      isHT: clock.phase === 'HT',
       isInProgress: true,
       isAET: false,
       isPen: false,
       h,
       a,
-      minute: parseMinute(live.minute),
-      detail: live.match_status || 'live',
+      minute: clock.minute ?? 0,
+      label: clock.label,
+      phase: clock.phase,
+      detail: live.match_status || clock.label || 'live',
       source: 'gazzetta',
       gazzettaId: sched.match_id,
     }
@@ -176,6 +227,8 @@ export function resolveGazzettaScore(match, scheduleById, liveRaw) {
         h,
         a,
         minute: 90,
+        label: 'ΤΕΛ',
+        phase: 'FT',
         detail: 'FT',
         source: 'gazzetta',
         gazzettaId: sched.match_id,

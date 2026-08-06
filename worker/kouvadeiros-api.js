@@ -318,6 +318,14 @@ function scoreMatch(pred, actual, opts = {}) {
   return { exact, correct, qualCorrect, scorePts, qualPts, points: scorePts + qualPts, dq: false }
 }
 
+function buildLivePayload(score) {
+  const min = score?.minute > 0 ? score.minute : null
+  const label = score?.label || (min ? `${min}′` : 'LIVE')
+  const out = { h: score.h, a: score.a, min: min ?? 0, label }
+  if (score?.phase) out.phase = score.phase
+  return out
+}
+
 function mergeResults(state) {
   return { ...FALLBACK_RESULTS, ...(state.results || {}) }
 }
@@ -634,7 +642,7 @@ export default {
             }
 
             if (!score.isFinal) {
-              state[`live_${match.id}`] = { h: score.h, a: score.a, min: score.minute }
+              state[`live_${match.id}`] = buildLivePayload(score)
               stateChanged = true
             }
           }
@@ -871,11 +879,11 @@ export default {
         return json({ ok: true, result: state.results[matchId], final: true, source: score.source || 'espn' })
       }
       if (score && score.h !== undefined) {
-        state[`live_${matchId}`] = { h: score.h, a: score.a, min: score.minute || 0 }
+        state[`live_${matchId}`] = buildLivePayload(score)
         await setState(env, state)
         return json({
           ok: true,
-          live: { h: score.h, a: score.a, min: score.minute },
+          live: buildLivePayload(score),
           final: false,
           source: score.source || 'espn',
         })
@@ -975,7 +983,7 @@ export default {
               delete state[`live_${match.id}`]
               changed = true
             } else {
-              state[`live_${match.id}`] = { h: score.h, a: score.a, min: score.minute || 0 }
+              state[`live_${match.id}`] = buildLivePayload(score)
               changed = true
             }
           }

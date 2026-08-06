@@ -5,7 +5,7 @@ import {
   ALL_FIXTURES, SUPER_LEAGUE, UEFA_FIXTURES,
   TEAMS, PLAYERS, PLAYER_NAMES, PCOL,
   scoreMatch, scorePlayerMatch, resolveQualTip, computeLeaderboard, mergeScoringResults, scorelineToActual,
-  buildPlayerMatchLedger,
+  buildPlayerMatchLedger, formatLiveClock,
   grTime, grDate, grKick, isToday, isLocked, isRevealOpen, nowGR, inLiveWindow,
   anyLiveScoreActivity, msUntilNextLiveScoreBand, inLiveScoreBand,
 } from './lib/data'
@@ -1749,7 +1749,7 @@ function MatchPredictCard({match,result,scoringActual,predictions,allPredictions
             <ScorePill h={liveScore?liveScore.h:result?.h} a={liveScore?liveScore.a:result?.a} pending={today&&!hasRes&&!liveScore}/>
             {liveScore&&<div style={{fontSize:9,fontWeight:700,color:GREEN,letterSpacing:'.06em',display:'flex',alignItems:'center',gap:3}}>
               <span style={{width:5,height:5,borderRadius:'50%',background:GREEN,animation:'pulse-dot 1s infinite',display:'inline-block'}}/>
-              {liveScore.min}'
+              {formatLiveClock(liveScore, match)}
             </div>}
             {result?.overtime&&<div style={{fontSize:9,fontWeight:700,color:GOLD,letterSpacing:'.03em',textAlign:'center'}}>
               {result.penalties?`Μπενάλντιζ ${result.penH}–${result.penA}`:`ΠΑΡΑΤΑΣΗ ${result.otH}–${result.otA}`}
