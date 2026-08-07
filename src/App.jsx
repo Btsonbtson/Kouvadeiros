@@ -871,7 +871,7 @@ export default function App({ user, onLogout }) {
     return () => window.removeEventListener('pointerdown', soft)
   }, [])
 
-  // Admin: Gazzetta cloud feed health (runs on Worker cron — default ON)
+  // Admin: Gazzetta cloud feed health (Worker cron — 30′ pre-KO → FT+30′ only)
   const refreshGazzetta = useCallback(async () => {
     if (user?.role !== 'admin') return
     try {
@@ -1134,7 +1134,7 @@ export default function App({ user, onLogout }) {
             disabled={gazzettaBusy || gazzetta.loading}
             title={
               gazzetta.enabled === false
-                ? 'Gazzetta OFF — πάτα για ενεργοποίηση (cloud cron)'
+                ? 'Gazzetta OFF — πάτα για ενεργοποίηση (30′ πριν → FT+30′)'
                 : gazzetta.healthy
                   ? `Gazzetta ON · live feed ${gazzetta.liveFeedCount ?? '—'} · matched ${gazzetta.matchedLive ?? 0}`
                   : `Gazzetta πρόβλημα${gazzetta.lastError ? ': ' + gazzetta.lastError : ''} — πάτα για refresh`

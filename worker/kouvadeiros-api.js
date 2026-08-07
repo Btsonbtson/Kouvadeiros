@@ -15,6 +15,14 @@ import {
   setGazzettaHealth,
   gazzettaIsHealthy,
 } from './gazzetta.js'
+import {
+  ALL_FIXTURES,
+  anyCloudOpsActivity,
+  inCloudOpsWindow,
+  CLOUD_BEFORE_MIN,
+  CLOUD_AFTER_FT_MIN,
+  CLOUD_MAX_AFTER_KO_MIN,
+} from '../src/lib/data.js'
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -157,6 +165,28 @@ const MATCHES = [
 const REMIND_TARGETS = [30, 20]
 /** Lock + reveal all predictions (minutes before kickoff) */
 const LOCK_TARGET = 15
+
+/** Real kickoff (not TBA) — same rules as ΠΡΟΓΡΑΜΜΑ / src/lib/data.js */
+function isSchedulableMatch(m) {
+  if (!m?.kickoff || m.timeTbd) return false
+  const home = m.homeTeam || m.home
+  const away = m.awayTeam || m.away
+  return home !== 'TBD' && away !== 'TBD'
+}
+
+/** FT timestamp from stored result, if any */
+function ftAtFromState(state, matchId) {
+  const r = state?.results?.[matchId]
+  if (!r || r.h == null || r.a == null) return null
+  const fetched = r.fetchedAt ? Date.parse(r.fetchedAt) : NaN
+  return Number.isFinite(fetched) ? fetched : null
+}
+
+/** Match still inside Cloudflare window: 30′ pre-KO → FT+30′ */
+function matchInCloudOps(match, now, state) {
+  if (!isSchedulableMatch(match)) return false
+  return inCloudOpsWindow(match.kickoff, now, ftAtFromState(state, match.id))
+}
 
 // ── HELPERS ──────────────────────────────────────────────────────────────────
 function makeToken() {
@@ -478,10 +508,18 @@ async function fetchESPNScore(match) {
   }
 }
 
-// ── CRON: every 1′ (* * * * *) — Gazzetta + reminders / live scores ──────────
+// ── CRON: every 1′ — KV/Gazzetta only in 30′ pre-KO → FT+30′ window ─────────
 export default {
   async scheduled(event, env, ctx) {
     const now = Date.now()
+    const todayAthens = athensDate(new Date(now).toISOString())
+
+    // Cheap skip (no KV): nothing in outer ΠΡΟΓΡΑΜΜΑ cloud window
+    if (!anyCloudOpsActivity(ALL_FIXTURES, now)) {
+      console.log(`cron skip — outside 30′ pre-KO → FT+30′ window (${todayAthens})`)
+      return
+    }
+
     const state = await getState(env)
     const phones = state.phones || {}
     const users = await getAllUsers(env)
@@ -495,27 +533,25 @@ export default {
     const playerNames = {}
     for (const u of Object.values(users)) playerNames[u.id] = u.name
 
-    // Ops band: reminders/lock from 40′ before KO; live scores through +200′ after KO.
-    // Skip the whole match loop when nothing is in that band (idle days).
-    const anyOps = MATCHES.some((m) => {
-      if (m.timeTbd) return false
-      const minsUntil = (new Date(m.kickoff).getTime() - now) / 60000
-      // Reminders from ~40′ before (covers 30′/20′); live scores through +200′ after KO
-      return minsUntil <= 40 && minsUntil >= -200
-    })
+    // Ops: 30′ before KO through 30′ after Full Time (uses result.fetchedAt when known)
+    const anyOps = MATCHES.some((m) => matchInCloudOps(m, now, state))
+    const mergedForPaper = { ...state, results: mergeResults(state) }
+    const paperDue = shouldSendNewspaper(MATCHES, mergedForPaper, todayAthens, now)
+
+    // Past FT+30′ for every match and no tabloid due → no Gazzetta / no KV churn
+    if (!anyOps && !paperDue) {
+      console.log(`cron skip — past FT+${CLOUD_AFTER_FT_MIN}′ and no newspaper (${todayAthens})`)
+      return
+    }
 
     if (anyOps) {
-    // Gazzetta first (default ON) — one schedule+live poll for all matches in band
+    // Gazzetta first (default ON) — one schedule+live poll for matches in cloud window
     let gzScores = {}
     const gzHealth = await getGazzettaHealth(env)
     if (gzHealth.enabled !== false) {
       try {
-        const bandMatches = MATCHES.filter((m) => {
-          if (m.timeTbd) return false
-          const minsUntil = (new Date(m.kickoff).getTime() - now) / 60000
-          return minsUntil <= 15 && minsUntil >= -200
-        })
-        const poll = await pollGazzettaForMatches(bandMatches.length ? bandMatches : MATCHES)
+        const bandMatches = MATCHES.filter((m) => matchInCloudOps(m, now, state))
+        const poll = await pollGazzettaForMatches(bandMatches.length ? bandMatches : MATCHES.filter(isSchedulableMatch))
         gzScores = poll.scores || {}
         await setGazzettaHealth(env, {
           ...gzHealth,
@@ -540,14 +576,15 @@ export default {
     }
 
     for (const match of MATCHES) {
-      if (match.timeTbd) continue
+      if (!matchInCloudOps(match, now, state)) continue
       const kickoff = new Date(match.kickoff).getTime()
       const minsUntil = (kickoff - now) / 60000
-      if (minsUntil > 40 || minsUntil < -200) continue
+      // Safety: ignore absurd clock skew outside reminder→post-FT band
+      if (minsUntil > CLOUD_BEFORE_MIN || minsUntil < -CLOUD_MAX_AFTER_KO_MIN) continue
 
-      // ── AUTO SCORE + ΘΑΥΜΑ/ΩΣΑΝΑ — 15′ warm-up → +200′ (until final) ──
+      // ── AUTO SCORE + ΘΑΥΜΑ/ΩΣΑΝΑ — while in cloud ops window ──
       const minsAfter = -minsUntil
-      if (minsAfter >= -15 && minsAfter <= 200) {
+      if (minsAfter >= -CLOUD_BEFORE_MIN && matchInCloudOps(match, now, state)) {
         const already = state.results?.[match.id]
         if (!already || already.source === 'auto') {
           const score = gzScores[match.id] || (await fetchESPNScore(match))
@@ -707,37 +744,12 @@ export default {
       }
     }
     } else {
-      console.log('cron idle — no match in ops band (40′ before → 200′ after KO)')
-      // Keep Gazzetta health green even on idle days (cheap poll)
-      const gzHealth = await getGazzettaHealth(env)
-      if (gzHealth.enabled !== false) {
-        try {
-          const poll = await pollGazzettaForMatches([])
-          await setGazzettaHealth(env, {
-            ...gzHealth,
-            enabled: true,
-            lastOk: new Date(now).toISOString(),
-            lastError: null,
-            lastPoll: new Date(now).toISOString(),
-            scheduleCount: poll.scheduleCount,
-            liveFeedCount: poll.liveFeedCount,
-            matchedLive: 0,
-            matchedTotal: 0,
-          })
-        } catch (e) {
-          await setGazzettaHealth(env, {
-            ...gzHealth,
-            lastError: String(e?.message || e),
-            lastPoll: new Date(now).toISOString(),
-          })
-        }
-      }
+      console.log(`cron idle — past FT+${CLOUD_AFTER_FT_MIN}′ / outside 30′ pre-KO (${todayAthens})`)
     }
 
     // ── Ο ΚΟΥΒΑΣ — end-of-day tabloid (once per Athens calendar day) ──
     try {
-      const todayAthens = athensDate(new Date(now).toISOString())
-      if (shouldSendNewspaper(MATCHES, { ...state, results: mergeResults(state) }, todayAthens, now)) {
+      if (paperDue) {
         const paperKey = `newspaper:${todayAthens}`
         if (!(await env.KOUV.get(paperKey))) {
           const blast = await sendNewspaperEdition(env, { ymd: todayAthens, adminOnly: false, force: false })
@@ -935,7 +947,7 @@ export default {
         ok: true,
         healthy: gazzettaIsHealthy(health),
         ...health,
-        note: 'Runs on Cloudflare cron every 1′ (default ON). Toggle does not start local Python.',
+        note: `Cloudflare cron every 1′; KV/Gazzetta only ${CLOUD_BEFORE_MIN}′ pre-KO → ${CLOUD_AFTER_FT_MIN}′ after FT. Toggle does not start local Python.`,
       })
     }
 
