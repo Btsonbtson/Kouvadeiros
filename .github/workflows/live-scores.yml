@@ -2,12 +2,12 @@ name: Live Score Sync
 on:
   schedule:
     # GitHub free tier: effective minimum ~every 5 minutes
-    # Gate step skips instantly when today is not a ΠΡΟΓΡΑΜΜΑ game day
+    # Gate step skips instantly outside 30′ pre-KO → FT+30′ window
     - cron: '*/5 * * * *'
   workflow_dispatch:
     inputs:
       force:
-        description: 'Force fetch even outside ΠΡΟΓΡΑΜΜΑ game-day / live window (for testing)'
+        description: 'Force fetch even outside 30′ pre-KO → FT+30′ window (for testing)'
         type: boolean
         default: false
 
@@ -19,7 +19,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Gate — ΠΡΟΓΡΑΜΜΑ game day only
+      - name: Gate — 30′ pre-KO → FT+30′ only
         id: gate
         env:
           FORCE: ${{ github.event_name == 'workflow_dispatch' && inputs.force == true }}
@@ -75,8 +75,6 @@ jobs:
           echo "upload=$UPLOAD" >> "$GITHUB_OUTPUT"
       - name: Fetch (+ upload if configured)
         if: steps.gate.outputs.run == '1'
-        # Skips automatically when no fixture is in 15′ warm-up → +200′ live window
-        # Manual runs can pass force=true to test providers anytime
         run: |
           ARGS=()
           if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.force }}" = "true" ]; then

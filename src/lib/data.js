@@ -530,6 +530,17 @@ export const LIVE_AFTER_MIN = 200
 /** Warm-up before KO so pipeline/ESPN are ready at séntra */
 export const LIVE_WARMUP_MIN = 15
 
+/**
+ * Cloudflare KV Worker / live sync window (ΠΡΟΓΡΑΜΜΑ):
+ * 30′ before kickoff → 30′ after Full Time.
+ */
+export const CLOUD_BEFORE_MIN = 30
+export const CLOUD_AFTER_FT_MIN = 30
+/** Estimated FT when result not known yet (90′ + HT ≈ newspaper convention) */
+export const ESTIMATED_FT_AFTER_KO_MIN = 100
+/** Hard stop if FT never arrives (AET/pens / stuck feed) */
+export const CLOUD_MAX_AFTER_KO_MIN = 180
+
 /** Match is in the live kickoff window (0–200 min after KO) */
 export const inLiveWindow = iso => {
   const mins = (Date.now() - new Date(iso).getTime()) / 60000
@@ -542,7 +553,7 @@ export function inLiveScoreBand(iso, now = Date.now()) {
   return minsAfter >= -LIVE_WARMUP_MIN && minsAfter <= LIVE_AFTER_MIN
 }
 
-/** Fixture has a real kickoff (not TBA / TBD) — used by ΠΡΟΓΡΑΜΜΑ game-day gates */
+/** Fixture has a real kickoff (not TBA / TBD) — used by ΠΡΟΓΡΑΜΜΑ gates */
 export function isSchedulableFixture(m) {
   if (!m?.kickoff || m.timeTbd) return false
   const home = m.home ?? m.homeTeam
@@ -550,7 +561,7 @@ export function isSchedulableFixture(m) {
   return home !== 'TBD' && away !== 'TBD'
 }
 
-/** Athens calendar date YYYY-MM-DD (ΠΡΟΓΡΑΜΜΑ / game-day key) */
+/** Athens calendar date YYYY-MM-DD */
 export function athensYmd(isoOrDate = new Date()) {
   const d = typeof isoOrDate === 'string' || typeof isoOrDate === 'number'
     ? new Date(isoOrDate)
@@ -559,8 +570,35 @@ export function athensYmd(isoOrDate = new Date()) {
 }
 
 /**
+ * Cloudflare ops window for one kickoff:
+ * 30′ before KO → 30′ after Full Time.
+ * Pass ftAtMs (result.fetchedAt) when FT is known; otherwise keep open until
+ * CLOUD_MAX_AFTER_KO_MIN so late/AET finals are still collected.
+ */
+export function inCloudOpsWindow(iso, now = Date.now(), ftAtMs = null) {
+  const ko = new Date(iso).getTime()
+  if (!Number.isFinite(ko)) return false
+  if (now < ko - CLOUD_BEFORE_MIN * 60000) return false
+
+  if (ftAtMs != null && Number.isFinite(ftAtMs) && ftAtMs >= ko) {
+    return now <= ftAtMs + CLOUD_AFTER_FT_MIN * 60000
+  }
+
+  return now <= ko + CLOUD_MAX_AFTER_KO_MIN * 60000
+}
+
+/** Any ΠΡΟΓΡΑΜΜΑ fixture in the Cloudflare 30′→FT+30′ window */
+export function anyCloudOpsActivity(fixtures = ALL_FIXTURES, now = Date.now(), ftById = null) {
+  return fixtures.some((m) => {
+    if (!isSchedulableFixture(m)) return false
+    const ftAt = ftById?.[m.id] ?? null
+    return inCloudOpsWindow(m.kickoff, now, ftAt)
+  })
+}
+
+/**
  * True when Athens day has at least one real ΠΡΟΓΡΑΜΜΑ fixture.
- * KV Worker / Cloudflare live sync should only run on these days.
+ * @deprecated Prefer anyCloudOpsActivity for Cloudflare gating.
  */
 export function isProgramGameDay(fixtures = ALL_FIXTURES, now = Date.now()) {
   const ymd = athensYmd(now)

@@ -1,7 +1,8 @@
 """Upload pipeline JSON to Cloudflare R2 and/or Workers KV.
 
-Runs only on ΠΡΟΓΡΑΜΜΑ game days while a match is in the live window
-(15′ warm-up → +200′), unless --force.
+Runs only while a ΠΡΟΓΡΑΜΜΑ match is in the Cloudflare window:
+30′ before kickoff → ~30′ after Full Time (estimated FT = KO+100′),
+unless --force.
 
 Usage:
   python scripts/upload_to_r2.py              # fetch + upload (R2 if configured, else KV)
@@ -33,6 +34,12 @@ load_dotenv(ROOT / ".env")
 DATA_DIR = ROOT / "data"
 KV_NAMESPACE_ID = os.getenv("CF_KV_NAMESPACE_ID", "5988821db92146b08969e4b27ec8854e")
 ATHENS = ZoneInfo("Europe/Athens")
+
+# Keep in sync with src/lib/data.js cloud ops constants
+CLOUD_BEFORE_MIN = 30
+CLOUD_AFTER_FT_MIN = 30
+ESTIMATED_FT_AFTER_KO_MIN = 100
+CLOUD_MAX_AFTER_KO_MIN = 180
 
 
 def r2_configured() -> bool:
@@ -178,40 +185,32 @@ def athens_ymd(dt: datetime | None = None) -> str:
     return dt.astimezone(ATHENS).date().isoformat()
 
 
-def is_program_game_day(now: datetime | None = None) -> bool:
-    """True when Athens today has a real ΠΡΟΓΡΑΜΜΑ kickoff."""
+def in_cloud_ops_window(now: datetime | None = None) -> bool:
+    """True while any fixture is 30′ pre-KO → estimated FT+30′ (CI has no live FT clock)."""
     now = now or datetime.now(timezone.utc)
-    ymd = athens_ymd(now)
-    for fx in load_program_fixtures():
-        if not is_schedulable(fx):
-            continue
-        if athens_ymd(parse_kickoff(fx["kickoff"])) == ymd:
-            return True
-    return False
-
-
-def in_live_score_band(now: datetime | None = None, warmup_min: int = 15, after_min: int = 200) -> bool:
-    """True only while a scheduled match is 15′ warm-up → +200′ — not idle days."""
-    now = now or datetime.now(timezone.utc)
+    # Estimated close: KO + 100′ (FT) + 30′; hard cap matches Worker CLOUD_MAX
+    after_min = min(ESTIMATED_FT_AFTER_KO_MIN + CLOUD_AFTER_FT_MIN, CLOUD_MAX_AFTER_KO_MIN)
     for fx in load_program_fixtures():
         if not is_schedulable(fx):
             continue
         mins_after = (now - parse_kickoff(fx["kickoff"])).total_seconds() / 60.0
-        if -warmup_min <= mins_after <= after_min:
+        if -CLOUD_BEFORE_MIN <= mins_after <= after_min:
             return True
     return False
 
 
 def should_run_cloud_sync(force: bool = False, now: datetime | None = None) -> tuple[bool, str]:
-    """KV/R2 sync only on ΠΡΟΓΡΑΜΜΑ game days inside the live window (or --force)."""
+    """KV/R2 sync only inside 30′ pre-KO → FT+30′ window (or --force)."""
     if force:
         return True, "forced"
     now = now or datetime.now(timezone.utc)
-    if not is_program_game_day(now):
-        return False, f"not a ΠΡΟΓΡΑΜΜΑ game day (Athens {athens_ymd(now)})"
-    if not in_live_score_band(now):
-        return False, "game day but outside warm-up/+200′ window"
-    return True, "ΠΡΟΓΡΑΜΜΑ game day + live window"
+    if not in_cloud_ops_window(now):
+        return (
+            False,
+            f"outside {CLOUD_BEFORE_MIN}′ pre-KO → FT+{CLOUD_AFTER_FT_MIN}′ window "
+            f"(Athens {athens_ymd(now)})",
+        )
+    return True, f"ΠΡΟΓΡΑΜΜΑ cloud window ({CLOUD_BEFORE_MIN}′ pre-KO → FT+{CLOUD_AFTER_FT_MIN}′)"
 
 
 def run_pipeline() -> None:
@@ -240,7 +239,7 @@ def main() -> None:
     parser.add_argument(
         "--force",
         action="store_true",
-        help="Run even outside ΠΡΟΓΡΑΜΜΑ game-day / live windows",
+        help="Run even outside 30′ pre-KO → FT+30′ window",
     )
     parser.add_argument(
         "--gate",
@@ -251,7 +250,6 @@ def main() -> None:
 
     ok, reason = should_run_cloud_sync(force=args.force)
     if args.gate:
-        # Always allow manual force via workflow; --gate itself respects --force
         print(f"run={'1' if ok else '0'}")
         print(f"reason={reason}")
         return
