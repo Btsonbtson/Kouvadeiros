@@ -542,8 +542,29 @@ export function inLiveScoreBand(iso, now = Date.now()) {
   return minsAfter >= -LIVE_WARMUP_MIN && minsAfter <= LIVE_AFTER_MIN
 }
 
-function isSchedulableFixture(m) {
-  return m && m.home !== 'TBD' && m.away !== 'TBD' && !m.timeTbd && m.kickoff
+/** Fixture has a real kickoff (not TBA / TBD) — used by ΠΡΟΓΡΑΜΜΑ game-day gates */
+export function isSchedulableFixture(m) {
+  if (!m?.kickoff || m.timeTbd) return false
+  const home = m.home ?? m.homeTeam
+  const away = m.away ?? m.awayTeam
+  return home !== 'TBD' && away !== 'TBD'
+}
+
+/** Athens calendar date YYYY-MM-DD (ΠΡΟΓΡΑΜΜΑ / game-day key) */
+export function athensYmd(isoOrDate = new Date()) {
+  const d = typeof isoOrDate === 'string' || typeof isoOrDate === 'number'
+    ? new Date(isoOrDate)
+    : isoOrDate
+  return d.toLocaleDateString('en-CA', { timeZone: 'Europe/Athens' })
+}
+
+/**
+ * True when Athens day has at least one real ΠΡΟΓΡΑΜΜΑ fixture.
+ * KV Worker / Cloudflare live sync should only run on these days.
+ */
+export function isProgramGameDay(fixtures = ALL_FIXTURES, now = Date.now()) {
+  const ymd = athensYmd(now)
+  return fixtures.some(m => isSchedulableFixture(m) && athensYmd(m.kickoff) === ymd)
 }
 
 /** Any fixture currently needing live scores / results polling */

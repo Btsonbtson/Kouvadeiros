@@ -1,20 +1,30 @@
 """Upload pipeline JSON to Cloudflare R2 and/or Workers KV.
 
+Runs only on ΠΡΟΓΡΑΜΜΑ game days while a match is in the live window
+(15′ warm-up → +200′), unless --force.
+
 Usage:
-  python scripts/upload_to_r2.py              # fetch + upload (R2 if configured, else KV via wrangler)
+  python scripts/upload_to_r2.py              # fetch + upload (R2 if configured, else KV)
   python scripts/upload_to_r2.py --skip-fetch
   python scripts/upload_to_r2.py --kv-only    # force KV path (no R2)
+  python scripts/upload_to_r2.py --gate       # print run=0|1 for Actions; exit 0
 """
 from __future__ import annotations
 
 import argparse
 import os
+import re
 import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
-from dotenv import load_dotenv
+try:
+    from dotenv import load_dotenv
+except ImportError:  # gate / CI before deps install
+    def load_dotenv(*_a, **_k):
+        return False
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -22,6 +32,7 @@ load_dotenv(ROOT / ".env")
 
 DATA_DIR = ROOT / "data"
 KV_NAMESPACE_ID = os.getenv("CF_KV_NAMESPACE_ID", "5988821db92146b08969e4b27ec8854e")
+ATHENS = ZoneInfo("Europe/Athens")
 
 
 def r2_configured() -> bool:
@@ -107,31 +118,100 @@ def upload_kv(local_path: Path, key: str) -> None:
     print(f"Uploaded {local_path.name} → KV:{key}")
 
 
-def load_kickoffs() -> list[datetime]:
-    """Kickoffs from Worker MATCHES schedule (UTC)."""
-    import re
-
-    src = ROOT / "worker" / "kouvadeiros-api.js"
-    if not src.exists():
-        return []
-    text = src.read_text(encoding="utf-8")
-    out: list[datetime] = []
-    for raw in re.findall(r"kickoff:\s*'([^']+Z)'", text):
-        try:
-            out.append(datetime.fromisoformat(raw.replace("Z", "+00:00")))
-        except ValueError:
+def _parse_fixture_blocks(text: str) -> list[dict]:
+    """Pull { id, kickoff, timeTbd, home/away } objects from JS fixture sources."""
+    out: list[dict] = []
+    for raw in re.finditer(r"\{([^{}]+)\}", text):
+        block = raw.group(1)
+        if "kickoff:" not in block:
             continue
+        kid = re.search(r"\bid:\s*'([^']+)'", block)
+        ko = re.search(r"kickoff:\s*'([^']+)'", block)
+        if not kid or not ko:
+            continue
+        home = re.search(r"\bhome(?:Team)?:\s*'([^']+)'", block)
+        away = re.search(r"\baway(?:Team)?:\s*'([^']+)'", block)
+        out.append(
+            {
+                "id": kid.group(1),
+                "kickoff": ko.group(1),
+                "timeTbd": "timeTbd" in block,
+                "home": home.group(1) if home else None,
+                "away": away.group(1) if away else None,
+            }
+        )
     return out
+
+
+def load_program_fixtures() -> list[dict]:
+    """ΠΡΟΓΡΑΜΜΑ fixtures from src/lib/data.js (preferred) + worker MATCHES."""
+    by_id: dict[str, dict] = {}
+    data_js = ROOT / "src" / "lib" / "data.js"
+    if data_js.exists():
+        for fx in _parse_fixture_blocks(data_js.read_text(encoding="utf-8")):
+            by_id[fx["id"]] = fx
+    worker = ROOT / "worker" / "kouvadeiros-api.js"
+    if worker.exists():
+        text = worker.read_text(encoding="utf-8")
+        start = text.find("const MATCHES = [")
+        end = text.find("\n]", start) if start >= 0 else -1
+        chunk = text[start:end] if start >= 0 and end > start else ""
+        for fx in _parse_fixture_blocks(chunk):
+            by_id.setdefault(fx["id"], fx)
+    return list(by_id.values())
+
+
+def is_schedulable(fx: dict) -> bool:
+    if not fx.get("kickoff") or fx.get("timeTbd"):
+        return False
+    if fx.get("home") == "TBD" or fx.get("away") == "TBD":
+        return False
+    return True
+
+
+def parse_kickoff(raw: str) -> datetime:
+    return datetime.fromisoformat(raw.replace("Z", "+00:00"))
+
+
+def athens_ymd(dt: datetime | None = None) -> str:
+    dt = dt or datetime.now(timezone.utc)
+    return dt.astimezone(ATHENS).date().isoformat()
+
+
+def is_program_game_day(now: datetime | None = None) -> bool:
+    """True when Athens today has a real ΠΡΟΓΡΑΜΜΑ kickoff."""
+    now = now or datetime.now(timezone.utc)
+    ymd = athens_ymd(now)
+    for fx in load_program_fixtures():
+        if not is_schedulable(fx):
+            continue
+        if athens_ymd(parse_kickoff(fx["kickoff"])) == ymd:
+            return True
+    return False
 
 
 def in_live_score_band(now: datetime | None = None, warmup_min: int = 15, after_min: int = 200) -> bool:
     """True only while a scheduled match is 15′ warm-up → +200′ — not idle days."""
     now = now or datetime.now(timezone.utc)
-    for ko in load_kickoffs():
-        mins_after = (now - ko).total_seconds() / 60.0
+    for fx in load_program_fixtures():
+        if not is_schedulable(fx):
+            continue
+        mins_after = (now - parse_kickoff(fx["kickoff"])).total_seconds() / 60.0
         if -warmup_min <= mins_after <= after_min:
             return True
     return False
+
+
+def should_run_cloud_sync(force: bool = False, now: datetime | None = None) -> tuple[bool, str]:
+    """KV/R2 sync only on ΠΡΟΓΡΑΜΜΑ game days inside the live window (or --force)."""
+    if force:
+        return True, "forced"
+    now = now or datetime.now(timezone.utc)
+    if not is_program_game_day(now):
+        return False, f"not a ΠΡΟΓΡΑΜΜΑ game day (Athens {athens_ymd(now)})"
+    if not in_live_score_band(now):
+        return False, "game day but outside warm-up/+200′ window"
+    return True, "ΠΡΟΓΡΑΜΜΑ game day + live window"
 
 
 def run_pipeline() -> None:
@@ -160,12 +240,24 @@ def main() -> None:
     parser.add_argument(
         "--force",
         action="store_true",
-        help="Run even outside live match windows",
+        help="Run even outside ΠΡΟΓΡΑΜΜΑ game-day / live windows",
+    )
+    parser.add_argument(
+        "--gate",
+        action="store_true",
+        help="Print GitHub Actions outputs (run=0|1) and exit without syncing",
     )
     args = parser.parse_args()
 
-    if not args.force and not args.skip_fetch and not in_live_score_band():
-        print("Skip live sync — no match in warm-up/+200′ window (use --force to override)")
+    ok, reason = should_run_cloud_sync(force=args.force)
+    if args.gate:
+        # Always allow manual force via workflow; --gate itself respects --force
+        print(f"run={'1' if ok else '0'}")
+        print(f"reason={reason}")
+        return
+
+    if not args.force and not args.skip_fetch and not ok:
+        print(f"Skip live sync — {reason} (use --force to override)")
         return
 
     if not args.skip_fetch:

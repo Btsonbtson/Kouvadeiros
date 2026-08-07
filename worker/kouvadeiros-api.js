@@ -15,6 +15,7 @@ import {
   setGazzettaHealth,
   gazzettaIsHealthy,
 } from './gazzetta.js'
+import { ALL_FIXTURES, isProgramGameDay as isProgramGameDayFromSchedule } from '../src/lib/data.js'
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -157,6 +158,19 @@ const MATCHES = [
 const REMIND_TARGETS = [30, 20]
 /** Lock + reveal all predictions (minutes before kickoff) */
 const LOCK_TARGET = 15
+
+/** Real kickoff (not TBA) — same rules as ΠΡΟΓΡΑΜΜΑ / src/lib/data.js */
+function isSchedulableMatch(m) {
+  if (!m?.kickoff || m.timeTbd) return false
+  const home = m.homeTeam || m.home
+  const away = m.awayTeam || m.away
+  return home !== 'TBD' && away !== 'TBD'
+}
+
+/** Athens day has a ΠΡΟΓΡΑΜΜΑ fixture (from src/lib/data.js schedule) */
+function isProgramGameDay(now = Date.now()) {
+  return isProgramGameDayFromSchedule(ALL_FIXTURES, now)
+}
 
 // ── HELPERS ──────────────────────────────────────────────────────────────────
 function makeToken() {
@@ -478,10 +492,18 @@ async function fetchESPNScore(match) {
   }
 }
 
-// ── CRON: every 1′ (* * * * *) — Gazzetta + reminders / live scores ──────────
+// ── CRON: every 1′ — only does KV/Gazzetta work on ΠΡΟΓΡΑΜΜΑ game days ───────
 export default {
   async scheduled(event, env, ctx) {
     const now = Date.now()
+    const todayAthens = athensDate(new Date(now).toISOString())
+
+    // Off days: no KV reads/writes, no Gazzetta — Cloudflare idle by schedule
+    if (!isProgramGameDay(now)) {
+      console.log(`cron skip — ${todayAthens} not a ΠΡΟΓΡΑΜΜΑ game day`)
+      return
+    }
+
     const state = await getState(env)
     const phones = state.phones || {}
     const users = await getAllUsers(env)
@@ -496,9 +518,9 @@ export default {
     for (const u of Object.values(users)) playerNames[u.id] = u.name
 
     // Ops band: reminders/lock from 40′ before KO; live scores through +200′ after KO.
-    // Skip the whole match loop when nothing is in that band (idle days).
+    // On a game day outside this band: stay quiet (no Gazzetta / no match loop).
     const anyOps = MATCHES.some((m) => {
-      if (m.timeTbd) return false
+      if (!isSchedulableMatch(m)) return false
       const minsUntil = (new Date(m.kickoff).getTime() - now) / 60000
       // Reminders from ~40′ before (covers 30′/20′); live scores through +200′ after KO
       return minsUntil <= 40 && minsUntil >= -200
@@ -511,11 +533,11 @@ export default {
     if (gzHealth.enabled !== false) {
       try {
         const bandMatches = MATCHES.filter((m) => {
-          if (m.timeTbd) return false
+          if (!isSchedulableMatch(m)) return false
           const minsUntil = (new Date(m.kickoff).getTime() - now) / 60000
           return minsUntil <= 15 && minsUntil >= -200
         })
-        const poll = await pollGazzettaForMatches(bandMatches.length ? bandMatches : MATCHES)
+        const poll = await pollGazzettaForMatches(bandMatches.length ? bandMatches : MATCHES.filter(isSchedulableMatch))
         gzScores = poll.scores || {}
         await setGazzettaHealth(env, {
           ...gzHealth,
@@ -540,7 +562,7 @@ export default {
     }
 
     for (const match of MATCHES) {
-      if (match.timeTbd) continue
+      if (!isSchedulableMatch(match)) continue
       const kickoff = new Date(match.kickoff).getTime()
       const minsUntil = (kickoff - now) / 60000
       if (minsUntil > 40 || minsUntil < -200) continue
@@ -707,36 +729,11 @@ export default {
       }
     }
     } else {
-      console.log('cron idle — no match in ops band (40′ before → 200′ after KO)')
-      // Keep Gazzetta health green even on idle days (cheap poll)
-      const gzHealth = await getGazzettaHealth(env)
-      if (gzHealth.enabled !== false) {
-        try {
-          const poll = await pollGazzettaForMatches([])
-          await setGazzettaHealth(env, {
-            ...gzHealth,
-            enabled: true,
-            lastOk: new Date(now).toISOString(),
-            lastError: null,
-            lastPoll: new Date(now).toISOString(),
-            scheduleCount: poll.scheduleCount,
-            liveFeedCount: poll.liveFeedCount,
-            matchedLive: 0,
-            matchedTotal: 0,
-          })
-        } catch (e) {
-          await setGazzettaHealth(env, {
-            ...gzHealth,
-            lastError: String(e?.message || e),
-            lastPoll: new Date(now).toISOString(),
-          })
-        }
-      }
+      console.log(`cron idle — game day ${todayAthens} outside ops band (40′ before → 200′ after KO)`)
     }
 
     // ── Ο ΚΟΥΒΑΣ — end-of-day tabloid (once per Athens calendar day) ──
     try {
-      const todayAthens = athensDate(new Date(now).toISOString())
       if (shouldSendNewspaper(MATCHES, { ...state, results: mergeResults(state) }, todayAthens, now)) {
         const paperKey = `newspaper:${todayAthens}`
         if (!(await env.KOUV.get(paperKey))) {
@@ -935,7 +932,7 @@ export default {
         ok: true,
         healthy: gazzettaIsHealthy(health),
         ...health,
-        note: 'Runs on Cloudflare cron every 1′ (default ON). Toggle does not start local Python.',
+        note: 'Cloudflare cron every 1′; KV/Gazzetta only on ΠΡΟΓΡΑΜΜΑ game days. Toggle does not start local Python.',
       })
     }
 

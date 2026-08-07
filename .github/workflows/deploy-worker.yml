@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'worker/**'
+      - 'src/lib/data.js'
       - '.github/workflows/deploy-worker.yml'
   workflow_dispatch:
   repository_dispatch:

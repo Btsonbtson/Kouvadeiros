@@ -2,11 +2,12 @@ name: Live Score Sync
 on:
   schedule:
     # GitHub free tier: effective minimum ~every 5 minutes
+    # Gate step skips instantly when today is not a ΠΡΟΓΡΑΜΜΑ game day
     - cron: '*/5 * * * *'
   workflow_dispatch:
     inputs:
       force:
-        description: 'Force fetch even outside live match window (for testing FDORG_TOKEN / Gazzetta)'
+        description: 'Force fetch even outside ΠΡΟΓΡΑΜΜΑ game-day / live window (for testing)'
         type: boolean
         default: false
 
@@ -18,7 +19,28 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Gate — ΠΡΟΓΡΑΜΜΑ game day only
+        id: gate
+        env:
+          FORCE: ${{ github.event_name == 'workflow_dispatch' && inputs.force == true }}
+        run: |
+          ARGS=(--gate)
+          if [ "$FORCE" = "true" ]; then
+            ARGS+=(--force)
+          fi
+          OUT=$(python scripts/upload_to_r2.py "${ARGS[@]}")
+          echo "$OUT"
+          RUN=$(printf '%s\n' "$OUT" | sed -n 's/^run=//p' | head -1)
+          REASON=$(printf '%s\n' "$OUT" | sed -n 's/^reason=//p' | head -1)
+          echo "run=${RUN:-0}" >> "$GITHUB_OUTPUT"
+          echo "reason=${REASON:-unknown}" >> "$GITHUB_OUTPUT"
+          if [ "${RUN:-0}" != "1" ]; then
+            echo "Skipping Cloudflare KV/R2 sync — ${REASON}"
+          else
+            echo "Proceeding — ${REASON}"
+          fi
       - name: Install deps
+        if: steps.gate.outputs.run == '1'
         run: |
           pip install requests python-dotenv boto3
           # SofaScore fallback uses Playwright when JSON API is blocked (403)
@@ -26,6 +48,7 @@ jobs:
           python -m playwright install chromium
       - name: Check secrets
         id: creds
+        if: steps.gate.outputs.run == '1'
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
@@ -51,6 +74,7 @@ jobs:
           fi
           echo "upload=$UPLOAD" >> "$GITHUB_OUTPUT"
       - name: Fetch (+ upload if configured)
+        if: steps.gate.outputs.run == '1'
         # Skips automatically when no fixture is in 15′ warm-up → +200′ live window
         # Manual runs can pass force=true to test providers anytime
         run: |
