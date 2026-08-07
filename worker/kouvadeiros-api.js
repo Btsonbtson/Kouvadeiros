@@ -535,6 +535,14 @@ export default {
 
     // Ops: 30′ before KO through 30′ after Full Time (uses result.fetchedAt when known)
     const anyOps = MATCHES.some((m) => matchInCloudOps(m, now, state))
+    const mergedForPaper = { ...state, results: mergeResults(state) }
+    const paperDue = shouldSendNewspaper(MATCHES, mergedForPaper, todayAthens, now)
+
+    // Past FT+30′ for every match and no tabloid due → no Gazzetta / no KV churn
+    if (!anyOps && !paperDue) {
+      console.log(`cron skip — past FT+${CLOUD_AFTER_FT_MIN}′ and no newspaper (${todayAthens})`)
+      return
+    }
 
     if (anyOps) {
     // Gazzetta first (default ON) — one schedule+live poll for matches in cloud window
@@ -741,7 +749,7 @@ export default {
 
     // ── Ο ΚΟΥΒΑΣ — end-of-day tabloid (once per Athens calendar day) ──
     try {
-      if (shouldSendNewspaper(MATCHES, { ...state, results: mergeResults(state) }, todayAthens, now)) {
+      if (paperDue) {
         const paperKey = `newspaper:${todayAthens}`
         if (!(await env.KOUV.get(paperKey))) {
           const blast = await sendNewspaperEdition(env, { ymd: todayAthens, adminOnly: false, force: false })
