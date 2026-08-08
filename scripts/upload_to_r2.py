@@ -14,12 +14,9 @@ from __future__ import annotations
 
 import argparse
 import os
-import re
 import subprocess
 import sys
-from datetime import datetime, timezone
 from pathlib import Path
-from zoneinfo import ZoneInfo
 
 try:
     from dotenv import load_dotenv
@@ -29,17 +26,13 @@ except ImportError:  # gate / CI before deps install
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(ROOT / "scripts"))
 load_dotenv(ROOT / ".env")
+
+from cloud_ops_window import should_run_cloud_sync  # noqa: E402
 
 DATA_DIR = ROOT / "data"
 KV_NAMESPACE_ID = os.getenv("CF_KV_NAMESPACE_ID", "5988821db92146b08969e4b27ec8854e")
-ATHENS = ZoneInfo("Europe/Athens")
-
-# Keep in sync with src/lib/data.js cloud ops constants
-CLOUD_BEFORE_MIN = 30
-CLOUD_AFTER_FT_MIN = 30
-ESTIMATED_FT_AFTER_KO_MIN = 100
-CLOUD_MAX_AFTER_KO_MIN = 180
 
 
 def r2_configured() -> bool:
@@ -123,94 +116,6 @@ def upload_kv(local_path: Path, key: str) -> None:
     # Windows needs shell=True so npx.cmd resolves from PATH.
     subprocess.check_call(cmd, cwd=str(ROOT), shell=(os.name == "nt"))
     print(f"Uploaded {local_path.name} → KV:{key}")
-
-
-def _parse_fixture_blocks(text: str) -> list[dict]:
-    """Pull { id, kickoff, timeTbd, home/away } objects from JS fixture sources."""
-    out: list[dict] = []
-    for raw in re.finditer(r"\{([^{}]+)\}", text):
-        block = raw.group(1)
-        if "kickoff:" not in block:
-            continue
-        kid = re.search(r"\bid:\s*'([^']+)'", block)
-        ko = re.search(r"kickoff:\s*'([^']+)'", block)
-        if not kid or not ko:
-            continue
-        home = re.search(r"\bhome(?:Team)?:\s*'([^']+)'", block)
-        away = re.search(r"\baway(?:Team)?:\s*'([^']+)'", block)
-        out.append(
-            {
-                "id": kid.group(1),
-                "kickoff": ko.group(1),
-                "timeTbd": "timeTbd" in block,
-                "home": home.group(1) if home else None,
-                "away": away.group(1) if away else None,
-            }
-        )
-    return out
-
-
-def load_program_fixtures() -> list[dict]:
-    """ΠΡΟΓΡΑΜΜΑ fixtures from src/lib/data.js (preferred) + worker MATCHES."""
-    by_id: dict[str, dict] = {}
-    data_js = ROOT / "src" / "lib" / "data.js"
-    if data_js.exists():
-        for fx in _parse_fixture_blocks(data_js.read_text(encoding="utf-8")):
-            by_id[fx["id"]] = fx
-    worker = ROOT / "worker" / "kouvadeiros-api.js"
-    if worker.exists():
-        text = worker.read_text(encoding="utf-8")
-        start = text.find("const MATCHES = [")
-        end = text.find("\n]", start) if start >= 0 else -1
-        chunk = text[start:end] if start >= 0 and end > start else ""
-        for fx in _parse_fixture_blocks(chunk):
-            by_id.setdefault(fx["id"], fx)
-    return list(by_id.values())
-
-
-def is_schedulable(fx: dict) -> bool:
-    if not fx.get("kickoff") or fx.get("timeTbd"):
-        return False
-    if fx.get("home") == "TBD" or fx.get("away") == "TBD":
-        return False
-    return True
-
-
-def parse_kickoff(raw: str) -> datetime:
-    return datetime.fromisoformat(raw.replace("Z", "+00:00"))
-
-
-def athens_ymd(dt: datetime | None = None) -> str:
-    dt = dt or datetime.now(timezone.utc)
-    return dt.astimezone(ATHENS).date().isoformat()
-
-
-def in_cloud_ops_window(now: datetime | None = None) -> bool:
-    """True while any fixture is 30′ pre-KO → estimated FT+30′ (CI has no live FT clock)."""
-    now = now or datetime.now(timezone.utc)
-    # Estimated close: KO + 100′ (FT) + 30′; hard cap matches Worker CLOUD_MAX
-    after_min = min(ESTIMATED_FT_AFTER_KO_MIN + CLOUD_AFTER_FT_MIN, CLOUD_MAX_AFTER_KO_MIN)
-    for fx in load_program_fixtures():
-        if not is_schedulable(fx):
-            continue
-        mins_after = (now - parse_kickoff(fx["kickoff"])).total_seconds() / 60.0
-        if -CLOUD_BEFORE_MIN <= mins_after <= after_min:
-            return True
-    return False
-
-
-def should_run_cloud_sync(force: bool = False, now: datetime | None = None) -> tuple[bool, str]:
-    """KV/R2 sync only inside 30′ pre-KO → FT+30′ window (or --force)."""
-    if force:
-        return True, "forced"
-    now = now or datetime.now(timezone.utc)
-    if not in_cloud_ops_window(now):
-        return (
-            False,
-            f"outside {CLOUD_BEFORE_MIN}′ pre-KO → FT+{CLOUD_AFTER_FT_MIN}′ window "
-            f"(Athens {athens_ymd(now)})",
-        )
-    return True, f"ΠΡΟΓΡΑΜΜΑ cloud window ({CLOUD_BEFORE_MIN}′ pre-KO → FT+{CLOUD_AFTER_FT_MIN}′)"
 
 
 def run_pipeline() -> None:
