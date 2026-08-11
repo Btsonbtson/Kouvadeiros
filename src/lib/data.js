@@ -515,6 +515,86 @@ export const grKick  = m => m?.timeTbd ? 'Ώρα TBA' : grTime(m.kickoff)
 export const grShort = iso => new Date(iso).toLocaleDateString('el-GR',  { timeZone:TZ, day:'numeric', month:'short' })
 export const grDate  = iso => new Date(iso).toLocaleDateString('el-GR',  { timeZone:TZ, weekday:'short', day:'numeric', month:'short' })
 export const nowGR   = ()  => new Date().toLocaleTimeString('el-GR', timeOpts)
+/** Athens calendar date YYYY-MM-DD from ISO (or now) */
+export function athensYmd(isoOrDate = new Date()) {
+  const d = typeof isoOrDate === 'string' || typeof isoOrDate === 'number'
+    ? new Date(isoOrDate)
+    : isoOrDate
+  return d.toLocaleDateString('en-CA', { timeZone: TZ })
+}
+/** Athens wall-clock HH:MM from ISO */
+export function athensHm(iso) {
+  return new Date(iso).toLocaleTimeString('en-GB', {
+    timeZone: TZ,
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  })
+}
+
+/**
+ * Convert Athens local date+time → UTC ISO (`…Z`).
+ * @param {string} dateYmd YYYY-MM-DD (Athens calendar)
+ * @param {string} timeHm HH:MM (Athens)
+ */
+export function athensLocalToUtcIso(dateYmd, timeHm) {
+  const ymd = String(dateYmd || '').trim()
+  const hm = String(timeHm || '').trim()
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(ymd)) throw new Error('Bad date (use YYYY-MM-DD)')
+  if (!/^\d{1,2}:\d{2}$/.test(hm)) throw new Error('Bad time (use HH:MM)')
+  const [Y, M, D] = ymd.split('-').map(Number)
+  const [hRaw, mRaw] = hm.split(':').map(Number)
+  if (hRaw > 23 || mRaw > 59) throw new Error('Bad time')
+  const h = hRaw
+  const mi = mRaw
+  // Initial guess EEST (UTC+3), then correct via Intl Athens wall clock
+  let t = Date.UTC(Y, M - 1, D, h, mi) - 3 * 3600 * 1000
+  for (let i = 0; i < 6; i++) {
+    const parts = Object.fromEntries(
+      new Intl.DateTimeFormat('en-GB', {
+        timeZone: TZ,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+      })
+        .formatToParts(new Date(t))
+        .map((p) => [p.type, p.value]),
+    )
+    const asY = Number(parts.year)
+    const asM = Number(parts.month)
+    const asD = Number(parts.day)
+    const asH = Number(parts.hour)
+    const asMin = Number(parts.minute)
+    const want = Date.UTC(Y, M - 1, D, h, mi)
+    const got = Date.UTC(asY, asM - 1, asD, asH, asMin)
+    const diff = want - got
+    if (diff === 0) break
+    t += diff
+  }
+  return new Date(t).toISOString().replace(/\.\d{3}Z$/, 'Z')
+}
+
+/**
+ * Merge KV kickoffOverrides onto fixtures (clears timeTbd when override says so).
+ * @param {Array} fixtures
+ * @param {Record<string,{kickoff:string,timeTbd?:boolean}>|null} overrides
+ */
+export function applyKickoffOverrides(fixtures = [], overrides = null) {
+  if (!overrides || typeof overrides !== 'object') return fixtures
+  return fixtures.map((m) => {
+    const o = overrides[m.id]
+    if (!o?.kickoff) return m
+    return {
+      ...m,
+      kickoff: o.kickoff,
+      timeTbd: o.timeTbd === true,
+    }
+  })
+}
+
 export const isToday = iso => {
   const f = d => d.toLocaleDateString('el-GR', { timeZone:TZ })
   return f(new Date()) === f(new Date(iso))
@@ -559,14 +639,6 @@ export function isSchedulableFixture(m) {
   const home = m.home ?? m.homeTeam
   const away = m.away ?? m.awayTeam
   return home !== 'TBD' && away !== 'TBD'
-}
-
-/** Athens calendar date YYYY-MM-DD */
-export function athensYmd(isoOrDate = new Date()) {
-  const d = typeof isoOrDate === 'string' || typeof isoOrDate === 'number'
-    ? new Date(isoOrDate)
-    : isoOrDate
-  return d.toLocaleDateString('en-CA', { timeZone: 'Europe/Athens' })
 }
 
 /**

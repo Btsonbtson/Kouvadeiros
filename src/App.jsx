@@ -8,6 +8,7 @@ import {
   buildPlayerMatchLedger, formatLiveClock,
   grTime, grDate, grKick, isToday, isLocked, isRevealOpen, nowGR, inLiveWindow,
   anyLiveScoreActivity, msUntilNextLiveScoreBand, inLiveScoreBand,
+  applyKickoffOverrides, athensYmd, athensHm,
 } from './lib/data'
 import { mapPipelineToLiveScores } from './lib/pipelineScores'
 import { TeamLogo, TPill, PtsBadge, ScorePill, Card, SLbl, Spinner } from './components/UI'
@@ -116,6 +117,77 @@ function FetchBtn({matchId,onFetched}){
   return <button onClick={go} disabled={st==='loading'||st==='done'} style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',gap:5,padding:'8px 10px',borderRadius:8,border:`1px solid ${cfg.b}`,background:cfg.bg,color:cfg.c,fontSize:11,fontWeight:700,cursor:'pointer',letterSpacing:'.02em'}}>
     <i className={`ti ${cfg.i}`} style={{fontSize:13,animation:st==='loading'?'spin .7s linear infinite':undefined}}/>{cfg.l}
   </button>
+}
+
+/** Admin: set kickoff (Athens) or pull from internet */
+function KickoffPanel({match,onSaved}){
+  const [date,setDate]=useState(()=>athensYmd(match.kickoff))
+  const [time,setTime]=useState(()=>match.timeTbd?'':athensHm(match.kickoff))
+  const [busy,setBusy]=useState(false)
+  const [msg,setMsg]=useState('')
+
+  useEffect(()=>{
+    setDate(athensYmd(match.kickoff))
+    setTime(match.timeTbd?'':athensHm(match.kickoff))
+    setMsg('')
+  },[match.id, match.kickoff, match.timeTbd])
+
+  async function saveManual(){
+    if(!time.trim()){setMsg('❌ Γράψε ώρα Αθηνών (π.χ. 20:30)');return}
+    setBusy(true);setMsg('')
+    try{
+      const r=await api.setKickoff(match.id, time.trim(), date.trim())
+      setMsg(r.ok?`✅ ${r.athens} Αθηνών`:'❌ '+JSON.stringify(r))
+      if(r.ok){ onSaved?.(); setTimeout(()=>setMsg(''),2500) }
+    }catch(e){setMsg('❌ '+e.message)}
+    setBusy(false)
+  }
+  async function fetchNet(){
+    setBusy(true);setMsg('')
+    try{
+      const r=await api.fetchKickoffs({matchId:match.id})
+      const u=r.updated?.[0]
+      if(u){
+        setDate(athensYmd(u.kickoff))
+        setTime(athensHm(u.kickoff))
+        setMsg(`✅ από ${u.source}: ${u.athensLocal}`)
+        onSaved?.()
+      }else{
+        setMsg(`⏳ Δεν βρέθηκε ώρα (${r.skipped?.[0]?.reason||'not_found'})`)
+      }
+    }catch(e){setMsg('❌ '+e.message)}
+    setBusy(false)
+  }
+
+  return <div style={{marginTop:10,background:'rgba(77,159,255,.06)',border:'1px solid rgba(77,159,255,.28)',borderRadius:12,padding:14}}>
+    <div style={{fontSize:12,fontWeight:700,color:BLUE,marginBottom:10}}>
+      🕒 ΩΡΑ ΣΕΝΤΡΑΣ · Αθηνών {match.timeTbd?'· TBA':''}
+    </div>
+    <div style={{display:'flex',gap:8,marginBottom:10}}>
+      <label style={{flex:1.2,display:'flex',flexDirection:'column',gap:4}}>
+        <span style={{fontSize:9,color:MUTED,fontWeight:700}}>ΗΜΕΡΟΜΗΝΙΑ</span>
+        <input type="date" value={date} onChange={e=>setDate(e.target.value)}
+          style={{padding:'8px 10px',borderRadius:8,border:`1px solid ${LINE}`,background:SURF2,color:TEXT,fontSize:13,fontWeight:600}}/>
+      </label>
+      <label style={{flex:1,display:'flex',flexDirection:'column',gap:4}}>
+        <span style={{fontSize:9,color:MUTED,fontWeight:700}}>ΩΡΑ (ΑΘΗΝΑ)</span>
+        <input type="time" value={time} onChange={e=>setTime(e.target.value)}
+          placeholder="20:30"
+          style={{padding:'8px 10px',borderRadius:8,border:`1px solid ${LINE}`,background:SURF2,color:TEXT,fontSize:13,fontWeight:700}}/>
+      </label>
+    </div>
+    {msg&&<div style={{fontSize:11,fontWeight:700,color:msg.startsWith('✅')?GREEN:msg.startsWith('⏳')?GOLD:RED,textAlign:'center',marginBottom:8,padding:'6px',borderRadius:7,background:msg.startsWith('✅')?'rgba(0,255,136,.1)':msg.startsWith('⏳')?'rgba(255,221,0,.1)':'rgba(255,77,109,.1)'}}>{msg}</div>}
+    <div style={{display:'flex',gap:8}}>
+      <button type="button" onClick={fetchNet} disabled={busy}
+        style={{flex:1,padding:'9px',borderRadius:9,border:`1px solid ${BLUE}55`,background:`${BLUE}14`,color:BLUE,fontSize:11,fontWeight:700,cursor:'pointer'}}>
+        {busy?'...':'🌐 Από internet'}
+      </button>
+      <button type="button" onClick={saveManual} disabled={busy}
+        style={{flex:1,padding:'9px',borderRadius:9,border:`1px solid ${GREEN}55`,background:`${GREEN}14`,color:GREEN,fontSize:11,fontWeight:700,cursor:'pointer'}}>
+        {busy?'...':'💾 Αποθήκευση'}
+      </button>
+    </div>
+  </div>
 }
 
 // ─── PUSH RESULT ──────────────────────────────────────────────────────────────
@@ -825,6 +897,12 @@ export default function App({ user, onLogout }) {
   const [showAddPlayer, setShowAddPlayer] = useState(false)
   const [gazzetta, setGazzetta] = useState({ healthy: false, enabled: true, loading: true })
   const [gazzettaBusy, setGazzettaBusy] = useState(false)
+  const [timesBusy, setTimesBusy] = useState(false)
+
+  const fixtures = useMemo(
+    () => applyKickoffOverrides(ALL_FIXTURES, state.kickoffOverrides),
+    [state.kickoffOverrides],
+  )
   const chatReadKey = `kouv_chat_read_${user?.id || 'anon'}`
   const [chatReadIdx, setChatReadIdx] = useState(() => {
     try { return parseInt(localStorage.getItem(chatReadKey) || '-1', 10) } catch { return -1 }
@@ -971,9 +1049,10 @@ export default function App({ user, onLogout }) {
   }, [])
 
   const load = useCallback(async (opts = {}) => {
-    const wantLive = opts.live !== false && anyLiveScoreActivity(ALL_FIXTURES)
     try {
       const s = await api.getState()
+      const fixturesNow = applyKickoffOverrides(ALL_FIXTURES, s.kickoffOverrides)
+      const wantLive = opts.live !== false && anyLiveScoreActivity(fixturesNow)
       const fromKv={}
       Object.entries(s).forEach(([k,v])=>{
         if(k.startsWith('live_')&&v) fromKv[k.replace('live_','')]=v
@@ -1008,8 +1087,8 @@ export default function App({ user, onLogout }) {
 
     const run = async () => {
       if (cancelled) return
-      const liveNow = anyLiveScoreActivity(ALL_FIXTURES)
-      const due = ALL_FIXTURES.filter(m => {
+      const liveNow = anyLiveScoreActivity(fixtures)
+      const due = fixtures.filter(m => {
         if (m.home==='TBD'||m.away==='TBD'||m.timeTbd) return false
         return inLiveScoreBand(m.kickoff)
       })
@@ -1026,17 +1105,32 @@ export default function App({ user, onLogout }) {
       // Idle day / between matches: light state sync only (chat etc.), no live score APIs
       if (!cancelled) await load({ live: false })
       if (cancelled) return
-      const until = msUntilNextLiveScoreBand(ALL_FIXTURES)
+      const until = msUntilNextLiveScoreBand(fixtures)
       // Wake at warm-up, or re-check every 5 min (chat), whichever sooner
       const wait = until == null ? 5 * 60 * 1000 : Math.min(Math.max(until, 15_000), 5 * 60 * 1000)
       schedule(wait)
     }
 
-    load({ live: anyLiveScoreActivity(ALL_FIXTURES) }).then(() => {
+    load({ live: anyLiveScoreActivity(fixtures) }).then(() => {
       if (!cancelled) run()
     })
     return () => { cancelled = true; clear() }
-  },[load,user?.role])
+  },[load,user?.role,fixtures])
+
+  async function syncTbaTimes(){
+    if(timesBusy) return
+    setTimesBusy(true)
+    try{
+      const r=await api.fetchKickoffs({})
+      await load({ live:false })
+      const n=r.updated?.length||0
+      alert(n?`Ενημερώθηκαν ${n} ώρες από internet.`:`Καμία νέα ώρα (TBA ακόμα).`)
+    }catch(e){
+      alert('Σφάλμα: '+(e.message||e))
+    }finally{
+      setTimesBusy(false)
+    }
+  }
 
   async function savePrediction(matchId,h,a,qual,predOT,otH,otA,predPen,penH,penA){
     setSyncing(true)
@@ -1077,9 +1171,9 @@ export default function App({ user, onLogout }) {
 
   const pc = PC[user.id] || PC.boikos
   const pages={
-    matchday:<MatchdayPage predictions={state.predictions} results={state.results} scoringResults={scoringResults} onRefresh={load} currentUser={user} revealed={state.revealed} onSave={savePrediction} liveScores={liveScores} pipelineHints={pipelineHints} slStandings={state.slStandings}/>,
+    matchday:<MatchdayPage fixtures={fixtures} predictions={state.predictions} results={state.results} scoringResults={scoringResults} onRefresh={load} currentUser={user} revealed={state.revealed} onSave={savePrediction} liveScores={liveScores} pipelineHints={pipelineHints} slStandings={state.slStandings}/>,
     league:  <LeaguePage   predictions={state.predictions} results={scoringResults} thavmaStats={state.thavmaStats}/>,
-    schedule: <SchedulePage slStandings={state.slStandings}/>,
+    schedule: <SchedulePage fixtures={fixtures} slStandings={state.slStandings}/>,
     history: <HistoryPage  predictions={state.predictions} results={scoringResults}/>,
     banter:  <BanterPage   chat={state.chat} onSend={sendChat} onRead={markChatRead}/>,
   }
@@ -1129,6 +1223,28 @@ export default function App({ user, onLogout }) {
       {/* Right controls */}
       <div style={{display:'flex',alignItems:'center',gap:isDesktop?10:6,flexShrink:0,minWidth:0}}>
         <div style={{width:7,height:7,borderRadius:'50%',flexShrink:0,background:syncOk?GREEN:RED,animation:syncing?'pulse-d .7s infinite':undefined}}/>
+        {user?.role==='admin' && (
+          <button
+            type="button"
+            onClick={syncTbaTimes}
+            disabled={timesBusy}
+            title="Ενημέρωση ωρών TBA από internet (ESPN / Gazzetta)"
+            style={{
+              display:'flex', alignItems:'center', gap:5, flexShrink:0,
+              padding: isDesktop ? '5px 10px' : '4px 7px',
+              borderRadius: 8,
+              border: `1px solid ${BLUE}55`,
+              background: `${BLUE}14`,
+              color: BLUE,
+              cursor: timesBusy ? 'wait' : 'pointer',
+              fontSize: isDesktop ? 11 : 9,
+              fontWeight: 700,
+            }}
+          >
+            <i className={`ti ${timesBusy?'ti-loader-2':'ti-clock-edit'}`} style={{fontSize:13,animation:timesBusy?'spin .7s linear infinite':undefined}}/>
+            {isDesktop ? (timesBusy?'…':'Ώρες') : '🕒'}
+          </button>
+        )}
         {user?.role==='admin' && (
           <button
             type="button"
@@ -1531,7 +1647,7 @@ function LeaguePage({predictions,results,thavmaStats}){
 }
 
 // ─── MATCHDAY PAGE ────────────────────────────────────────────────────────────
-function MatchdayPage({predictions,results,scoringResults,onRefresh,currentUser,revealed,onSave,liveScores,pipelineHints,slStandings}){
+function MatchdayPage({fixtures=ALL_FIXTURES,predictions,results,scoringResults,onRefresh,currentUser,revealed,onSave,liveScores,pipelineHints,slStandings}){
   const now=Date.now()
   const ONE_HOUR=3600000
   const isLive=(m,res)=>{
@@ -1540,7 +1656,7 @@ function MatchdayPage({predictions,results,scoringResults,onRefresh,currentUser,
     const ko=new Date(m.kickoff).getTime()
     return now>=ko&&now<ko+7200000
   }
-  const sorted=[...ALL_FIXTURES]
+  const sorted=[...fixtures]
     .filter(m=>{
       const ko=new Date(m.kickoff).getTime()
       const res=results?.[m.id]
@@ -1600,6 +1716,7 @@ function FormStrip({form}){
 function MatchPredictCard({match,result,scoringActual,predictions,allPredictions,onRefresh,allResults,currentUser,revealed,onSave,liveScore,pipelineHint,slStandings}){
   // ── State ──────────────────────────────────────────────────────────────────
   const [showPush,setShowPush]=useState(false)
+  const [showKickoff,setShowKickoff]=useState(false)
   const myPred=currentUser?predictions?.[currentUser.id]:null
   const [h,setH]=useState(myPred?.h??0),[a,setA]=useState(myPred?.a??0)
   const [qual,setQual]=useState(myPred?.qual??match.home)
@@ -1905,10 +2022,18 @@ function MatchPredictCard({match,result,scoringActual,predictions,allPredictions
 
         {/* ── ADMIN ACTIONS ── */}
         {currentUser?.role==='admin'&&(
-          <div style={{display:'flex',gap:8,marginTop:12}}>
+          <div style={{display:'flex',gap:8,marginTop:12,flexWrap:'wrap'}}>
             <FetchBtn matchId={match.id} onFetched={onRefresh}/>
-            <button onClick={()=>setShowPush(v=>!v)}
-              style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',gap:5,
+            <button onClick={()=>{setShowKickoff(v=>!v);if(!showKickoff)setShowPush(false)}}
+              style={{flex:1,minWidth:90,display:'flex',alignItems:'center',justifyContent:'center',gap:5,
+                padding:'8px 10px',borderRadius:8,
+                border:`1px solid ${showKickoff||match.timeTbd?BLUE+'55':BLUE+'25'}`,
+                background:showKickoff?`${BLUE}20`:`${BLUE}08`,
+                color:BLUE,fontSize:11,fontWeight:700,cursor:'pointer'}}>
+              <i className="ti ti-clock" style={{fontSize:13}}/>{match.timeTbd?'Ώρα TBA':'Ώρα'}
+            </button>
+            <button onClick={()=>{setShowPush(v=>!v);if(!showPush)setShowKickoff(false)}}
+              style={{flex:1,minWidth:90,display:'flex',alignItems:'center',justifyContent:'center',gap:5,
                 padding:'8px 10px',borderRadius:8,
                 border:`1px solid ${showPush?GOLD+'55':GOLD+'25'}`,
                 background:showPush?`${GOLD}20`:`${GOLD}08`,
@@ -1916,6 +2041,9 @@ function MatchPredictCard({match,result,scoringActual,predictions,allPredictions
               <i className="ti ti-cloud-upload" style={{fontSize:13}}/>Push
             </button>
           </div>
+        )}
+        {showKickoff&&currentUser?.role==='admin'&&(
+          <KickoffPanel match={match} onSaved={()=>{setShowKickoff(false);onRefresh()}}/>
         )}
         {showPush&&currentUser?.role==='admin'&&(
           <PushPanel match={match} result={result} pipelineHint={pipelineHint} onSaved={()=>{setShowPush(false);onRefresh()}}/>
@@ -1995,7 +2123,8 @@ function FixtureList({fixtures,rankMap,formMap,setView,setH2hMatch}){
 }
 
 // ─── SCHEDULE PAGE ────────────────────────────────────────────────────────────
-function SchedulePage({slStandings}){
+function SchedulePage({fixtures:programFixtures,slStandings}){
+  const scheduleFixtures = programFixtures || ALL_FIXTURES
   const [filter,  setFilter]  = useState('all')
   const [view,    setView]    = useState('list')
   const [h2hMatch,setH2hMatch]= useState(null)
@@ -2024,7 +2153,7 @@ function SchedulePage({slStandings}){
     rankMap[t.name] = t.rank
   })
 
-  let fixtures = [...ALL_FIXTURES]
+  let fixtures = [...scheduleFixtures]
 
   if(filter!=='all'){
     if(['SL','UCL','UEL','UECL'].includes(filter)){

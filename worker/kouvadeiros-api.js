@@ -10,19 +10,25 @@ import {
   resolveMediaSlot,
 } from './newspaper.js'
 import {
-  pollGazzettaForMatches,
-  getGazzettaHealth,
-  setGazzettaHealth,
-  gazzettaIsHealthy,
-} from './gazzetta.js'
-import {
   ALL_FIXTURES,
+  TEAMS,
   anyCloudOpsActivity,
   inCloudOpsWindow,
   CLOUD_BEFORE_MIN,
   CLOUD_AFTER_FT_MIN,
   CLOUD_MAX_AFTER_KO_MIN,
+  applyKickoffOverrides,
+  athensLocalToUtcIso,
+  athensYmd,
+  athensHm,
 } from '../src/lib/data.js'
+import {
+  pollGazzettaForMatches,
+  getGazzettaHealth,
+  setGazzettaHealth,
+  gazzettaIsHealthy,
+  fetchGazzettaKickoff,
+} from './gazzetta.js'
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -188,6 +194,111 @@ function matchInCloudOps(match, now, state) {
   return inCloudOpsWindow(match.kickoff, now, ftAtFromState(state, match.id))
 }
 
+/** Cheap KV key for cron early-skip (mirrors state.kickoffOverrides) */
+async function getKickoffOverrides(env) {
+  try {
+    const raw = await env.KOUV.get('kickoffOverrides')
+    return raw ? JSON.parse(raw) : {}
+  } catch {
+    return {}
+  }
+}
+
+async function saveKickoffOverride(env, state, matchId, entry) {
+  if (!state.kickoffOverrides) state.kickoffOverrides = {}
+  state.kickoffOverrides[matchId] = entry
+  await setState(env, state)
+  await env.KOUV.put('kickoffOverrides', JSON.stringify(state.kickoffOverrides))
+  return entry
+}
+
+function findProgramMatch(matchId) {
+  return (
+    MATCHES.find((m) => m.id === matchId) ||
+    ALL_FIXTURES.find((m) => m.id === matchId) ||
+    null
+  )
+}
+
+function withOverrides(list, overrides) {
+  return applyKickoffOverrides(list, overrides)
+}
+
+/** ESPN kickoff (works for STATUS_SCHEDULED) */
+async function fetchESPNKickoff(match) {
+  if (!match?.espnLeague || !match?.kickoff) return null
+  const home = match.homeTeam || match.home
+  const away = match.awayTeam || match.away
+  if (!home || !away || home === 'TBD' || away === 'TBD') return null
+  const date = match.kickoff.substring(0, 10).replace(/-/g, '')
+  const url = `https://site.api.espn.com/apis/site/v2/sports/soccer/${match.espnLeague}/scoreboard?dates=${date}`
+  try {
+    const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0', Accept: 'application/json' } })
+    if (!res.ok) return null
+    const data = await res.json()
+    const significant = (s) =>
+      s
+        .toLowerCase()
+        .split(/[\s.\-/]+/)
+        .filter((w) => w.length > 2 && !['fc', 'cf', 'sc', 'the', 'and'].includes(w))
+    const nameHit = (needleWords, haystackNames) =>
+      needleWords.some((w) => haystackNames.some((n) => n.includes(w) || w.includes(n.split(/[\s.\-/]+/)[0] || '')))
+    const evt =
+      (data.events || []).find((e) => {
+        const comps = e.competitions?.[0]?.competitors || []
+        const allNames = comps.flatMap((c) =>
+          [c.team?.displayName || '', c.team?.name || '', c.team?.abbreviation || '', c.team?.shortDisplayName || ''].map((n) =>
+            n.toLowerCase(),
+          ),
+        )
+        return nameHit(significant(home), allNames) && nameHit(significant(away), allNames)
+      }) || null
+    if (!evt?.date) return null
+    return new Date(evt.date).toISOString().replace(/\.\d{3}Z$/, 'Z')
+  } catch {
+    return null
+  }
+}
+
+function enrichMatchForFetch(match) {
+  const ESPN_BY_T = {
+    SL: 'gre.1',
+    UCL: 'uefa.champions',
+    UEL: 'uefa.europa',
+    UECL: 'uefa.europa.conf',
+  }
+  const keyName = (key) => {
+    if (!key || key === 'TBD') return key
+    // Prefer Worker MATCHES English names when present
+    if (match.homeTeam && key === match.home) return match.homeTeam
+    if (match.awayTeam && key === match.away) return match.awayTeam
+    return TEAMS[key]?.name || key
+  }
+  const homeKey = match.home || null
+  const awayKey = match.away || null
+  return {
+    ...match,
+    espnLeague: match.espnLeague || ESPN_BY_T[match.t] || null,
+    homeTeam: match.homeTeam || keyName(homeKey),
+    awayTeam: match.awayTeam || keyName(awayKey),
+    home: homeKey || match.homeTeam,
+    away: awayKey || match.awayTeam,
+  }
+}
+
+async function resolveKickoffFromInternet(match) {
+  const enriched = enrichMatchForFetch(match)
+  const espn = await fetchESPNKickoff(enriched)
+  if (espn) return { kickoff: espn, source: 'espn' }
+  try {
+    const gz = await fetchGazzettaKickoff(enriched)
+    if (gz) return { kickoff: gz, source: 'gazzetta' }
+  } catch {
+    /* ignore */
+  }
+  return null
+}
+
 // ── HELPERS ──────────────────────────────────────────────────────────────────
 function makeToken() {
   return Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2)
@@ -215,8 +326,10 @@ async function getState(env) {
         welcomed: {},
         revealed: {},
         thavmaStats: {},
+        kickoffOverrides: {},
         version: 8,
       }
+  if (!state.kickoffOverrides) state.kickoffOverrides = {}
   const before = JSON.stringify(state.phones || {})
   state.phones = { ...DEFAULT_PHONES, ...(state.phones || {}) }
   // Persist merged phones once so KV is the source of truth
@@ -514,13 +627,17 @@ export default {
     const now = Date.now()
     const todayAthens = athensDate(new Date(now).toISOString())
 
-    // Cheap skip (no KV): nothing in outer ΠΡΟΓΡΑΜΜΑ cloud window
-    if (!anyCloudOpsActivity(ALL_FIXTURES, now)) {
+    // Cheap skip: static fixtures + KV kickoff overrides (no full state yet)
+    const overrides = await getKickoffOverrides(env)
+    const programFixtures = withOverrides(ALL_FIXTURES, overrides)
+    if (!anyCloudOpsActivity(programFixtures, now)) {
       console.log(`cron skip — outside 30′ pre-KO → FT+30′ window (${todayAthens})`)
       return
     }
 
     const state = await getState(env)
+    state.kickoffOverrides = { ...overrides, ...(state.kickoffOverrides || {}) }
+    const opsMatches = withOverrides(MATCHES, state.kickoffOverrides)
     const phones = state.phones || {}
     const users = await getAllUsers(env)
     // Keep 5′ buckets for WhatsApp dedup so 1′ cron doesn't re-fire the same reminder
@@ -534,9 +651,9 @@ export default {
     for (const u of Object.values(users)) playerNames[u.id] = u.name
 
     // Ops: 30′ before KO through 30′ after Full Time (uses result.fetchedAt when known)
-    const anyOps = MATCHES.some((m) => matchInCloudOps(m, now, state))
+    const anyOps = opsMatches.some((m) => matchInCloudOps(m, now, state))
     const mergedForPaper = { ...state, results: mergeResults(state) }
-    const paperDue = shouldSendNewspaper(MATCHES, mergedForPaper, todayAthens, now)
+    const paperDue = shouldSendNewspaper(opsMatches, mergedForPaper, todayAthens, now)
 
     // Past FT+30′ for every match and no tabloid due → no Gazzetta / no KV churn
     if (!anyOps && !paperDue) {
@@ -550,8 +667,8 @@ export default {
     const gzHealth = await getGazzettaHealth(env)
     if (gzHealth.enabled !== false) {
       try {
-        const bandMatches = MATCHES.filter((m) => matchInCloudOps(m, now, state))
-        const poll = await pollGazzettaForMatches(bandMatches.length ? bandMatches : MATCHES.filter(isSchedulableMatch))
+        const bandMatches = opsMatches.filter((m) => matchInCloudOps(m, now, state))
+        const poll = await pollGazzettaForMatches(bandMatches.length ? bandMatches : opsMatches.filter(isSchedulableMatch))
         gzScores = poll.scores || {}
         await setGazzettaHealth(env, {
           ...gzHealth,
@@ -575,7 +692,7 @@ export default {
       }
     }
 
-    for (const match of MATCHES) {
+    for (const match of opsMatches) {
       if (!matchInCloudOps(match, now, state)) continue
       const kickoff = new Date(match.kickoff).getTime()
       const minsUntil = (kickoff - now) / 60000
@@ -812,12 +929,15 @@ export default {
       const user = await getUser(request, env)
       if (!user) return json({ error: 'Unauthorized' }, 401)
       const { matchId, h, a, qual, predOT, otH, otA, predPen, penH, penA } = await request.json()
-      const match = MATCHES.find((m) => m.id === matchId)
+      const state = await getState(env)
+      const match = withOverrides(
+        MATCHES.some((m) => m.id === matchId) ? MATCHES : ALL_FIXTURES,
+        state.kickoffOverrides,
+      ).find((m) => m.id === matchId)
       if (match) {
         const minsUntil = (new Date(match.kickoff).getTime() - Date.now()) / 60000
-        if (minsUntil <= LOCK_TARGET) return json({ error: 'Predictions locked (15′ before kickoff)' }, 403)
+        if (!match.timeTbd && minsUntil <= LOCK_TARGET) return json({ error: 'Predictions locked (15′ before kickoff)' }, 403)
       }
-      const state = await getState(env)
       if (!state.predictions) state.predictions = {}
       if (!state.predictions[matchId]) state.predictions[matchId] = {}
       state.predictions[matchId][user.id] = { h, a, qual, predOT, otH, otA, predPen, penH, penA, savedAt: new Date().toISOString() }
@@ -850,11 +970,108 @@ export default {
       return json({ ok: true })
     }
 
+    if (path === '/set-kickoff' && request.method === 'POST') {
+      const user = await getUser(request, env)
+      if (!user || user.role !== 'admin') return json({ error: 'Admin only' }, 403)
+      const body = await request.json().catch(() => ({}))
+      const matchId = body.matchId
+      const base = findProgramMatch(matchId)
+      if (!base) return json({ error: 'Unknown match' }, 400)
+
+      let kickoffIso = null
+      try {
+        if (body.kickoff && typeof body.kickoff === 'string' && body.kickoff.includes('T')) {
+          kickoffIso = new Date(body.kickoff).toISOString().replace(/\.\d{3}Z$/, 'Z')
+        } else {
+          const dateYmd = body.date || athensYmd(base.kickoff)
+          const timeHm = body.athensTime || body.time
+          if (!timeHm) return json({ error: 'Need athensTime (HH:MM) or kickoff ISO' }, 400)
+          kickoffIso = athensLocalToUtcIso(dateYmd, timeHm)
+        }
+      } catch (e) {
+        return json({ error: String(e?.message || e) }, 400)
+      }
+      if (!Number.isFinite(Date.parse(kickoffIso))) return json({ error: 'Invalid kickoff' }, 400)
+
+      const state = await getState(env)
+      const entry = {
+        kickoff: kickoffIso,
+        timeTbd: false,
+        source: 'manual',
+        setBy: user.id,
+        setAt: new Date().toISOString(),
+        athensLocal: `${athensYmd(kickoffIso)} ${athensHm(kickoffIso)}`,
+      }
+      await saveKickoffOverride(env, state, matchId, entry)
+      return json({
+        ok: true,
+        matchId,
+        kickoff: kickoffIso,
+        athens: entry.athensLocal,
+        override: entry,
+      })
+    }
+
+    if (path === '/fetch-kickoffs' && request.method === 'POST') {
+      const user = await getUser(request, env)
+      if (!user || user.role !== 'admin') return json({ error: 'Admin only' }, 403)
+      const body = await request.json().catch(() => ({}))
+      const state = await getState(env)
+      const overrides = state.kickoffOverrides || {}
+
+      let targets = []
+      if (body.matchId) {
+        const m = findProgramMatch(body.matchId)
+        if (!m) return json({ error: 'Unknown match' }, 400)
+        targets = [withOverrides([m], overrides)[0]]
+      } else {
+        // TBA fixtures with known teams (ALL_FIXTURES + MATCHES)
+        const byId = new Map()
+        for (const m of [...ALL_FIXTURES, ...MATCHES]) byId.set(m.id, m)
+        targets = withOverrides([...byId.values()], overrides).filter((m) => {
+          if (m.home === 'TBD' || m.away === 'TBD' || m.homeTeam === 'TBD' || m.awayTeam === 'TBD') return false
+          return m.timeTbd || body.force === true
+        })
+      }
+
+      const updated = []
+      const skipped = []
+      for (const match of targets) {
+        try {
+          const found = await resolveKickoffFromInternet(match)
+          if (!found?.kickoff) {
+            skipped.push({ id: match.id, reason: 'not_found' })
+            continue
+          }
+          const entry = {
+            kickoff: found.kickoff,
+            timeTbd: false,
+            source: found.source,
+            setBy: user.id,
+            setAt: new Date().toISOString(),
+            athensLocal: `${athensYmd(found.kickoff)} ${athensHm(found.kickoff)}`,
+          }
+          await saveKickoffOverride(env, state, match.id, entry)
+          updated.push({ id: match.id, ...entry })
+        } catch (e) {
+          skipped.push({ id: match.id, reason: String(e?.message || e) })
+        }
+      }
+
+      return json({
+        ok: true,
+        updated,
+        skipped,
+        kickoffOverrides: state.kickoffOverrides,
+      })
+    }
+
     if (path === '/fetch-scores' && request.method === 'POST') {
       const user = await getUser(request, env)
       if (!user) return json({ error: 'Unauthorized' }, 401)
       const { matchId } = await request.json()
-      const match = MATCHES.find((m) => m.id === matchId)
+      const state0 = await getState(env)
+      const match = withOverrides(MATCHES, state0.kickoffOverrides).find((m) => m.id === matchId)
       if (!match) return json({ error: 'Unknown match' }, 400)
       let score = null
       const gzHealth = await getGazzettaHealth(env)

@@ -240,10 +240,11 @@ export function resolveGazzettaScore(match, scheduleById, liveRaw) {
 }
 
 /** Merge schedule boards for today + each match kickoff (Athens dates). */
-async function fetchSchedulesForMatches(matches) {
+async function fetchSchedulesForMatches(matches, { includeTbd = false } = {}) {
   const dates = new Set([gazzettaDateParam()])
   for (const m of matches || []) {
-    if (!m?.kickoff || m.timeTbd) continue
+    if (!m?.kickoff) continue
+    if (m.timeTbd && !includeTbd) continue
     dates.add(gazzettaDateParam(new Date(m.kickoff)))
   }
   const merged = {}
@@ -258,6 +259,24 @@ async function fetchSchedulesForMatches(matches) {
     }),
   )
   return merged
+}
+
+/**
+ * Look up kickoff ISO for a MATCHES/fixture entry from Gazzetta schedule.
+ * Works for TBA placeholders (searches the placeholder Athens date).
+ */
+export async function fetchGazzettaKickoff(match) {
+  if (!match?.kickoff) return null
+  const home = match.homeTeam || match.home
+  const away = match.awayTeam || match.away
+  if (!home || !away || home === 'TBD' || away === 'TBD') return null
+  const scheduleById = await fetchSchedulesForMatches([match], { includeTbd: true })
+  const sched = findScheduleRow(match, scheduleById)
+  if (!sched?.kickoff_unix) return null
+  const raw = Number(sched.kickoff_unix)
+  if (!Number.isFinite(raw) || raw <= 0) return null
+  const ms = raw > 1e12 ? raw : raw * 1000
+  return new Date(ms).toISOString().replace(/\.\d{3}Z$/, 'Z')
 }
 
 export async function pollGazzettaForMatches(matches) {
