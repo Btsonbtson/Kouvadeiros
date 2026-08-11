@@ -8,7 +8,7 @@ import {
   buildPlayerMatchLedger, formatLiveClock,
   grTime, grDate, grKick, isToday, isLocked, isRevealOpen, nowGR, inLiveWindow,
   anyLiveScoreActivity, msUntilNextLiveScoreBand, inLiveScoreBand,
-  applyKickoffOverrides, athensYmd, athensHm,
+  applyKickoffOverrides, athensYmd, athensHm, applyTipResultLocks,
 } from './lib/data'
 import { mapPipelineToLiveScores } from './lib/pipelineScores'
 import { TeamLogo, TPill, PtsBadge, ScorePill, Card, SLbl, Spinner } from './components/UI'
@@ -106,11 +106,11 @@ const SEEDED_RES={
   'uel-paok-2':{h:2,a:0,qual:'PAOK'},
   'uecl-pao-2':{h:2,a:2,qual:'PAO'},
   'ucl-oly-1':{h:0,a:0},
-  // NEC–OLY Leg 2: tips on 90′ (1–1). AET 2–1 NEC — πρόκριση not awarded yet.
+  // NEC–OLY Leg 2: tips on 90′ (1–1). AET 2–1 NEC — πρόκριση not awarded (all tipped OLY).
   'ucl-oly-2':{h:1,a:1,overtime:true,otH:2,otA:1},
   'uecl-pao-3':{h:1,a:1},
-  // CSK–PAO Leg 2: tips on 90′ (1–1). AET 1–2 PAO — πρόκριση not awarded yet.
-  'uecl-pao-4':{h:1,a:1,overtime:true,otH:1,otA:2},
+  // CSK–PAO Leg 2: tips on 90′ (1–1). AET 1–2 PAO → πρόκριση PAO (+1 all three).
+  'uecl-pao-4':{h:1,a:1,overtime:true,otH:1,otA:2,qual:'PAO'},
 }
 
 function isUEFATie(id){return UEFA_FIXTURES.some(f=>f.id===id)}
@@ -1079,7 +1079,7 @@ export default function App({ user, onLogout }) {
         ...s,
         predictions:{ ...SEEDED_PREDS,...s.predictions,
           ...Object.fromEntries(Object.keys({...SEEDED_PREDS,...s.predictions}).map(mid=>[mid,{...(SEEDED_PREDS[mid]||{}),...(s.predictions[mid]||{})}])) },
-        results:{ ...SEEDED_RES, ...s.results },
+        results: applyTipResultLocks({ ...SEEDED_RES, ...s.results }).results,
       })
       setSyncOk(true)
       api.getSlStandings().then(d=>{

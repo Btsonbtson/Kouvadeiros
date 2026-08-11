@@ -21,6 +21,7 @@ import {
   athensLocalToUtcIso,
   athensYmd,
   athensHm,
+  applyTipResultLocks,
 } from '../src/lib/data.js'
 import {
   pollGazzettaForMatches,
@@ -330,10 +331,13 @@ async function getState(env) {
         version: 8,
       }
   if (!state.kickoffOverrides) state.kickoffOverrides = {}
-  const before = JSON.stringify(state.phones || {})
+  if (!state.results) state.results = {}
+  const beforePhones = JSON.stringify(state.phones || {})
   state.phones = { ...DEFAULT_PHONES, ...(state.phones || {}) }
-  // Persist merged phones once so KV is the source of truth
-  if (JSON.stringify(state.phones) !== before) {
+  const locked = applyTipResultLocks(state.results)
+  state.results = locked.results
+  // Persist phone merge + tip-result locks so AET auto-FT cannot keep wiping 90′ scores / πρόκριση
+  if (JSON.stringify(state.phones) !== beforePhones || locked.changed) {
     await env.KOUV.put('state', JSON.stringify(state))
   }
   return state

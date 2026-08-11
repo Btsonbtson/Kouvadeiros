@@ -452,6 +452,53 @@ export function scorelineToActual(scoreline) {
 }
 
 /**
+ * Hard locks for finished AET ties: tip scoreline is always 90′, πρόκριση only when set.
+ * Prevents ESPN/Gazzetta AET board totals from wiping corrected tip points.
+ */
+export const TIP_RESULT_LOCKS = {
+  // NEC–OLY Leg 2: 90′ 1–1, AET 2–1 NEC. No πρόκριση pts (field went to NEC; tips were OLY).
+  'ucl-oly-2': { h: 1, a: 1, overtime: true, otH: 2, otA: 1, qual: null },
+  // CSK–PAO Leg 2: 90′ 1–1, AET 1–2 PAO → πρόκριση PAO (+1 all three).
+  'uecl-pao-4': { h: 1, a: 1, overtime: true, otH: 1, otA: 2, qual: 'PAO' },
+}
+
+export function applyTipResultLocks(results = {}) {
+  const out = { ...(results || {}) }
+  let changed = false
+  for (const [id, lock] of Object.entries(TIP_RESULT_LOCKS)) {
+    const cur = out[id] || {}
+    const next = {
+      ...cur,
+      h: lock.h,
+      a: lock.a,
+      overtime: !!lock.overtime,
+      otH: lock.otH,
+      otA: lock.otA,
+      qual: lock.qual,
+    }
+    if (
+      cur.h !== next.h ||
+      cur.a !== next.a ||
+      !!cur.overtime !== next.overtime ||
+      (cur.otH ?? null) !== (next.otH ?? null) ||
+      (cur.otA ?? null) !== (next.otA ?? null) ||
+      (cur.qual || null) !== (next.qual || null)
+    ) {
+      changed = true
+      next.source = cur.source && cur.source !== 'auto' ? cur.source : 'lock'
+      next.lockedAt = new Date().toISOString()
+      out[id] = next
+    } else if (!out[id]) {
+      changed = true
+      out[id] = { ...next, source: 'lock', lockedAt: new Date().toISOString() }
+    } else {
+      out[id] = { ...cur, ...next }
+    }
+  }
+  return { results: out, changed }
+}
+
+/**
  * Official finals win; otherwise use in-play liveScores, then finished pipeline hints.
  * Used so leaderboard / H2H / cards move with the scoreline before ΤΕΛΙΚΟ is saved.
  */
