@@ -39,8 +39,8 @@ export const api = {
   getState:   ()               => call('GET', '/state'),
   savePred:   (matchId,h,a,qual,predOT,otH,otA,predPen,penH,penA) =>
     call('PATCH','/prediction',{matchId,h,a,qual,predOT,otH,otA,predPen,penH,penA}),
-  saveResult: (matchId,h,a,ot,otH,otA,pen,penH,penA) =>
-    call('PATCH','/result',{matchId,h,a,overtime:ot,otH,otA,penalties:pen,penH,penA}),
+  saveResult: (matchId,h,a,ot,otH,otA,pen,penH,penA,qual) =>
+    call('PATCH','/result',{matchId,h,a,overtime:ot,otH,otA,penalties:pen,penH,penA,qual}),
   fetchScores:(matchId) => call('POST','/fetch-scores',{matchId}),
   /** Admin: set kickoff (Athens HH:MM + optional YYYY-MM-DD) */
   setKickoff: (matchId, athensTime, date) =>
