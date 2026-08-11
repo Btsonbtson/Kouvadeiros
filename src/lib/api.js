@@ -42,6 +42,11 @@ export const api = {
   saveResult: (matchId,h,a,ot,otH,otA,pen,penH,penA) =>
     call('PATCH','/result',{matchId,h,a,overtime:ot,otH,otA,penalties:pen,penH,penA}),
   fetchScores:(matchId) => call('POST','/fetch-scores',{matchId}),
+  /** Admin: set kickoff (Athens HH:MM + optional YYYY-MM-DD) */
+  setKickoff: (matchId, athensTime, date) =>
+    call('POST', '/set-kickoff', { matchId, athensTime, date }),
+  /** Admin: pull TBA kickoffs from ESPN/Gazzetta (optional matchId) */
+  fetchKickoffs: (opts = {}) => call('POST', '/fetch-kickoffs', opts),
   sendChat:   (text)    => call('PATCH','/chat',{text}),
   savePhone:  (phone)   => call('PATCH','/save-phone',{phone}),
   addPlayer:  (data)    => call('POST','/add-player',data),
