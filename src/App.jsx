@@ -100,7 +100,18 @@ const SEEDED_PREDS={
   'uel-paok-1':{boikos:{h:2,a:1,qual:'DYN'},mavromichalis:{h:0,a:0,qual:'PAOK'},chousiadas:{h:2,a:1,qual:'DYN'}},
   'uecl-pao-1':{boikos:{h:0,a:3,qual:'PAO'},mavromichalis:{h:0,a:1,qual:'PAO'},chousiadas:{h:1,a:2,qual:'PAO'}},
 }
-const SEEDED_RES={'uel-paok-1':{h:2,a:3},'uecl-pao-1':{h:1,a:2},'uel-paok-2':{h:2,a:0,qual:'PAOK'},'uecl-pao-2':{h:2,a:2,qual:'PAO'},'ucl-oly-1':{h:0,a:0},'uecl-pao-3':{h:1,a:1}}
+const SEEDED_RES={
+  'uel-paok-1':{h:2,a:3},
+  'uecl-pao-1':{h:1,a:2},
+  'uel-paok-2':{h:2,a:0,qual:'PAOK'},
+  'uecl-pao-2':{h:2,a:2,qual:'PAO'},
+  'ucl-oly-1':{h:0,a:0},
+  // NEC–OLY Leg 2: tips on 90′ (1–1). AET 2–1 NEC — πρόκριση not awarded yet.
+  'ucl-oly-2':{h:1,a:1,overtime:true,otH:2,otA:1},
+  'uecl-pao-3':{h:1,a:1},
+  // CSK–PAO Leg 2: tips on 90′ (1–1). AET 1–2 PAO — πρόκριση not awarded yet.
+  'uecl-pao-4':{h:1,a:1,overtime:true,otH:1,otA:2},
+}
 
 function isUEFATie(id){return UEFA_FIXTURES.some(f=>f.id===id)}
 
@@ -194,8 +205,8 @@ function KickoffPanel({match,onSaved}){
 function PushPanel({match,result,onSaved,pipelineHint}){
   const [h,setH]=useState(result?.h??pipelineHint?.h??0),[a,setA]=useState(result?.a??pipelineHint?.a??0)
   const [mn,setMn]=useState(pipelineHint?.min&&!pipelineHint?.final?pipelineHint.min:0)
-  const [ot,setOt]=useState(false),[otH,setOtH]=useState(0),[otA,setOtA]=useState(0)
-  const [pen,setPen]=useState(false),[penH,setPenH]=useState(0),[penA,setPenA]=useState(0)
+  const [ot,setOt]=useState(!!result?.overtime),[otH,setOtH]=useState(result?.otH??0),[otA,setOtA]=useState(result?.otA??0)
+  const [pen,setPen]=useState(!!result?.penalties),[penH,setPenH]=useState(result?.penH??0),[penA,setPenA]=useState(result?.penA??0)
   const [busy,setBusy]=useState(false),[msg,setMsg]=useState('')
   const isuefa=isUEFATie(match.id)
   const imported=pipelineHint?.final&&result==null
@@ -212,7 +223,9 @@ function PushPanel({match,result,onSaved,pipelineHint}){
   }
   async function doFinal(){
     setBusy(true);setMsg('')
-    try{const r=await api.saveResult(match.id,h,a,ot,otH,otA,pen,penH,penA);setMsg(r.ok?`✅ Τελικό ${h}–${a}!`:'❌ '+JSON.stringify(r));if(r.ok)setTimeout(()=>{setMsg('');onSaved?.()},1500)}
+    // Tip scoreline = 90′ (h/a). OT board goes in otH/otA. Clear qual unless already set elsewhere —
+    // πρόκριση is awarded only when admin sets qual explicitly on a later edit.
+    try{const r=await api.saveResult(match.id,h,a,ot,ot?otH:null,ot?otA:null,pen,pen?penH:null,pen?penA:null);setMsg(r.ok?`✅ Τελικό ${h}–${a}${ot?` · Παρ ${otH}–${otA}`:''}!`:'❌ '+JSON.stringify(r));if(r.ok)setTimeout(()=>{setMsg('');onSaved?.()},1500)}
     catch(e){setMsg('❌ '+e.message)}
     setBusy(false)
   }

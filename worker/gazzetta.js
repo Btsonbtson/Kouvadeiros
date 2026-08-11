@@ -217,19 +217,22 @@ export function resolveGazzettaScore(match, scheduleById, liveRaw) {
     const h = parseInt(sh, 10)
     const a = parseInt(sa, 10)
     if (!Number.isNaN(h) && !Number.isNaN(a)) {
+      const statusBlob = `${sched.status_name || ''} ${sched.match_status || ''} ${sched.score_status || ''} ${live?.match_status || ''}`
+      const isAET = /aet|after.?extra|παρ[αά]ταση|παρατ/i.test(statusBlob)
+      const isPen = /pen|π[εέ]ναλ/i.test(statusBlob)
       return {
         status: 'STATUS_FINAL',
         isFinal: true,
         isHT: false,
         isInProgress: false,
-        isAET: false,
-        isPen: false,
+        isAET,
+        isPen,
         h,
         a,
         minute: 90,
-        label: 'ΤΕΛ',
+        label: isAET ? 'AET' : isPen ? 'PEN' : 'ΤΕΛ',
         phase: 'FT',
-        detail: 'FT',
+        detail: isAET ? 'AET' : isPen ? 'PEN' : 'FT',
         source: 'gazzetta',
         gazzettaId: sched.match_id,
       }

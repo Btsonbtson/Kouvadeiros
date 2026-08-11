@@ -466,6 +466,12 @@ function buildLivePayload(score) {
   const label = score?.label || (min ? `${min}'` : 'LIVE')
   const out = { h: score.h, a: score.a, min: min ?? 0, label }
   if (score?.phase) out.phase = score.phase
+  // Tip scoring is always 90′ — keep regulation snapshot for provisional pts during ET/pens.
+  if (score?.regH != null && score?.regA != null) {
+    out.regH = score.regH
+    out.regA = score.regA
+  }
+  if (score?.isInET || score?.phase === 'ET') out.phase = out.phase || 'ET'
   return out
 }
 
@@ -473,18 +479,93 @@ function mergeResults(state) {
   return { ...FALLBACK_RESULTS, ...(state.results || {}) }
 }
 
-/** Keep qual / OT / pen fields when ESPN auto-writes FT (they are not in live feed). */
-function buildAutoResult(matchId, score, prev) {
+/**
+ * Sum ESPN period linescores for regulation (periods 1–2).
+ * Returns null when linescores are missing / incomplete.
+ */
+function regulationFromLinescores(homeC, awayC) {
+  const sumRegs = (comp) => {
+    const lines = comp?.linescores
+    if (!Array.isArray(lines) || lines.length < 2) return null
+    let total = 0
+    for (const line of lines.slice(0, 2)) {
+      const v = parseInt(line?.value ?? line?.displayValue ?? '', 10)
+      if (!Number.isFinite(v)) return null
+      total += v
+    }
+    return total
+  }
+  const h = sumRegs(homeC)
+  const a = sumRegs(awayC)
+  if (h == null || a == null) return null
+  return { h, a }
+}
+
+/**
+ * Auto FT writer.
+ * Tips always score against 90′ (h/a). After AET/pens the board total goes in otH/otA
+ * (or penH/penA) — never overwrite the tip scoreline with ET goals.
+ * Does not invent πρόκριση (qual stays prior/manual only).
+ */
+function buildAutoResult(matchId, score, prev, regSnap) {
   const prior = prev || FALLBACK_RESULTS[matchId] || {}
+  const fallback = FALLBACK_RESULTS[matchId] || {}
+  // Some feeds post the AET board total as FT without an AET flag — if our known
+  // fallback has overtime and the posted total matches otH/otA, treat as AET.
+  const feedLooksLikeOtTotal =
+    !!(fallback.overtime &&
+      fallback.otH != null &&
+      fallback.otA != null &&
+      score.h === fallback.otH &&
+      score.a === fallback.otA &&
+      (fallback.h !== score.h || fallback.a !== score.a))
+  const afterExtra = !!(score.isAET || score.isPen || prior.overtime || prior.penalties || feedLooksLikeOtTotal)
+  let h = score.h
+  let a = score.a
+  let otH = prior.otH ?? null
+  let otA = prior.otA ?? null
+  let penH = prior.penH ?? null
+  let penA = prior.penA ?? null
+
+  if (afterExtra) {
+    // Final board after ET/pens
+    if (score.isPen) {
+      penH = score.penH ?? score.h
+      penA = score.penA ?? score.a
+      if (score.otH != null && score.otA != null) {
+        otH = score.otH
+        otA = score.otA
+      } else if (otH == null || otA == null) {
+        otH = score.h
+        otA = score.a
+      }
+    } else {
+      otH = score.h
+      otA = score.a
+    }
+    const reg =
+      (score.regH != null && score.regA != null ? { h: score.regH, a: score.regA } : null) ||
+      (regSnap?.h != null && regSnap?.a != null ? { h: regSnap.h, a: regSnap.a } : null) ||
+      (prior.regH != null && prior.regA != null ? { h: prior.regH, a: prior.regA } : null) ||
+      (fallback.h != null && fallback.a != null && fallback.overtime ? { h: fallback.h, a: fallback.a } : null) ||
+      (prior.h != null && prior.a != null && !prior.overtime && prior.source !== 'auto'
+        ? { h: prior.h, a: prior.a }
+        : null)
+    if (reg) {
+      h = reg.h
+      a = reg.a
+    }
+  }
+
   return {
-    h: score.h,
-    a: score.a,
-    overtime: score.isAET || prior.overtime || false,
-    otH: prior.otH ?? null,
-    otA: prior.otA ?? null,
+    h,
+    a,
+    overtime: !!(score.isAET || prior.overtime || afterExtra || feedLooksLikeOtTotal),
+    otH,
+    otA,
     penalties: score.isPen || prior.penalties || false,
-    penH: prior.penH ?? null,
-    penA: prior.penA ?? null,
+    penH,
+    penA,
     qual: prior.qual || null,
     source: 'auto',
     fetchedAt: new Date().toISOString(),
@@ -610,12 +691,37 @@ async function fetchESPNScore(match) {
     const a = parseInt(awayC.score || 0)
     const clockStr = comp?.status?.displayClock || '0:00'
     const minute = parseInt(clockStr.split(':')[0] || 0)
+    const period = Number(comp?.status?.period || evt?.status?.period || 0) || 0
     const isFinal = status === 'STATUS_FINAL'
     const isHT = status === 'STATUS_HALFTIME'
     const isInProg = status === 'STATUS_IN_PROGRESS'
-    const isAET = isFinal && (detail.toLowerCase().includes('aet') || detail.toLowerCase().includes('extra'))
-    const isPen = isFinal && (detail.toLowerCase().includes('pen') || detail.toLowerCase().includes('penalty'))
-    return { status, isFinal, isHT, isInProgress: isInProg, isAET, isPen, h, a, minute, detail }
+    const detailL = detail.toLowerCase()
+    const isInET = isInProg && (period >= 3 || detailL.includes('aet') || detailL.includes('extra') || detailL.includes('et'))
+    const isAET = (isFinal && (detailL.includes('aet') || detailL.includes('extra'))) || (isFinal && period >= 3)
+    const isPen = isFinal && (detailL.includes('pen') || detailL.includes('penalty'))
+    const reg = regulationFromLinescores(homeC, awayC)
+    const out = {
+      status,
+      isFinal,
+      isHT,
+      isInProgress: isInProg,
+      isInET,
+      isAET,
+      isPen,
+      h,
+      a,
+      minute,
+      period,
+      detail,
+      phase: isInET ? 'ET' : isHT ? 'HT' : undefined,
+    }
+    if (reg) {
+      out.regH = reg.h
+      out.regA = reg.a
+    } else if (isInET || isAET || isPen) {
+      // No linescores — callers may fill from live 90′ snapshot
+    }
+    return out
   } catch {
     return null
   }
@@ -707,15 +813,33 @@ export default {
           const score = gzScores[match.id] || (await fetchESPNScore(match))
           if (score) {
             const prev = state.results?.[match.id]
+            const regKey = `reg_${match.id}`
+            // Snapshot 90′ tip scoreline before ET goals pollute the board total
+            if (!score.isFinal && !score.isInET && score.minute >= 90 && score.period <= 2) {
+              state[regKey] = { h: score.h, a: score.a, snappedAt: new Date(now).toISOString() }
+              stateChanged = true
+            }
+            if (!score.isFinal && score.regH != null && score.regA != null && !state[regKey]) {
+              state[regKey] = { h: score.regH, a: score.regA, snappedAt: new Date(now).toISOString() }
+              stateChanged = true
+            }
+            if ((score.isInET || score.isAET || score.isPen) && state[regKey] && score.regH == null) {
+              score.regH = state[regKey].h
+              score.regA = state[regKey].a
+            }
+
+            const tipH = score.regH ?? score.h
+            const tipA = score.regA ?? score.a
             const prevH = prev?.h ?? null
             const prevA = prev?.a ?? null
-            const scoreChanged = prevH !== score.h || prevA !== score.a
-            const isLate = score.minute >= 85
-            const isInjury = score.minute >= 90
+            const scoreChanged = prevH !== tipH || prevA !== tipA
+            const isLate = score.minute >= 85 && !score.isInET
+            const isInjury = score.minute >= 90 && !score.isInET
 
-            if (scoreChanged && isLate && !score.isFinal) {
-              const newScore = { h: score.h, a: score.a }
-              const dramaKey = `drama:${match.id}:${score.h}-${score.a}`
+            // ΘΑΥΜΑ/ΩΣΑΝΑ only on 90′ tip scoreline — never on ET goals
+            if (scoreChanged && isLate && !score.isFinal && !score.isInET) {
+              const newScore = { h: tipH, a: tipA }
+              const dramaKey = `drama:${match.id}:${tipH}-${tipA}`
 
               if (!sent[dramaKey]) {
                 const preds = state.predictions?.[match.id] || {}
@@ -766,19 +890,33 @@ export default {
             }
 
             if (score.isFinal) {
-              const result = buildAutoResult(match.id, score, prev)
+              const result = buildAutoResult(match.id, score, prev, state[regKey])
               result.fetchedAt = new Date(now).toISOString()
-              const changed = !prev || prev.h !== score.h || prev.a !== score.a || (!prev.qual && result.qual)
+              const changed =
+                !prev ||
+                prev.h !== result.h ||
+                prev.a !== result.a ||
+                (prev.otH ?? null) !== (result.otH ?? null) ||
+                (prev.otA ?? null) !== (result.otA ?? null) ||
+                (!!prev.overtime) !== (!!result.overtime) ||
+                (!prev.qual && result.qual)
               if (changed) {
                 if (!state.results) state.results = {}
                 state.results[match.id] = result
                 delete state[`live_${match.id}`]
+                delete state[regKey]
                 stateChanged = true
                 if (!sent[`ft:${match.id}`]) {
-                  const ot = score.isAET ? ' (AET)' : ''
-                  const pen = score.isPen ? ' · Pen' : ''
+                  const tipLine = `${result.h}–${result.a}`
+                  const ot =
+                    result.overtime && result.otH != null
+                      ? ` · Παρ ${result.otH}–${result.otA}`
+                      : score.isAET
+                        ? ' (AET)'
+                        : ''
+                  const pen = result.penalties ? ' · Pen' : ''
                   const q = result.qual ? ` · →${result.qual}` : ''
-                  const msg = `🏁 *Αποτέλεσμα!*\n\n⚽ *${match.label}*\n*${score.h}–${score.a}*${ot}${pen}${q}\n\nΔες τους πόντους: kouvadeiros.pages.dev`
+                  const msg = `🏁 *Αποτέλεσμα!*\n\n⚽ *${match.label}*\n*${tipLine}*${ot}${pen}${q}\n\nΔες τους πόντους: kouvadeiros.pages.dev`
                   for (const [, user] of Object.entries(users)) {
                     const phone = phones[user.id]
                     if (phone) await sendWA(env, phone, msg)
@@ -1102,12 +1240,28 @@ export default {
       const state = await getState(env)
       if (!state.results) state.results = {}
       if (score?.isFinal) {
-        state.results[matchId] = buildAutoResult(matchId, score, state.results[matchId])
+        const regSnap = state[`reg_${matchId}`]
+        if ((score.isAET || score.isPen) && regSnap && score.regH == null) {
+          score.regH = regSnap.h
+          score.regA = regSnap.a
+        }
+        state.results[matchId] = buildAutoResult(matchId, score, state.results[matchId], regSnap)
         delete state[`live_${matchId}`]
+        delete state[`reg_${matchId}`]
         await setState(env, state)
         return json({ ok: true, result: state.results[matchId], final: true, source: score.source || 'espn' })
       }
       if (score && score.h !== undefined) {
+        if (!score.isInET && score.minute >= 90 && (score.period == null || score.period <= 2)) {
+          state[`reg_${matchId}`] = { h: score.h, a: score.a, snappedAt: new Date().toISOString() }
+        }
+        if (score.regH != null && score.regA != null) {
+          state[`reg_${matchId}`] = { h: score.regH, a: score.regA, snappedAt: new Date().toISOString() }
+        }
+        if ((score.isInET || score.isAET) && state[`reg_${matchId}`] && score.regH == null) {
+          score.regH = state[`reg_${matchId}`].h
+          score.regA = state[`reg_${matchId}`].a
+        }
         state[`live_${matchId}`] = buildLivePayload(score)
         await setState(env, state)
         return json({
@@ -1208,10 +1362,23 @@ export default {
             if (minsUntil > 15 || minsUntil < -200) continue
             if (score.isFinal) {
               if (!state.results) state.results = {}
-              state.results[match.id] = buildAutoResult(match.id, score, state.results[match.id])
+              const regSnap = state[`reg_${match.id}`]
+              if ((score.isAET || score.isPen) && regSnap && score.regH == null) {
+                score.regH = regSnap.h
+                score.regA = regSnap.a
+              }
+              state.results[match.id] = buildAutoResult(match.id, score, state.results[match.id], regSnap)
               delete state[`live_${match.id}`]
+              delete state[`reg_${match.id}`]
               changed = true
             } else {
+              if (!score.isInET && score.minute >= 90 && (score.period == null || score.period <= 2)) {
+                state[`reg_${match.id}`] = { h: score.h, a: score.a, snappedAt: new Date().toISOString() }
+              }
+              if ((score.isInET || score.isAET) && state[`reg_${match.id}`] && score.regH == null) {
+                score.regH = state[`reg_${match.id}`].h
+                score.regA = state[`reg_${match.id}`].a
+              }
               state[`live_${match.id}`] = buildLivePayload(score)
               changed = true
             }

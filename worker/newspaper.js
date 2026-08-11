@@ -10,7 +10,11 @@ export const FALLBACK_RESULTS = {
   'uel-paok-2': { h: 2, a: 0, qual: 'PAOK' },
   'uecl-pao-2': { h: 2, a: 2, qual: 'PAO' },
   'ucl-oly-1': { h: 0, a: 0 },
+  // Tip score = 90′ only. AET finals live in otH/otA (NEC 2–1 after ET; no πρόκριση pts yet).
+  'ucl-oly-2': { h: 1, a: 1, overtime: true, otH: 2, otA: 1 },
   'uecl-pao-3': { h: 1, a: 1 },
+  // Tip score = 90′ 1–1; AET finished CSK 1–2 PAO.
+  'uecl-pao-4': { h: 1, a: 1, overtime: true, otH: 1, otA: 2 },
 }
 
 const PLAYER_COLORS = {

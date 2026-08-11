@@ -439,12 +439,15 @@ export function buildPlayerMatchLedger(fixtures, predictions, results, playerId)
 /** Turn a live / hint scoreline into an actual for scoreMatch (provisional until official result). */
 export function scorelineToActual(scoreline) {
   if (!scoreline || scoreline.h == null || scoreline.a == null) return null
+  // Tip scoring is always regulation time. During ET/pens live boards include extra goals —
+  // prefer an explicit 90′ snapshot when the feed carries one.
+  const useReg = scoreline.regH != null && scoreline.regA != null
   const actual = {
-    h: Number(scoreline.h),
-    a: Number(scoreline.a),
+    h: Number(useReg ? scoreline.regH : scoreline.h),
+    a: Number(useReg ? scoreline.regA : scoreline.a),
     provisional: true,
   }
-  if (scoreline.qual) actual.qual = scoreline.qual
+  // Never award πρόκριση from live/provisional feeds
   return actual
 }
 
