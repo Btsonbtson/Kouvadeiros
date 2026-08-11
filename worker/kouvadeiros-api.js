@@ -139,9 +139,9 @@ const MATCHES = [
   // Ολυμπιακός–NEC Q3: Τρί 4/8 21:00 · Τρί 11/8 20:30 Ελλ.
   { id: 'ucl-oly-1', kickoff: '2026-08-04T18:00:00Z', label: 'ΟΛΥ vs NEC', espnLeague: 'uefa.champions', homeTeam: 'Olympiacos', awayTeam: 'NEC Nijmegen' },
   { id: 'ucl-oly-2', kickoff: '2026-08-11T17:30:00Z', label: 'NEC vs ΟΛΥ', espnLeague: 'uefa.champions', homeTeam: 'NEC Nijmegen', awayTeam: 'Olympiacos' },
-  // Παναθηναϊκός–ΤΣΣΚΑ 1948 Q3: Τετ 5/8 21:30 · Τρί 11/8 ώρα TBA
+  // Παναθηναϊκός–ΤΣΣΚΑ 1948 Q3: Τετ 5/8 21:30 · Τρί 11/8 20:30 Ελλ.
   { id: 'uecl-pao-3', kickoff: '2026-08-05T18:30:00Z', label: 'ΠΑΟ vs CSKA 1948', espnLeague: 'uefa.europa.conf', homeTeam: 'Panathinaikos', awayTeam: 'CSKA 1948' },
-  { id: 'uecl-pao-4', kickoff: '2026-08-11T18:00:00Z', label: 'CSKA 1948 vs ΠΑΟ', espnLeague: 'uefa.europa.conf', homeTeam: 'CSKA 1948', awayTeam: 'Panathinaikos', timeTbd: true },
+  { id: 'uecl-pao-4', kickoff: '2026-08-11T17:30:00Z', label: 'CSKA 1948 vs ΠΑΟ', espnLeague: 'uefa.europa.conf', homeTeam: 'CSKA 1948', awayTeam: 'Panathinaikos' },
   // ΠΑΟΚ–Άντερλεχτ Q3: Πέμ 6/8 20:45 · Πέμ 13/8 21:30
   { id: 'uel-paok-3', kickoff: '2026-08-06T17:45:00Z', label: 'ΠΑΟΚ vs Άντερλεχτ', espnLeague: 'uefa.europa', homeTeam: 'PAOK', awayTeam: 'Anderlecht' },
   { id: 'uel-paok-4', kickoff: '2026-08-13T18:30:00Z', label: 'Άντερλεχτ vs ΠΑΟΚ', espnLeague: 'uefa.europa', homeTeam: 'Anderlecht', awayTeam: 'PAOK' },

@@ -295,9 +295,9 @@ export const UEFA_FIXTURES = [
   // Ολυμπιακός–NEC Q3 (olympiacos.org / UEFA): Τρί 4/8 21:00 · Τρί 11/8 20:30 Ελλ.
   {id:'ucl-oly-1',  t:'UCL', greek:'OLY', home:'OLY', away:'NEC',  kickoff:'2026-08-04T18:00:00Z', round:'Q3 · Leg 1', leg:1, tie:'ucl-oly', venue:'Karaiskakis, Πειραιάς'},
   {id:'ucl-oly-2',  t:'UCL', greek:'OLY', home:'NEC', away:'OLY',  kickoff:'2026-08-11T17:30:00Z', round:'Q3 · Leg 2', leg:2, tie:'ucl-oly', venue:'Goffert, Nijmegen'},
-  // Παναθηναϊκός–ΤΣΣΚΑ 1948 Q3 (pao.gr / sport24): Τετ 5/8 21:30 ΟΑΚΑ · Τρί 11/8 Σόφια ώρα TBA
+  // Παναθηναϊκός–ΤΣΣΚΑ 1948 Q3 (pao.gr / UEFA): Τετ 5/8 21:30 ΟΑΚΑ · Τρί 11/8 20:30 Ελλ. Σόφια
   {id:'uecl-pao-3', t:'UECL',greek:'PAO', home:'PAO', away:'CSK', kickoff:'2026-08-05T18:30:00Z', round:'Q3 · Leg 1', leg:1, tie:'uecl-pao-q3', venue:'ΟΑΚΑ, Αθήνα'},
-  {id:'uecl-pao-4', t:'UECL',greek:'PAO', home:'CSK', away:'PAO', kickoff:'2026-08-11T18:00:00Z', round:'Q3 · Leg 2', leg:2, tie:'uecl-pao-q3', venue:'Σόφια', timeTbd:true},
+  {id:'uecl-pao-4', t:'UECL',greek:'PAO', home:'CSK', away:'PAO', kickoff:'2026-08-11T17:30:00Z', round:'Q3 · Leg 2', leg:2, tie:'uecl-pao-q3', venue:'Vasil Levski, Σόφια'},
   // ΠΑΟΚ–Άντερλεχτ Q3 (UEFA 31/7): Πέμ 6/8 20:45 Τούμπα · Πέμ 13/8 21:30 Βρυξέλλες
   {id:'uel-paok-3', t:'UEL', greek:'PAOK', home:'PAOK',away:'AND', kickoff:'2026-08-06T17:45:00Z', round:'Q3 · Leg 1', leg:1, tie:'uel-paok-q3', venue:'Toumba, Θεσσαλονίκη'},
   {id:'uel-paok-4', t:'UEL', greek:'PAOK', home:'AND', away:'PAOK',kickoff:'2026-08-13T18:30:00Z', round:'Q3 · Leg 2', leg:2, tie:'uel-paok-q3', venue:'Lotto Park, Βρυξέλλες'},

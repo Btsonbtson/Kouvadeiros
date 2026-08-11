@@ -81,7 +81,9 @@ const ODDS = {
   'uecl-pao-2':  {h:1.60, d:3.60, a:5.00},
   // UEFA — this week
   'ucl-oly-1':   {h:1.55, d:4.20, a:5.70},   // OLY–NEC · 4/8
+  'ucl-oly-2':   {h:4.80, d:3.90, a:1.70},   // NEC–OLY · 11/8 20:30
   'uecl-pao-3':  {h:1.40, d:4.60, a:9.00},   // PAO–CSK · 5/8
+  'uecl-pao-4':  {h:5.50, d:3.80, a:1.60},   // CSK–PAO · 11/8 20:30
   'uel-paok-3':  {h:1.70, d:3.55, a:4.40},   // PAOK–AND · 6/8
   // Super League · Αγωνιστική 1 (OddsMath 3/8/2026)
   'sl-1-1':      {h:1.19, d:6.15, a:17.50},  // AEK–IRA
