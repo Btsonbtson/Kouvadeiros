@@ -911,6 +911,8 @@ export default function App({ user, onLogout }) {
   const [gazzetta, setGazzetta] = useState({ healthy: false, enabled: true, loading: true })
   const [gazzettaBusy, setGazzettaBusy] = useState(false)
   const [timesBusy, setTimesBusy] = useState(false)
+  const resultsRef = useRef(state.results)
+  resultsRef.current = state.results
 
   const fixtures = useMemo(
     () => applyKickoffOverrides(ALL_FIXTURES, state.kickoffOverrides),
@@ -1108,7 +1110,11 @@ export default function App({ user, onLogout }) {
 
       if (liveNow) {
         if (user?.role==='admin' && due.length) {
-          await Promise.allSettled(due.map(m => api.fetchScores(m.id).catch(() => null)))
+          // Poll only matches without an official result yet. Manual "Update Score" still forces a fetch.
+          const needFetch = due.filter(m => !resultsRef.current?.[m.id])
+          if (needFetch.length) {
+            await Promise.allSettled(needFetch.map(m => api.fetchScores(m.id).catch(() => null)))
+          }
         }
         if (!cancelled) await load({ live: true })
         if (!cancelled) schedule(8000)

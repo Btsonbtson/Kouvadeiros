@@ -1239,6 +1239,19 @@ export default {
       if (!score) score = await fetchESPNScore(match)
       const state = await getState(env)
       if (!state.results) state.results = {}
+      const priorResult = state.results[matchId]
+      // Never clobber an admin/manual final (AET tip-score corrections, etc.)
+      if (score?.isFinal && priorResult && priorResult.source && priorResult.source !== 'auto') {
+        delete state[`live_${matchId}`]
+        await setState(env, state)
+        return json({
+          ok: true,
+          result: priorResult,
+          final: true,
+          source: priorResult.source,
+          locked: true,
+        })
+      }
       if (score?.isFinal) {
         const regSnap = state[`reg_${matchId}`]
         if ((score.isAET || score.isPen) && regSnap && score.regH == null) {
@@ -1360,7 +1373,10 @@ export default {
             if (!score || score.h === undefined) continue
             const minsUntil = (new Date(match.kickoff).getTime() - now) / 60000
             if (minsUntil > 15 || minsUntil < -200) continue
+            const prior = state.results?.[match.id]
             if (score.isFinal) {
+              // Respect admin/manual tip-scoreline locks
+              if (prior && prior.source && prior.source !== 'auto') continue
               if (!state.results) state.results = {}
               const regSnap = state[`reg_${match.id}`]
               if ((score.isAET || score.isPen) && regSnap && score.regH == null) {
