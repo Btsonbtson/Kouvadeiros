@@ -745,7 +745,7 @@ function HistoryPage({predictions,results}){
           {PLAYERS.map(p=>{const pred=predictions?.[m.id]?.[p],sc=pred?scorePlayerMatch(m,pred,actual,predictions,ALL_FIXTURES,p):null,pc=PC[p];return <div key={p} style={{flex:1,background:sc?.exact?`${GREEN}12`:sc?.correct?`${GOLD}08`:'rgba(255,255,255,.04)',borderRadius:9,padding:'8px',textAlign:'center',border:`1px solid ${sc?.exact?GREEN+'35':sc?.correct?GOLD+'20':LINE}`}}>
             <div style={{fontSize:10,fontWeight:800,color:pc.p,marginBottom:3,letterSpacing:'.04em'}}>{PLAYER_NAMES[p].substring(0,4).toUpperCase()}</div>
             <div style={{fontSize:13,fontWeight:800,color:TEXT,fontVariantNumeric:'tabular-nums'}}>{pred?`${pred.h}–${pred.a}`:'–'}</div>
-            {sc&&<div style={{fontSize:11,fontWeight:700,color:sc.points===2?GREEN:sc.points===1?GOLD:DIM,marginTop:2}}>{sc.points===2?'🎯':sc.points===1?'✓':'✗'}{sc.points}p</div>}
+            {sc&&<div style={{fontSize:11,fontWeight:700,color:sc.dq?RED:sc.points>=2?GREEN:sc.points===1?GOLD:DIM,marginTop:2}}>{sc.dq?'DQ −1':`${sc.points>=2?'🎯':sc.points===1?'✓':'✗'}${sc.points}p`}</div>}
           </div>})}
         </div>
       </div>
@@ -1456,6 +1456,8 @@ function LeaguePage({predictions,results,thavmaStats}){
         const pcr=PC[row.player]
         const qualPts=row.qual||0
         const scorePts=ledger.reduce((s,r)=>s+r.scorePts,0)
+        const etPtsTot=ledger.reduce((s,r)=>s+(r.etPts||0),0)
+        const penPtsTot=ledger.reduce((s,r)=>s+(r.penPts||0),0)
         const expanded = openPlayer === row.player
         const catRows = {
           exact: ledger.filter(r => r.exact),
@@ -1471,18 +1473,26 @@ function LeaguePage({predictions,results,thavmaStats}){
               <div>
                 <div style={{fontSize:12,fontWeight:700,color:TEXT}}>{r.label}</div>
                 <div style={{fontSize:10,color:MUTED,marginTop:2}}>
-                  Tip {r.tip}{r.tipQual?` →${r.tipQual}`:''} · Αποτ. {r.actual}{r.actualQual?` →${r.actualQual}`:''}
+                  Tip {r.tip}{r.tipEt?` · ET ${r.tipEt}`:''}{r.tipPen?` · ΠΕΝ ${r.tipPen}`:''}{r.tipQual?` →${r.tipQual}`:''}
+                  {' · '}Αποτ. {r.actual}{r.actualEt?` · ET ${r.actualEt}`:''}{r.actualPen?` · ΠΕΝ ${r.actualPen}`:''}{r.actualQual?` →${r.actualQual}`:''}
                 </div>
                 <div style={{fontSize:10,marginTop:3,display:'flex',gap:6,flexWrap:'wrap'}}>
+                  {r.dq && <span style={{color:RED}}>DQ −1 (χωρίς tip 90′)</span>}
                   {r.exact && <span style={{color:GREEN}}>exact +1</span>}
                   {r.correct && <span style={{color:GOLD}}>1Χ2 +1</span>}
+                  {r.etExact && <span style={{color:GREEN}}>ET exact +1</span>}
+                  {r.etCorrect && <span style={{color:GOLD}}>ET 1Χ2 +1</span>}
+                  {r.penExact && <span style={{color:GREEN}}>ΠΕΝ exact +1</span>}
+                  {r.penCorrect && <span style={{color:GOLD}}>ΠΕΝ νικητής +1</span>}
                   {r.qualCorrect && <span style={{color:BLUE}}>πρόκριση +1 ({r.actualQual})</span>}
-                  {!r.exact && !r.correct && !r.qualCorrect && <span style={{color:MUTED}}>0</span>}
+                  {!r.dq && !r.exact && !r.correct && !r.etExact && !r.etCorrect && !r.penExact && !r.penCorrect && !r.qualCorrect && <span style={{color:MUTED}}>0</span>}
                 </div>
               </div>
               <div style={{textAlign:'right'}}>
-                <div style={{fontSize:16,fontWeight:900,color:pcr.p}}>+{r.points}</div>
-                <div style={{fontSize:9,color:MUTED}}>{r.scorePts} σκορ{r.qualPts?` + ${r.qualPts}🔑`:''}</div>
+                <div style={{fontSize:16,fontWeight:900,color:r.dq?RED:pcr.p}}>{r.dq?'−1':`+${r.points}`}</div>
+                <div style={{fontSize:9,color:MUTED}}>
+                  {r.dq?'DQ 90′':`${r.scorePts} 90′${r.etPts?` + ${r.etPts}ET`:''}${r.penPts?` + ${r.penPts}ΠΕΝ`:''}${r.qualPts?` + ${r.qualPts}🔑`:''}`}
+                </div>
               </div>
             </div>
           ))
@@ -1500,7 +1510,7 @@ function LeaguePage({predictions,results,thavmaStats}){
             </div>
             <div style={{textAlign:'right'}}>
               <div style={{fontSize:22,fontWeight:900,color:pcr.p}}>{row.pts}<span style={{fontSize:12,color:MUTED,fontWeight:500}}>p</span></div>
-              <div style={{fontSize:9,color:MUTED,marginTop:2}}>{scorePts} σκορ + <span style={{color:BLUE}}>{qualPts}🔑</span></div>
+              <div style={{fontSize:9,color:MUTED,marginTop:2}}>{scorePts} 90′{etPtsTot?` + ${etPtsTot}ET`:''}{penPtsTot?` + ${penPtsTot}ΠΕΝ`:''} + <span style={{color:BLUE}}>{qualPts}🔑</span></div>
             </div>
           </button>
 
@@ -1890,7 +1900,7 @@ function MatchPredictCard({match,result,scoringActual,predictions,allPredictions
               {formatLiveClock(liveScore, match)}
             </div>}
             {result?.overtime&&<div style={{fontSize:9,fontWeight:700,color:GOLD,letterSpacing:'.03em',textAlign:'center'}}>
-              {result.penalties?`Μπενάλντιζ ${result.penH}–${result.penA}`:`ΠΑΡΑΤΑΣΗ ${result.otH}–${result.otA}`}
+              ΠΑΡΑΤΑΣΗ {result.otH}–{result.otA}{result.penalties?` · ΠΕΝ ${result.penH}–${result.penA}`:''}
             </div>}
             {!hasRes&&!today&&<div style={{fontSize:10,color:DIM,fontWeight:600}}>vs</div>}
           </div>
@@ -1969,9 +1979,12 @@ function MatchPredictCard({match,result,scoringActual,predictions,allPredictions
               </div>
             )}
 
-            {/* OT score row */}
+            {/* OT / pen score rows — missing these = 0pts on that layer, never DQ */}
             {showExtraTimeUI&&predOT&&!locked&&<div style={{marginTop:8}}>
-              <ScoreRow lbl={predPen?'Μπενάλντιζ':'ΠΑΡΑΤΑΣΗ'} hv={otH} setHv={setOtH} av={otA} setAv={setOtA} sm/>
+              <ScoreRow lbl="ΠΑΡΑΤΑΣΗ (120′)" hv={otH} setHv={setOtH} av={otA} setAv={setOtA} sm/>
+            </div>}
+            {showExtraTimeUI&&predOT&&predPen&&!locked&&<div style={{marginTop:8}}>
+              <ScoreRow lbl="Μπενάλντιζ" hv={penH} setHv={setPenH} av={penA} setAv={setPenA} sm/>
             </div>}
 
             {/* Error */}
@@ -1998,6 +2011,8 @@ function MatchPredictCard({match,result,scoringActual,predictions,allPredictions
             <div style={{width:7,height:7,borderRadius:'50%',background:PC[currentUser.id]?.p||MUTED,flexShrink:0}}/>
             <span style={{fontSize:11,fontWeight:600,color:MUTED}}>Η πρόβλεψή μου:</span>
             <span style={{fontSize:14,fontWeight:900,color:PC[currentUser.id]?.p||TEXT,fontVariantNumeric:'tabular-nums'}}>{myPred.h}–{myPred.a}</span>
+            {myPred.predOT&&typeof myPred.otH==='number'&&<span style={{fontSize:10,color:GOLD}}>ET {myPred.otH}–{myPred.otA}</span>}
+            {myPred.predPen&&typeof myPred.penH==='number'&&<span style={{fontSize:10,color:RED}}>ΠΕΝ {myPred.penH}–{myPred.penA}</span>}
             {myPred.qual&&showQualUI&&<span style={{fontSize:10,color:MUTED}}>→ {myPred.qual}</span>}
             {isLeg2&&myLeg1Qual&&<span style={{fontSize:10,color:BLUE}}>→ {myLeg1Qual}</span>}
           </div>
@@ -2029,9 +2044,11 @@ function MatchPredictCard({match,result,scoringActual,predictions,allPredictions
                     opacity:isProvisional&&sc?0.92:1}}>
                     <div style={{fontSize:9,fontWeight:700,color:pc.p,marginBottom:3,letterSpacing:'.04em'}}>{PLAYER_NAMES[playerKey].substring(0,4).toUpperCase()}</div>
                     <div style={{fontSize:13,fontWeight:800,color:TEXT,fontVariantNumeric:'tabular-nums'}}>{pred?`${pred.h}–${pred.a}`:(showAllPreds?'DQ':'–')}</div>
+                    {pred?.predOT&&typeof pred.otH==='number'&&<div style={{fontSize:9,color:MUTED,marginTop:1}}>ET {pred.otH}–{pred.otA}</div>}
+                    {pred?.predPen&&typeof pred.penH==='number'&&<div style={{fontSize:9,color:MUTED,marginTop:1}}>ΠΕΝ {pred.penH}–{pred.penA}</div>}
                     {shownQual&&<div style={{fontSize:9,color:MUTED,marginTop:1}}>→{shownQual}</div>}
                     {isDq&&<div style={{fontSize:9,fontWeight:700,color:RED,marginTop:2}}>ΑΠΟΚΛΕΙΣΜΟΣ</div>}
-                    {sc&&<div style={{fontSize:10,fontWeight:700,color:sc.dq?RED:sc.points>=2?GREEN:sc.points===1?GOLD:DIM,marginTop:2}}>{sc.dq?'DQ −1p':`${sc.exact?'🎯':sc.correct?'✓':sc.qualCorrect?'🔑':'✗'}${sc.points}p`}{!sc.dq&&isProvisional?'~':''}{sc.qualPts?` ·${sc.qualPts}🔑`:''}</div>}
+                    {sc&&<div style={{fontSize:10,fontWeight:700,color:sc.dq?RED:sc.points>=2?GREEN:sc.points===1?GOLD:DIM,marginTop:2}}>{sc.dq?'DQ −1p':`${sc.exact?'🎯':sc.correct?'✓':sc.etExact||sc.penExact?'🎯':sc.qualCorrect?'🔑':'✗'}${sc.points}p`}{!sc.dq&&isProvisional?'~':''}{!sc.dq&&(sc.etPts||sc.penPts||sc.qualPts)?` ·${[sc.etPts?`${sc.etPts}ET`:null,sc.penPts?`${sc.penPts}ΠΕΝ`:null,sc.qualPts?`${sc.qualPts}🔑`:null].filter(Boolean).join('·')}`:''}</div>}
                   </div>
                 )
               })}

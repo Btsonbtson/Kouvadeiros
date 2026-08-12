@@ -83,12 +83,17 @@ export function TPill({ id, size = 'sm' }) {
 }
 
 export function PtsBadge({ pts, compact }) {
-  const map = {
-    2:{ bg:'#00ff8818', c:'#00ff88', border:'#00ff8840', label:compact?'+2':'🎯 2pts' },
-    1:{ bg:'#ffdd0018', c:'#ffdd00', border:'#ffdd0040', label:compact?'+1':'✓ 1pt' },
-    0:{ bg:'#ffffff08', c:'#ffffff44', border:'#ffffff12', label:compact?'0':'✗ 0pts' },
+  const n = Number(pts)
+  let s
+  if (!Number.isFinite(n) || n === 0) {
+    s = { bg:'#ffffff08', c:'#ffffff44', border:'#ffffff12', label:compact?'0':'✗ 0pts' }
+  } else if (n < 0) {
+    s = { bg:'#ff224418', c:'#ff2244', border:'#ff224440', label:compact?'−1':'⛔ DQ −1' }
+  } else if (n === 1) {
+    s = { bg:'#ffdd0018', c:'#ffdd00', border:'#ffdd0040', label:compact?'+1':'✓ 1pt' }
+  } else {
+    s = { bg:'#00ff8818', c:'#00ff88', border:'#00ff8840', label:compact?`+${n}`:`🎯 ${n}pts` }
   }
-  const s = map[pts] || map[0]
   return (
     <span style={{ fontSize:compact?10:11, fontWeight:700,
       padding:compact?'1px 5px':'2px 8px', borderRadius:6,

@@ -106,17 +106,20 @@ export default function Guide({ onBack }) {
               </div>
               <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', paddingTop:10, borderTop:`1px solid rgba(255,255,255,.06)` }}>
                 <div>
-                  <div style={{ fontSize:13, fontWeight:700, color:TEXT }}>⛔ DQ — χωρίς πρόβλεψη</div>
-                  <div style={{ fontSize:11, color:MUTED, marginTop:2 }}>Δεν έβαλες tip πριν το κλείδωμα · −1 πέναλτι</div>
+                  <div style={{ fontSize:13, fontWeight:700, color:TEXT }}>⛔ DQ — χωρίς tip 90′</div>
+                  <div style={{ fontSize:11, color:MUTED, marginTop:2 }}>Μόνο αν λείπει η πρόβλεψη κανονικής διάρκειας πριν το κλείδωμα · −1</div>
                 </div>
                 <div style={{ fontSize:22, fontWeight:900, color:'#ff2244' }}>−1p</div>
               </div>
             </div>
 
-            <div style={{ fontSize:12, fontWeight:700, color:MUTED, letterSpacing:'.07em', textTransform:'uppercase', marginBottom:10 }}>BONUS UEFA — Πρόκριση & παράταση</div>
+            <div style={{ fontSize:12, fontWeight:700, color:MUTED, letterSpacing:'.07em', textTransform:'uppercase', marginBottom:10 }}>BONUS UEFA — Πρόκριση · Παράταση · Πέναλτι</div>
             {[
-              {l:'🔑 Πρόκριση — προβλέπεται στο Leg 1, μετράει μετά το Leg 2', v:'+1p', c:BLUE},
-              {l:'⏱ Παράταση / Μπενάλντιζ — μόνο στο Leg 2 (αποθήκευση, χωρίς πόντους ακόμη)', v:'—', c:MUTED},
+              {l:'🔑 Πρόκριση — tip στο Leg 1, μετράει στο Leg 2', v:'+1p', c:BLUE},
+              {l:'⏱ Παράταση (120′) — σωστό αποτέλεσμα', v:'+1p', c:GOLD},
+              {l:'⏱ Παράταση (120′) — ακριβές σκορ', v:'+1p', c:GREEN},
+              {l:'⚽ Πέναλτι — νικητής μπαράζ', v:'+1p', c:GOLD},
+              {l:'⚽ Πέναλτι — ακριβές σκορ μπαράζ', v:'+1p', c:GREEN},
             ].map((r,i)=>(
               <div key={i} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'8px 0', borderBottom:`1px solid rgba(255,255,255,.05)` }}>
                 <span style={{ fontSize:12, color:MUTED }}>{r.l}</span>
@@ -124,7 +127,10 @@ export default function Guide({ onBack }) {
               </div>
             ))}
             <div style={{ fontSize:11, color:MUTED, marginTop:10, lineHeight:1.5 }}>
-              Στο Leg 1 διαλέγεις σκορ + ποιος προκρίνεται. Στο Leg 2 διαλέγεις σκορ 90′ (+ προαιρετικά παράταση/πέναλτι). Οι πόντοι σκορ μετράνε πάντα το 90′ — όχι το σκορ μετά την παράταση. Η πρόκριση βαθμολογείται μόνο όταν καταχωρηθεί το επίσημο qual στο Leg 2.
+              Max UEFA Leg 2 = <strong style={{color:TEXT}}>7p</strong> (2×90′ + 2×ET + 2×pen + 1×πρόκριση).
+              Οι πόντοι 90′ μετράνε το κανονικό· ET το συνολικό σκορ στα 120′· pens το μπαράζ.
+              Αν δεν παίχτηκε ET/pen (ή δεν έβαλες tip), εκείνα τα layers = 0 — όχι DQ.
+              DQ −1 μόνο αν λείπει η πρόβλεψη 90′ πριν το κλείδωμα.
             </div>
           </Section>
 
@@ -151,7 +157,7 @@ export default function Guide({ onBack }) {
             <Rule n="1" text='Πήγαινε στην καρτέλα "Predict"' sub="Βλέπεις όλους τους επερχόμενους αγώνες σε χρονολογική σειρά"/>
             <Rule n="2" text="Επίλεξε το σκορ που προβλέπεις" sub="Χρησιμοποίησε τα +/– κουμπιά για γκολ Γηπεδούχου και Φιλοξενούμενου"/>
             <Rule n="3" text="UEFA Leg 1: επίλεξε ποιος προκρίνεται" sub="Μπλε κουτί μόνο στο πρώτο ματς της σειράς — +1 όταν κλείσει το Leg 2"/>
-            <Rule n="4" text="UEFA Leg 2: παράταση / πέναλτι (προαιρετικά)" sub="Μόνο στο δεύτερο ματς. Δεν εμφανίζονται στο Leg 1"/>
+            <Rule n="4" text="UEFA Leg 2: παράταση / πέναλτι (προαιρετικά)" sub="Μόνο στο δεύτερο ματς. Έως +2 από ET και +2 από pens αν παίξουν και τα βρεις"/>
             <Rule n="5" text='Πάτα "Αποθήκευσε πρόβλεψη"' sub="Πράσινο κουμπί στο κάτω μέρος. Μπορείς να αλλάξεις μέχρι 15 λεπτά πριν τον αγώνα"/>
           </Section>
 
