@@ -346,7 +346,13 @@ function dqScore(actual) {
     exact: false,
     correct: false,
     qualCorrect: false,
+    etExact: false,
+    etCorrect: false,
+    penExact: false,
+    penCorrect: false,
     scorePts: -1,
+    etPts: 0,
+    penPts: 0,
     qualPts: 0,
     points: -1,
     dq: true,
@@ -354,29 +360,72 @@ function dqScore(actual) {
   }
 }
 
+function hasScorePair(obj, hKey, aKey) {
+  return !!obj && typeof obj[hKey] === 'number' && typeof obj[aKey] === 'number'
+}
+
+/** Score one 1Χ2+exact layer (90′ / ET / pens). */
+function scoreLayer(tipH, tipA, actH, actA) {
+  const exact = tipH === actH && tipA === actA
+  const correct = matchResult(tipH, tipA) === matchResult(actH, actA)
+  return { exact, correct, pts: (exact ? 1 : 0) + (correct ? 1 : 0) }
+}
+
 /**
  * Core scorer.
+ * 90′: up to +2 (outcome + exact). DQ −1 only when 90′ tip missing.
+ * ET (if played): up to +2 on full 120′ board — missing ET tip = 0, not DQ.
+ * Pens (if played): up to +2 on shootout — missing pen tip = 0, not DQ.
  * opts.qualTip — tip to compare for πρόκριση (usually from Leg 1)
  * opts.awardQual — false on Leg 1 (never award until Leg 2 settles)
- * opts.allowDq — missing tip → −1 when true
+ * opts.allowDq — missing 90′ tip → −1 when true
  */
 export function scoreMatch(pred, actual, opts = {}) {
   if (actual == null) return null
   if (isMissingTip(pred)) return opts.allowDq ? dqScore(actual) : null
-  const exact   = pred.h === actual.h && pred.a === actual.a
-  const correct = matchResult(pred.h, pred.a) === matchResult(actual.h, actual.a)
+
+  const ninety = scoreLayer(pred.h, pred.a, actual.h, actual.a)
+
+  // Extra time — full board after 120′ (otH/otA), only if the match reached ET
+  let etExact = false, etCorrect = false, etPts = 0
+  const actualEt = !!(actual.overtime && hasScorePair(actual, 'otH', 'otA'))
+  const tippedEt = !!(pred.predOT && hasScorePair(pred, 'otH', 'otA'))
+  if (actualEt && tippedEt) {
+    const et = scoreLayer(pred.otH, pred.otA, actual.otH, actual.otA)
+    etExact = et.exact
+    etCorrect = et.correct
+    etPts = et.pts
+  }
+
+  // Penalties — shootout score, only if the match reached pens
+  let penExact = false, penCorrect = false, penPts = 0
+  const actualPen = !!(actual.penalties && hasScorePair(actual, 'penH', 'penA'))
+  const tippedPen = !!(pred.predPen && hasScorePair(pred, 'penH', 'penA'))
+  if (actualPen && tippedPen) {
+    const pen = scoreLayer(pred.penH, pred.penA, actual.penH, actual.penA)
+    penExact = pen.exact
+    penCorrect = pen.correct
+    penPts = pen.pts
+  }
+
   const awardQual = opts.awardQual !== false && !!actual.qual
   const qualTip = opts.qualTip !== undefined ? opts.qualTip : pred?.qual
   const qualCorrect = !!(awardQual && qualTip && actual.qual && qualTip === actual.qual)
-  const scorePts = (exact ? 1 : 0) + (correct ? 1 : 0)
-  const qualPts  = qualCorrect ? 1 : 0
+  const scorePts = ninety.pts
+  const qualPts = qualCorrect ? 1 : 0
   return {
-    exact,
-    correct,
+    exact: ninety.exact,
+    correct: ninety.correct,
     qualCorrect,
+    etExact,
+    etCorrect,
+    penExact,
+    penCorrect,
     scorePts,
+    etPts,
+    penPts,
     qualPts,
-    points: scorePts + qualPts,
+    points: scorePts + etPts + penPts + qualPts,
     dq: false,
     provisional: !!actual.provisional,
   }
@@ -384,9 +433,9 @@ export function scoreMatch(pred, actual, opts = {}) {
 
 /**
  * Full UEFA-aware score for one player on one fixture.
- * Leg 1: scoreline only (πρόκριση tip stored, not scored yet).
- * Leg 2: scoreline from Leg 2 tip + πρόκριση from Leg 1 tip vs result.qual.
- * Missing tip → −1 DQ only if someone else tipped (match counted in the league).
+ * Leg 1: 90′ scoreline only (πρόκριση tip stored, not scored yet).
+ * Leg 2: 90′ + ET + pens (as played) + πρόκριση from Leg 1 tip vs result.qual.
+ * Max Leg 2 = 7 (2+2+2+1). DQ −1 only if 90′ tip missing while others tipped.
  */
 export function scorePlayerMatch(match, pred, actual, predictions, fixtures, playerId) {
   if (actual == null) return null
@@ -395,7 +444,8 @@ export function scorePlayerMatch(match, pred, actual, predictions, fixtures, pla
     return dqScore(actual)
   }
   if (match?.leg === 1) {
-    return scoreMatch(pred, actual, { awardQual: false })
+    // Leg 1: never ET/pens in our ties for scoring purposes; strip OT flags on actual
+    return scoreMatch(pred, { ...actual, overtime: false, penalties: false }, { awardQual: false })
   }
   if (match?.leg === 2 && actual.qual) {
     const qualTip = resolveQualTip(predictions, fixtures, match, playerId)
@@ -414,6 +464,10 @@ export function buildPlayerMatchLedger(fixtures, predictions, results, playerId)
     const sc = scorePlayerMatch(m, pred, actual, predictions, fixtures, playerId)
     if (!sc) continue
     const tipQual = resolveQualTip(predictions, fixtures, m, playerId)
+    const tipEt = pred?.predOT && hasScorePair(pred, 'otH', 'otA') ? `${pred.otH}–${pred.otA}` : null
+    const tipPen = pred?.predPen && hasScorePair(pred, 'penH', 'penA') ? `${pred.penH}–${pred.penA}` : null
+    const actualEt = actual.overtime && hasScorePair(actual, 'otH', 'otA') ? `${actual.otH}–${actual.otA}` : null
+    const actualPen = actual.penalties && hasScorePair(actual, 'penH', 'penA') ? `${actual.penH}–${actual.penA}` : null
     rows.push({
       matchId: m.id,
       label: `${TEAMS[m.home]?.abbr || m.home}–${TEAMS[m.away]?.abbr || m.away}`,
@@ -421,13 +475,23 @@ export function buildPlayerMatchLedger(fixtures, predictions, results, playerId)
       round: m.round || m.md || '',
       leg: m.leg || null,
       tip: !isMissingTip(pred) ? `${pred.h}–${pred.a}` : 'DQ',
+      tipEt,
+      tipPen,
       tipQual: m.leg === 2 ? tipQual : (pred?.qual || tipQual || null),
       actual: `${actual.h}–${actual.a}`,
+      actualEt,
+      actualPen,
       actualQual: actual.qual || null,
       exact: sc.exact,
       correct: sc.correct,
       qualCorrect: sc.qualCorrect,
+      etExact: sc.etExact,
+      etCorrect: sc.etCorrect,
+      penExact: sc.penExact,
+      penCorrect: sc.penCorrect,
       scorePts: sc.scorePts,
+      etPts: sc.etPts,
+      penPts: sc.penPts,
       qualPts: sc.qualPts,
       points: sc.points,
       dq: !!sc.dq,

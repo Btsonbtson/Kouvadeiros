@@ -137,16 +137,55 @@ export function scoreMatch(pred, actual, opts = {}) {
   const missing = !pred || typeof pred.h !== 'number' || typeof pred.a !== 'number'
   if (missing) {
     if (!opts.allowDq) return null
-    return { exact: false, correct: false, qualCorrect: false, scorePts: -1, qualPts: 0, points: -1, dq: true }
+    return {
+      exact: false, correct: false, qualCorrect: false,
+      etExact: false, etCorrect: false, penExact: false, penCorrect: false,
+      scorePts: -1, etPts: 0, penPts: 0, qualPts: 0, points: -1, dq: true,
+    }
   }
-  const exact = pred.h === actual.h && pred.a === actual.a
-  const correct = matchResult(pred.h, pred.a) === matchResult(actual.h, actual.a)
+  const layer = (th, ta, ah, aa) => {
+    const exact = th === ah && ta === aa
+    const correct = matchResult(th, ta) === matchResult(ah, aa)
+    return { exact, correct, pts: (exact ? 1 : 0) + (correct ? 1 : 0) }
+  }
+  const ninety = layer(pred.h, pred.a, actual.h, actual.a)
+
+  let etExact = false, etCorrect = false, etPts = 0
+  const actualEt = !!(actual.overtime && typeof actual.otH === 'number' && typeof actual.otA === 'number')
+  const tippedEt = !!(pred.predOT && typeof pred.otH === 'number' && typeof pred.otA === 'number')
+  if (actualEt && tippedEt) {
+    const et = layer(pred.otH, pred.otA, actual.otH, actual.otA)
+    etExact = et.exact; etCorrect = et.correct; etPts = et.pts
+  }
+
+  let penExact = false, penCorrect = false, penPts = 0
+  const actualPen = !!(actual.penalties && typeof actual.penH === 'number' && typeof actual.penA === 'number')
+  const tippedPen = !!(pred.predPen && typeof pred.penH === 'number' && typeof pred.penA === 'number')
+  if (actualPen && tippedPen) {
+    const pen = layer(pred.penH, pred.penA, actual.penH, actual.penA)
+    penExact = pen.exact; penCorrect = pen.correct; penPts = pen.pts
+  }
+
   const awardQual = opts.awardQual !== false && !!actual.qual
   const qualTip = opts.qualTip !== undefined ? opts.qualTip : pred?.qual
   const qualCorrect = !!(awardQual && qualTip && actual.qual && qualTip === actual.qual)
-  const scorePts = (exact ? 1 : 0) + (correct ? 1 : 0)
+  const scorePts = ninety.pts
   const qualPts = qualCorrect ? 1 : 0
-  return { exact, correct, qualCorrect, scorePts, qualPts, points: scorePts + qualPts, dq: false }
+  return {
+    exact: ninety.exact,
+    correct: ninety.correct,
+    qualCorrect,
+    etExact,
+    etCorrect,
+    penExact,
+    penCorrect,
+    scorePts,
+    etPts,
+    penPts,
+    qualPts,
+    points: scorePts + etPts + penPts + qualPts,
+    dq: false,
+  }
 }
 
 function matchHadAnyTip(predictions, matchId) {
@@ -162,7 +201,9 @@ function scorePlayerMatchWorker(match, pred, actual, predictions, playerId) {
     return scoreMatch(null, actual, { allowDq: true })
   }
   const meta = parseTieMeta(match)
-  if (meta.leg === 1) return scoreMatch(pred, actual, { awardQual: false })
+  if (meta.leg === 1) {
+    return scoreMatch(pred, { ...actual, overtime: false, penalties: false }, { awardQual: false })
+  }
   if (meta.leg === 2 && actual.qual) {
     const leg1Id = getTieLeg1Id(match)
     const qualTip = (leg1Id && predictions?.[leg1Id]?.[playerId]?.qual) || null
@@ -226,16 +267,27 @@ export function buildDayLedger(matches, state, users) {
         parseTieMeta(match).leg === 2
           ? state.predictions?.[leg1Id]?.[p.id]?.qual
           : pred?.qual
+      const tipEt =
+        !dq && pred?.predOT && typeof pred.otH === 'number' && typeof pred.otA === 'number'
+          ? ` · ET ${pred.otH}–${pred.otA}`
+          : ''
+      const tipPen =
+        !dq && pred?.predPen && typeof pred.penH === 'number' && typeof pred.penA === 'number'
+          ? ` · ΠΕΝ ${pred.penH}–${pred.penA}`
+          : ''
       row.players.push({
         id: p.id,
         name: p.name,
         tip: dq || sc?.dq
           ? 'ΑΠΟΚΛΕΙΣΜΟΣ −1'
-          : `${pred.h}–${pred.a}${tipQual ? ' →' + tipQual : ''}`,
+          : `${pred.h}–${pred.a}${tipEt}${tipPen}${tipQual ? ' →' + tipQual : ''}`,
         pts: sc?.dq ? -1 : pts,
         dq: !!(dq || sc?.dq),
         exact: !!sc?.exact,
         correct: !!sc?.correct,
+        etPts: sc?.etPts || 0,
+        penPts: sc?.penPts || 0,
+        qualPts: sc?.qualPts || 0,
       })
     }
     matchRows.push(row)
