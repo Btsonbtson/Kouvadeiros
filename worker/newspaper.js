@@ -267,16 +267,27 @@ export function buildDayLedger(matches, state, users) {
         parseTieMeta(match).leg === 2
           ? state.predictions?.[leg1Id]?.[p.id]?.qual
           : pred?.qual
+      const tipEt =
+        !dq && pred?.predOT && typeof pred.otH === 'number' && typeof pred.otA === 'number'
+          ? ` · ET ${pred.otH}–${pred.otA}`
+          : ''
+      const tipPen =
+        !dq && pred?.predPen && typeof pred.penH === 'number' && typeof pred.penA === 'number'
+          ? ` · ΠΕΝ ${pred.penH}–${pred.penA}`
+          : ''
       row.players.push({
         id: p.id,
         name: p.name,
         tip: dq || sc?.dq
           ? 'ΑΠΟΚΛΕΙΣΜΟΣ −1'
-          : `${pred.h}–${pred.a}${tipQual ? ' →' + tipQual : ''}`,
+          : `${pred.h}–${pred.a}${tipEt}${tipPen}${tipQual ? ' →' + tipQual : ''}`,
         pts: sc?.dq ? -1 : pts,
         dq: !!(dq || sc?.dq),
         exact: !!sc?.exact,
         correct: !!sc?.correct,
+        etPts: sc?.etPts || 0,
+        penPts: sc?.penPts || 0,
+        qualPts: sc?.qualPts || 0,
       })
     }
     matchRows.push(row)
