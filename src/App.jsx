@@ -1727,8 +1727,10 @@ function MatchPredictCard({match,result,scoringActual,predictions,allPredictions
       setQual(myPred.qual??match.home)
       setPredOT(myPred.predOT??false)
       setOtH(myPred.otH??0);setOtA(myPred.otA??0)
+      setPredPen(myPred.predPen??false)
+      setPenH(myPred.penH??0);setPenA(myPred.penA??0)
     }
-  },[myPred?.h,myPred?.a,myPred?.qual])
+  },[myPred?.h,myPred?.a,myPred?.qual,myPred?.predOT,myPred?.otH,myPred?.otA,myPred?.predPen,myPred?.penH,myPred?.penA])
 
   // ── Derived state ──────────────────────────────────────────────────────────
   const hasRes=result!=null
@@ -1866,7 +1868,7 @@ function MatchPredictCard({match,result,scoringActual,predictions,allPredictions
               {formatLiveClock(liveScore, match)}
             </div>}
             {result?.overtime&&<div style={{fontSize:9,fontWeight:700,color:GOLD,letterSpacing:'.03em',textAlign:'center'}}>
-              {result.penalties?`Μπενάλντιζ ${result.penH}–${result.penA}`:`ΠΑΡΑΤΑΣΗ ${result.otH}–${result.otA}`}
+              ΠΑΡΑΤΑΣΗ {result.otH}–{result.otA}{result.penalties?` · ΠΕΝ ${result.penH}–${result.penA}`:''}
             </div>}
             {!hasRes&&!today&&!liveScore&&<div style={{fontSize:10,color:DIM,fontWeight:600}}>vs</div>}
             {cardOdds&&(
@@ -1952,9 +1954,12 @@ function MatchPredictCard({match,result,scoringActual,predictions,allPredictions
               </div>
             )}
 
-            {/* OT score row */}
+            {/* OT / pen score rows — full tip: 90′ + παράταση (+ πέναλτι) when tipped */}
             {showExtraTimeUI&&predOT&&!locked&&<div style={{marginTop:8}}>
-              <ScoreRow lbl={predPen?'Μπενάλντιζ':'ΠΑΡΑΤΑΣΗ'} hv={otH} setHv={setOtH} av={otA} setAv={setOtA} sm/>
+              <ScoreRow lbl="ΠΑΡΑΤΑΣΗ (120′)" hv={otH} setHv={setOtH} av={otA} setAv={setOtA} sm/>
+            </div>}
+            {showExtraTimeUI&&predOT&&predPen&&!locked&&<div style={{marginTop:8}}>
+              <ScoreRow lbl="Μπενάλντιζ" hv={penH} setHv={setPenH} av={penA} setAv={setPenA} sm/>
             </div>}
 
             {/* Error */}
@@ -1981,6 +1986,8 @@ function MatchPredictCard({match,result,scoringActual,predictions,allPredictions
             <div style={{width:7,height:7,borderRadius:'50%',background:PC[currentUser.id]?.p||MUTED,flexShrink:0}}/>
             <span style={{fontSize:11,fontWeight:600,color:MUTED}}>Η πρόβλεψή μου:</span>
             <span style={{fontSize:14,fontWeight:900,color:PC[currentUser.id]?.p||TEXT,fontVariantNumeric:'tabular-nums'}}>{myPred.h}–{myPred.a}</span>
+            {myPred.predOT&&typeof myPred.otH==='number'&&<span style={{fontSize:10,color:GOLD}}>ET {myPred.otH}–{myPred.otA}</span>}
+            {myPred.predPen&&typeof myPred.penH==='number'&&<span style={{fontSize:10,color:RED}}>ΠΕΝ {myPred.penH}–{myPred.penA}</span>}
             {myPred.qual&&showQualUI&&<span style={{fontSize:10,color:MUTED}}>→ {myPred.qual}</span>}
             {isLeg2&&myLeg1Qual&&<span style={{fontSize:10,color:BLUE}}>→ {myLeg1Qual}</span>}
           </div>
@@ -2012,6 +2019,8 @@ function MatchPredictCard({match,result,scoringActual,predictions,allPredictions
                     opacity:isProvisional&&sc?0.92:1}}>
                     <div style={{fontSize:9,fontWeight:700,color:pc.p,marginBottom:3,letterSpacing:'.04em'}}>{PLAYER_NAMES[playerKey].substring(0,4).toUpperCase()}</div>
                     <div style={{fontSize:13,fontWeight:800,color:TEXT,fontVariantNumeric:'tabular-nums'}}>{pred?`${pred.h}–${pred.a}`:(showAllPreds?'DQ':'–')}</div>
+                    {pred?.predOT&&typeof pred.otH==='number'&&<div style={{fontSize:9,color:GOLD,marginTop:1}}>ET {pred.otH}–{pred.otA}</div>}
+                    {pred?.predPen&&typeof pred.penH==='number'&&<div style={{fontSize:9,color:RED,marginTop:1}}>ΠΕΝ {pred.penH}–{pred.penA}</div>}
                     {shownQual&&<div style={{fontSize:9,color:MUTED,marginTop:1}}>→{shownQual}</div>}
                     {isDq&&<div style={{fontSize:9,fontWeight:700,color:RED,marginTop:2}}>ΑΠΟΚΛΕΙΣΜΟΣ</div>}
                     {sc&&<div style={{fontSize:10,fontWeight:700,color:sc.dq?RED:sc.points>=2?GREEN:sc.points===1?GOLD:DIM,marginTop:2}}>{sc.dq?'DQ −1p':`${sc.exact?'🎯':sc.correct?'✓':sc.qualCorrect?'🔑':'✗'}${sc.points}p`}{!sc.dq&&isProvisional?'~':''}{sc.qualPts?` ·${sc.qualPts}🔑`:''}</div>}

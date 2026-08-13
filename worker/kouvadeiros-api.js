@@ -1018,7 +1018,15 @@ export default {
           const allU = await getAllUsers(env)
           const lines = Object.entries(preds).map(([pid, p]) => {
             const uname = Object.values(allU).find((u) => u.id === pid)?.name || pid
-            return `${uname}: *${p.h}\u2013${p.a}*${p.qual ? ' (\u2192' + p.qual + ')' : ''}`
+            const et =
+              p.predOT && typeof p.otH === 'number' && typeof p.otA === 'number'
+                ? ` · ET ${p.otH}\u2013${p.otA}`
+                : ''
+            const pen =
+              p.predPen && typeof p.penH === 'number' && typeof p.penA === 'number'
+                ? ` · \u03a0\u0395\u039d ${p.penH}\u2013${p.penA}`
+                : ''
+            return `${uname}: *${p.h}\u2013${p.a}*${et}${pen}${p.qual ? ' (\u2192' + p.qual + ')' : ''}`
           })
           const predText = lines.length ? lines.join('\n') : '⚠️ Κανείς δεν έκανε πρόβλεψη!'
           const msg =
