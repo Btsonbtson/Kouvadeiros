@@ -943,6 +943,7 @@ export default {
                 state.results[match.id] = result
                 delete state[`live_${match.id}`]
                 delete state[regKey]
+                if (state.tipBoards) delete state.tipBoards[match.id]
                 stateChanged = true
                 if (!sent[`ft:${match.id}`]) {
                   const tipLine = `${result.h}–${result.a}`
