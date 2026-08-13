@@ -3,7 +3,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { api, clearAuth, storeUser } from './lib/api'
 import {
   ALL_FIXTURES, SUPER_LEAGUE, UEFA_FIXTURES,
-  TEAMS, PLAYERS, PLAYER_NAMES, PCOL,
+  TEAMS, PLAYERS, PLAYER_NAMES, PCOL, getMatchOdds,
   scoreMatch, scorePlayerMatch, resolveQualTip, computeLeaderboard, mergeScoringResults, scorelineToActual,
   buildPlayerMatchLedger, formatLiveClock,
   grTime, grDate, grKick, isToday, isLocked, isRevealOpen, nowGR, inLiveWindow,
@@ -70,31 +70,6 @@ function TabBackdrop({ bgUrl, children, style, fillChildren=false }) {
       </div>
     </div>
   )
-}
-
-// Odds for each game (manual 1/X/2). Missing id → UI shows «Δεν υπάρχουν ακόμα».
-// Updated Aug 2026 from public book consensus (OddsMath / Wincomparator).
-const ODDS = {
-  // UEFA — played
-  'uel-paok-1':  {h:3.10, d:3.30, a:2.10},
-  'uel-paok-2':  {h:2.00, d:3.40, a:3.50},
-  'uecl-pao-1':  {h:4.20, d:3.50, a:1.70},
-  'uecl-pao-2':  {h:1.60, d:3.60, a:5.00},
-  // UEFA — this week
-  'ucl-oly-1':   {h:1.55, d:4.20, a:5.70},   // OLY–NEC · 4/8
-  'ucl-oly-2':   {h:4.80, d:3.90, a:1.70},   // NEC–OLY · 11/8 20:30
-  'uecl-pao-3':  {h:1.40, d:4.60, a:9.00},   // PAO–CSK · 5/8
-  'uecl-pao-4':  {h:5.50, d:3.80, a:1.60},   // CSK–PAO · 11/8 20:30
-  'uel-paok-3':  {h:1.70, d:3.55, a:4.40},   // PAOK–AND · 6/8
-  'uel-paok-4':  {h:3.02, d:3.52, a:2.42},   // AND–PAOK · 13/8
-  // Super League · Αγωνιστική 1 (OddsMath 3/8/2026)
-  'sl-1-1':      {h:1.19, d:6.15, a:17.50},  // AEK–IRA
-  'sl-1-2':      {h:3.92, d:3.06, a:2.06},   // KAL–ARI
-  'sl-1-3':      {h:1.23, d:5.50, a:14.00},  // OLY–ATR
-  'sl-1-4':      {h:2.02, d:3.26, a:3.76},   // OFI–VOL
-  'sl-1-5':      {h:1.25, d:5.05, a:14.75},  // PAO–KIF
-  'sl-1-6':      {h:2.63, d:3.05, a:2.75},   // PNE–AST
-  'sl-1-7':      {h:1.29, d:4.90, a:11.50},  // PAOK–LEV
 }
 
 const SEEDED_PREDS={
@@ -273,27 +248,26 @@ function PushPanel({match,result,onSaved,pipelineHint}){
 }
 
 
-function OddsRow({matchId}){
-  const odds=ODDS[matchId]
-  const valid=odds&&[odds.h,odds.d,odds.a].every(v=>typeof v==='number'&&Number.isFinite(v)&&v>1)
-  const best=valid?Math.max(odds.h,odds.d,odds.a):0
+function OddsRow({matchId, compact}){
+  const odds=getMatchOdds(matchId)
+  const best=odds?Math.max(odds.h,odds.d,odds.a):0
   const pill=(label,val)=>{
     const hot=val===best
-    return <div style={{flex:1,textAlign:'center',background:hot?'rgba(0,255,136,.1)':'rgba(255,255,255,.04)',borderRadius:8,padding:'6px 4px',border:`1px solid ${hot?'rgba(0,255,136,.3)':LINE}`}}>
-      <div style={{fontSize:9,fontWeight:700,color:MUTED,letterSpacing:'.05em',marginBottom:3}}>{label}</div>
-      <div style={{fontSize:14,fontWeight:800,color:hot?GREEN:TEXT,fontVariantNumeric:'tabular-nums'}}>{val.toFixed(2)}</div>
+    return <div style={{flex:1,textAlign:'center',background:hot?'rgba(0,255,136,.14)':'rgba(255,255,255,.06)',borderRadius:8,padding:compact?'5px 3px':'7px 4px',border:`1px solid ${hot?'rgba(0,255,136,.45)':LINE}`}}>
+      <div style={{fontSize:compact?8:9,fontWeight:700,color:MUTED,letterSpacing:'.05em',marginBottom:2}}>{label}</div>
+      <div style={{fontSize:compact?13:15,fontWeight:900,color:hot?GREEN:TEXT,fontVariantNumeric:'tabular-nums'}}>{val.toFixed(2)}</div>
     </div>
   }
-  return <div style={{marginTop:8}}>
-    <div style={{fontSize:9,fontWeight:700,color:DIM,letterSpacing:'.1em',textTransform:'uppercase',marginBottom:5}}>Αποδόσεις</div>
-    {!valid
+  return <div style={{marginTop:compact?6:10}} data-odds={matchId}>
+    <div style={{fontSize:9,fontWeight:800,color:GOLD,letterSpacing:'.1em',textTransform:'uppercase',marginBottom:5}}>Αποδόσεις 1Χ2</div>
+    {!odds
       ? <div style={{fontSize:12,fontWeight:600,color:MUTED,padding:'8px 10px',borderRadius:8,background:'rgba(255,255,255,.04)',border:`1px solid ${LINE}`,textAlign:'center'}}>
           Δεν υπάρχουν ακόμα
         </div>
       : <div style={{display:'flex',gap:5}}>
-          {pill('1 (Γηπεδ.)',odds.h)}
-          {pill('X (Ισοπαλία)',odds.d)}
-          {pill('2 (Φιλοξ.)',odds.a)}
+          {pill('1',odds.h)}
+          {pill('X',odds.d)}
+          {pill('2',odds.a)}
         </div>}
   </div>
 }
@@ -1792,6 +1766,7 @@ function MatchPredictCard({match,result,scoringActual,predictions,allPredictions
   const hn=TEAMS[match.home]?.name||match.home
   const an=TEAMS[match.away]?.name||match.away
   const tC={SL:'#f0c040',UCL:BLUE,UEL:'#f5733a',UECL:GREEN}[match.t]||GOLD
+  const cardOdds=getMatchOdds(match.id)
 
   // Leg 1 aggregate
   const leg1Fix=match.leg===2&&match.tie?UEFA_FIXTURES.find(f=>f.tie===match.tie&&f.leg===1):null
@@ -1893,7 +1868,14 @@ function MatchPredictCard({match,result,scoringActual,predictions,allPredictions
             {result?.overtime&&<div style={{fontSize:9,fontWeight:700,color:GOLD,letterSpacing:'.03em',textAlign:'center'}}>
               {result.penalties?`Μπενάλντιζ ${result.penH}–${result.penA}`:`ΠΑΡΑΤΑΣΗ ${result.otH}–${result.otA}`}
             </div>}
-            {!hasRes&&!today&&<div style={{fontSize:10,color:DIM,fontWeight:600}}>vs</div>}
+            {!hasRes&&!today&&!liveScore&&<div style={{fontSize:10,color:DIM,fontWeight:600}}>vs</div>}
+            {cardOdds&&(
+              <div style={{display:'flex',gap:4,marginTop:2}}>
+                {[cardOdds.h,cardOdds.d,cardOdds.a].map((v,i)=>(
+                  <span key={i} style={{fontSize:9,fontWeight:800,color:i===1?GOLD:MUTED,fontVariantNumeric:'tabular-nums'}}>{v.toFixed(2)}</span>
+                ))}
+              </div>
+            )}
           </div>
           <div style={{display:'flex',flexDirection:'column',alignItems:'flex-start',gap:4}}>
             <TeamLogo k={match.away} size={36}/>
@@ -2129,6 +2111,7 @@ function FixtureList({fixtures,rankMap,formMap,setView,setH2hMatch}){
                 {isSL&&awayForm.length>0&&<FormStrip form={awayForm.slice(-5)}/>}
               </div>
             </div>
+            <OddsRow matchId={m.id} compact/>
             <button onClick={()=>{setView('h2h');setH2hMatch(m.id)}}
               style={{marginTop:8,width:'100%',padding:'5px',borderRadius:7,
                 border:'1px solid '+LINE,background:'rgba(255,255,255,.04)',

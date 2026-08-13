@@ -311,6 +311,41 @@ export const UEFA_FIXTURES = [
 
 export const ALL_FIXTURES = [...SUPER_LEAGUE, ...UEFA_FIXTURES]
 
+/**
+ * Manual 1/X/2 odds per fixture id. Missing id → UI shows «Δεν υπάρχουν ακόμα».
+ * Updated Aug 2026 from public book consensus (OddsMath / Wincomparator).
+ */
+export const MATCH_ODDS = {
+  // UEFA — played
+  'uel-paok-1':  { h: 3.10, d: 3.30, a: 2.10 },
+  'uel-paok-2':  { h: 2.00, d: 3.40, a: 3.50 },
+  'uecl-pao-1':  { h: 4.20, d: 3.50, a: 1.70 },
+  'uecl-pao-2':  { h: 1.60, d: 3.60, a: 5.00 },
+  // UEFA — this week
+  'ucl-oly-1':   { h: 1.55, d: 4.20, a: 5.70 },   // OLY–NEC · 4/8
+  'ucl-oly-2':   { h: 4.80, d: 3.90, a: 1.70 },   // NEC–OLY · 11/8 20:30
+  'uecl-pao-3':  { h: 1.40, d: 4.60, a: 9.00 },   // PAO–CSK · 5/8
+  'uecl-pao-4':  { h: 5.50, d: 3.80, a: 1.60 },   // CSK–PAO · 11/8 20:30
+  'uel-paok-3':  { h: 1.70, d: 3.55, a: 4.40 },   // PAOK–AND · 6/8
+  'uel-paok-4':  { h: 3.02, d: 3.52, a: 2.42 },   // AND–PAOK · 13/8 21:30
+  // Super League · Αγωνιστική 1 (OddsMath 3/8/2026)
+  'sl-1-1':      { h: 1.19, d: 6.15, a: 17.50 },  // AEK–IRA
+  'sl-1-2':      { h: 3.92, d: 3.06, a: 2.06 },   // KAL–ARI
+  'sl-1-3':      { h: 1.23, d: 5.50, a: 14.00 },  // OLY–ATR
+  'sl-1-4':      { h: 2.02, d: 3.26, a: 3.76 },   // OFI–VOL
+  'sl-1-5':      { h: 1.25, d: 5.05, a: 14.75 },  // PAO–KIF
+  'sl-1-6':      { h: 2.63, d: 3.05, a: 2.75 },   // PNE–AST
+  'sl-1-7':      { h: 1.29, d: 4.90, a: 11.50 },  // PAOK–LEV
+}
+
+export function getMatchOdds(matchId) {
+  const odds = MATCH_ODDS[matchId]
+  if (!odds) return null
+  const vals = [odds.h, odds.d, odds.a]
+  if (!vals.every((v) => typeof v === 'number' && Number.isFinite(v) && v > 1)) return null
+  return odds
+}
+
 // ─── SCORING ──────────────────────────────────────────────────────────────────
 export function matchResult(h, a) { return h > a ? 'H' : h < a ? 'A' : 'D' }
 
