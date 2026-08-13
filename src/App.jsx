@@ -720,6 +720,8 @@ function HistoryPage({predictions,results}){
           {PLAYERS.map(p=>{const pred=predictions?.[m.id]?.[p],sc=pred?scorePlayerMatch(m,pred,actual,predictions,ALL_FIXTURES,p):null,pc=PC[p];return <div key={p} style={{flex:1,background:sc?.exact?`${GREEN}12`:sc?.correct?`${GOLD}08`:'rgba(255,255,255,.04)',borderRadius:9,padding:'8px',textAlign:'center',border:`1px solid ${sc?.exact?GREEN+'35':sc?.correct?GOLD+'20':LINE}`}}>
             <div style={{fontSize:10,fontWeight:800,color:pc.p,marginBottom:3,letterSpacing:'.04em'}}>{PLAYER_NAMES[p].substring(0,4).toUpperCase()}</div>
             <div style={{fontSize:13,fontWeight:800,color:TEXT,fontVariantNumeric:'tabular-nums'}}>{pred?`${pred.h}–${pred.a}`:'–'}</div>
+            {pred?.predOT&&typeof pred.otH==='number'&&<div style={{fontSize:9,color:GOLD,marginTop:1}}>ET {pred.otH}–{pred.otA}</div>}
+            {pred?.predPen&&typeof pred.penH==='number'&&<div style={{fontSize:9,color:RED,marginTop:1}}>ΠΕΝ {pred.penH}–{pred.penA}</div>}
             {sc&&<div style={{fontSize:11,fontWeight:700,color:sc.points===2?GREEN:sc.points===1?GOLD:DIM,marginTop:2}}>{sc.points===2?'🎯':sc.points===1?'✓':'✗'}{sc.points}p</div>}
           </div>})}
         </div>
