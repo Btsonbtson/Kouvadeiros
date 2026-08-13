@@ -86,6 +86,7 @@ const ODDS = {
   'uecl-pao-3':  {h:1.40, d:4.60, a:9.00},   // PAO–CSK · 5/8
   'uecl-pao-4':  {h:5.50, d:3.80, a:1.60},   // CSK–PAO · 11/8 20:30
   'uel-paok-3':  {h:1.70, d:3.55, a:4.40},   // PAOK–AND · 6/8
+  'uel-paok-4':  {h:3.02, d:3.52, a:2.42},   // AND–PAOK · 13/8
   // Super League · Αγωνιστική 1 (OddsMath 3/8/2026)
   'sl-1-1':      {h:1.19, d:6.15, a:17.50},  // AEK–IRA
   'sl-1-2':      {h:3.92, d:3.06, a:2.06},   // KAL–ARI
@@ -543,7 +544,7 @@ function RivalryStats({predictions,results,thavmaStats}){
 
         {/* ── ΘΑΥΜΑΤΑ / ΩΣΑΝΑ — TOP ── */}
         <Block title="⚡ Θαύματα & Ωσάννα — Late Goal Drama" emoji="🙏" accent="rgba(255,221,0,.2)">
-          <div style={{fontSize:11,color:MUTED,marginBottom:12}}>Πόντοι που χαρίστηκαν από γκολ μετά το 85'</div>
+          <div style={{fontSize:11,color:MUTED,marginBottom:12}}>Θαύμα: γκολ μετά το 85′ · Ωσανά: γκολ μετά το 90′ · ένα μήνυμα ανά γκολ</div>
           {PLAYERS.map(p=>{
             const ts=(thavmaStats&&thavmaStats[p])||{benefited:0,pts_gained:0,pts_lost:{}}
             const totalLost=Object.values(ts.pts_lost||{}).reduce((a,b)=>a+b,0)

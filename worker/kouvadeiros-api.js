@@ -107,28 +107,31 @@ function sumPtsLost(ptsLost) {
   return 0
 }
 
-function buildDramaMessages(beneficiary, allPlayers, matchLabel, newScore, minute, isOsana, thavmaStats) {
+/** One WA body per player for a late-goal event (Θαύμα ≥85′ / Ωσανά ≥90′). */
+function buildDramaMessages(beneficiaries, allPlayers, matchLabel, newScore, minute, isOsana, thavmaStats) {
   const msgs = {}
   const type = isOsana ? 'ΩΣΑΝΑ 🙌' : 'ΘΑΥΜΑ ⚡'
   const lucky_pool = isOsana ? OSANA_LUCKY : THAVMA_LUCKY
   const unlucky_pool = isOsana ? OSANA_UNLUCKY : THAVMA_UNLUCKY
+  const luckyIds = new Set(beneficiaries.map((b) => b.id))
+  const luckyNames = beneficiaries.map((b) => b.name).join(' & ')
 
   for (const [pid] of Object.entries(allPlayers)) {
-    const isLucky = pid === beneficiary.id
+    const isLucky = luckyIds.has(pid)
     const stats = thavmaStats[pid] || { benefited: 0, pts_gained: 0, pts_lost: {} }
 
     if (isLucky) {
       const personalMsg = rand(lucky_pool)
       msgs[pid] =
-        `${type} *${beneficiary.name}!*\n\n` +
+        `${type} *${luckyNames}!*\n\n` +
         `⚽ *${matchLabel}* · ${newScore.h}–${newScore.a} (${minute}')\n\n` +
         `${personalMsg}\n\n` +
-        `📊 Θαύματά σου φέτος: *${stats.benefited + 1}* · Πόντοι από θαύματα: *${stats.pts_gained + 1}*`
+        `📊 Θαύματά σου φέτος: *${stats.benefited}* · Πόντοι από θαύματα: *${stats.pts_gained}*`
     } else {
       const rivalMsg = rand(unlucky_pool)
-      const myLost = sumPtsLost(thavmaStats[pid]?.pts_lost) + 1
+      const myLost = sumPtsLost(thavmaStats[pid]?.pts_lost)
       msgs[pid] =
-        `${type} *${beneficiary.name}!*\n\n` +
+        `${type} *${luckyNames}!*\n\n` +
         `⚽ *${matchLabel}* · ${newScore.h}–${newScore.a} (${minute}')\n\n` +
         `${rivalMsg}\n\n` +
         `📊 Πόντοι που σου έκλεψαν τα θαύματα φέτος: *${myLost}* 😤`
@@ -834,61 +837,92 @@ export default {
 
             const tipH = score.regH ?? score.h
             const tipA = score.regA ?? score.a
-            const prevH = prev?.h ?? null
-            const prevA = prev?.a ?? null
-            const scoreChanged = prevH !== tipH || prevA !== tipA
+            // Tip-board snapshot across cron ticks (not the 5′ WA window) — needed so late
+            // goals are detected as real changes, not re-fired every 5 minutes.
+            if (!state.tipBoards) state.tipBoards = {}
+            if (!state.dramaAlerts) state.dramaAlerts = {}
+            const tipPrev = state.tipBoards[match.id] || null
+            const scoreChanged = !tipPrev || tipPrev.h !== tipH || tipPrev.a !== tipA
+            // Θαύμα: goal from 85′ onward (regulation). Ωσανά: from 90′ (injury time). Never ET.
             const isLate = score.minute >= 85 && !score.isInET
             const isInjury = score.minute >= 90 && !score.isInET
 
-            // ΘΑΥΜΑ/ΩΣΑΝΑ only on 90′ tip scoreline — never on ET goals
-            if (scoreChanged && isLate && !score.isFinal && !score.isInET) {
+            // Always refresh tip board during regulation so the *next* late change is real
+            if (!score.isInET && typeof tipH === 'number' && typeof tipA === 'number') {
+              state.tipBoards[match.id] = { h: tipH, a: tipA, min: score.minute, at: new Date(now).toISOString() }
+              stateChanged = true
+            }
+
+            // ΘΑΥΜΑ/ΩΣΑΝΑ only when the tip scoreline actually changed while already late,
+            // and only once per scoreline (persisted in state — not the 5′ cron window).
+            if (
+              scoreChanged &&
+              tipPrev &&
+              isLate &&
+              !score.isFinal &&
+              !score.isInET
+            ) {
               const newScore = { h: tipH, a: tipA }
               const dramaKey = `drama:${match.id}:${tipH}-${tipA}`
 
-              if (!sent[dramaKey]) {
+              if (!state.dramaAlerts[dramaKey] && !sent[dramaKey]) {
                 const preds = state.predictions?.[match.id] || {}
+                const beneficiaries = []
+                const gains = {}
 
                 for (const [pid, pred] of Object.entries(preds)) {
-                  const prevSc = prev ? scoreMatch(pred, { h: prevH, a: prevA }) : { points: 0 }
+                  const prevSc = scoreMatch(pred, { h: tipPrev.h, a: tipPrev.a })
                   const newSc = scoreMatch(pred, newScore)
-                  const gained = (newSc?.points || 0) > (prevSc?.points || 0)
+                  const ptsGained = (newSc?.points || 0) - (prevSc?.points || 0)
+                  if (ptsGained > 0) {
+                    beneficiaries.push({ id: pid, name: playerNames[pid] || pid })
+                    gains[pid] = ptsGained
+                  }
+                }
 
-                  if (gained) {
-                    const beneficiary = { id: pid, name: playerNames[pid] || pid }
-                    const type = isInjury ? 'ΩΣΑΝΑ' : 'ΘΑΥΜΑ'
-                    const ptsGained = (newSc?.points || 0) - (prevSc?.points || 0)
-
-                    if (!state.thavmaStats[pid]) state.thavmaStats[pid] = { benefited: 0, pts_gained: 0, pts_lost: {} }
-                    state.thavmaStats[pid].benefited = (state.thavmaStats[pid].benefited || 0) + 1
-                    state.thavmaStats[pid].pts_gained = (state.thavmaStats[pid].pts_gained || 0) + ptsGained
+                if (beneficiaries.length) {
+                  for (const b of beneficiaries) {
+                    const ptsGained = gains[b.id]
+                    if (!state.thavmaStats[b.id]) state.thavmaStats[b.id] = { benefited: 0, pts_gained: 0, pts_lost: {} }
+                    state.thavmaStats[b.id].benefited = (state.thavmaStats[b.id].benefited || 0) + 1
+                    state.thavmaStats[b.id].pts_gained = (state.thavmaStats[b.id].pts_gained || 0) + ptsGained
 
                     for (const otherId of Object.values(BASE_USERS).map((u) => u.id)) {
-                      if (otherId !== pid) {
+                      if (otherId !== b.id) {
                         if (!state.thavmaStats[otherId]) state.thavmaStats[otherId] = { benefited: 0, pts_gained: 0, pts_lost: {} }
                         if (!state.thavmaStats[otherId].pts_lost) state.thavmaStats[otherId].pts_lost = {}
-                        state.thavmaStats[otherId].pts_lost[pid] = (state.thavmaStats[otherId].pts_lost[pid] || 0) + ptsGained
+                        state.thavmaStats[otherId].pts_lost[b.id] =
+                          (state.thavmaStats[otherId].pts_lost[b.id] || 0) + ptsGained
                       }
                     }
-                    stateChanged = true
-
-                    const dramaMessages = buildDramaMessages(
-                      beneficiary,
-                      playerNames,
-                      match.label,
-                      newScore,
-                      score.minute,
-                      isInjury,
-                      state.thavmaStats,
-                    )
-
-                    for (const [mpid, msg] of Object.entries(dramaMessages)) {
-                      const phone = phones[mpid]
-                      if (phone) await sendWA(env, phone, `${isInjury ? '🙌' : '⚡'} *${type}!*\n\n${msg}`)
-                    }
-
-                    sent[dramaKey] = true
-                    console.log(`${type} sent for ${match.id}: ${pid} benefited`)
                   }
+                  stateChanged = true
+
+                  const type = isInjury ? 'ΩΣΑΝΑ' : 'ΘΑΥΜΑ'
+                  const dramaMessages = buildDramaMessages(
+                    beneficiaries,
+                    playerNames,
+                    match.label,
+                    newScore,
+                    score.minute,
+                    isInjury,
+                    state.thavmaStats,
+                  )
+
+                  // Exactly one WA per player for this late goal — never re-blast on later cron ticks
+                  for (const [mpid, msg] of Object.entries(dramaMessages)) {
+                    const phone = phones[mpid]
+                    if (phone) await sendWA(env, phone, `${isInjury ? '🙌' : '⚡'} *${type}!*\n\n${msg}`)
+                  }
+
+                  state.dramaAlerts[dramaKey] = {
+                    at: new Date(now).toISOString(),
+                    type,
+                    minute: score.minute,
+                    beneficiaries: beneficiaries.map((b) => b.id),
+                  }
+                  sent[dramaKey] = true
+                  console.log(`${type} sent once for ${match.id} @${score.minute}': ${beneficiaries.map((b) => b.id).join(',')}`)
                 }
               }
             }
@@ -909,6 +943,7 @@ export default {
                 state.results[match.id] = result
                 delete state[`live_${match.id}`]
                 delete state[regKey]
+                if (state.tipBoards) delete state.tipBoards[match.id]
                 stateChanged = true
                 if (!sent[`ft:${match.id}`]) {
                   const tipLine = `${result.h}–${result.a}`
