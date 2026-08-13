@@ -116,7 +116,7 @@ export default function Guide({ onBack }) {
             <div style={{ fontSize:12, fontWeight:700, color:MUTED, letterSpacing:'.07em', textTransform:'uppercase', marginBottom:10 }}>BONUS UEFA — Πρόκριση & παράταση</div>
             {[
               {l:'🔑 Πρόκριση — προβλέπεται στο Leg 1, μετράει μετά το Leg 2', v:'+1p', c:BLUE},
-              {l:'⏱ Παράταση / Μπενάλντιζ — μόνο στο Leg 2 (αποθήκευση, χωρίς πόντους ακόμη)', v:'—', c:MUTED},
+              {l:'⏱ Παράταση / Μπενάλντιζ — μόνο στο Leg 2 · φαίνονται στην αποκάλυψη 15′ (αποθήκευση, χωρίς πόντους ακόμη)', v:'—', c:MUTED},
             ].map((r,i)=>(
               <div key={i} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'8px 0', borderBottom:`1px solid rgba(255,255,255,.05)` }}>
                 <span style={{ fontSize:12, color:MUTED }}>{r.l}</span>
@@ -173,7 +173,7 @@ export default function Guide({ onBack }) {
             <div style={{ background:'rgba(0,255,136,.06)', border:`1px solid rgba(0,255,136,.2)`, borderRadius:10, padding:'14px', marginBottom:14 }}>
               <div style={{ fontSize:13, fontWeight:700, color:GREEN, marginBottom:8 }}>Πότε στέλνουμε μήνυμα;</div>
               <div style={{ fontSize:12, color:MUTED, lineHeight:1.7 }}>
-                Αν <strong style={{color:TEXT}}>δεν έχεις κάνει πρόβλεψη</strong> για κάποιον αγώνα, λαμβάνεις αυτόματο WhatsApp μήνυμα <strong style={{color:TEXT}}>30′</strong> και ξανά <strong style={{color:TEXT}}>20′</strong> πριν την εκκίνηση — ώστε να προλάβεις πριν το κλείδωμα στις <strong style={{color:TEXT}}>15′</strong> (τότε φαίνονται όλες οι προβλέψεις).
+                Αν <strong style={{color:TEXT}}>δεν έχεις κάνει πρόβλεψη</strong> για κάποιον αγώνα, λαμβάνεις αυτόματο WhatsApp μήνυμα <strong style={{color:TEXT}}>30′</strong> και ξανά <strong style={{color:TEXT}}>20′</strong> πριν την εκκίνηση — ώστε να προλάβεις πριν το κλείδωμα στις <strong style={{color:TEXT}}>15′</strong> (τότε φαίνονται όλες οι προβλέψεις: 90′ + παράταση/πέναλτι αν έχουν μπει).
               </div>
             </div>
             <div style={{ background:'rgba(255,77,109,.06)', border:`1px solid rgba(255,77,109,.25)`, borderRadius:10, padding:'14px', marginBottom:14 }}>
