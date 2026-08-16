@@ -31,6 +31,10 @@ export const ESPN_TEAM_ALIASES = {
   PKS:  ['PKS', 'Paksi', 'Paks', 'Paksi SE'],
   AND:  ['AND', 'Anderlecht', 'RSC Anderlecht'],
   CSK:  ['CSK', 'CSKA 1948', 'CSKA Sofia 1948'],
+  LVS:  ['LVS', 'Levski', 'Levski Sofia', 'PFC Levski Sofia'],
+  CSS:  ['CSS', 'CSKA Sofia', 'PFC CSKA Sofia'],
+  BRN:  ['BRN', 'Brann', 'SK Brann'],
+  HRK:  ['HRK', 'Hradec', 'Hradec Kralove', 'Hradec Králové', 'FC Hradec Kralove'],
   TBD:  ['TBD'],
 }
 

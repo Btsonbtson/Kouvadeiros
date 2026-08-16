@@ -61,6 +61,10 @@ export const TSDB_NAME_ALIASES = {
   PKS:  ['Paks', 'Paksi', 'Paksi SE'],
   AND:  ['Anderlecht', 'RSC Anderlecht'],
   CSK:  ['CSKA 1948', 'CSKA Sofia 1948', 'CSKA 1948 Sofia'],
+  LVS:  ['Levski Sofia', 'Levski', 'PFC Levski Sofia'],
+  CSS:  ['CSKA Sofia', 'PFC CSKA Sofia'],
+  BRN:  ['Brann', 'SK Brann'],
+  HRK:  ['Hradec Kralove', 'Hradec Králové', 'Hradec', 'FC Hradec Kralove'],
   TBD:  ['TBD'],
 }
 

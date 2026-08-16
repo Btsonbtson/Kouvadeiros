@@ -34,7 +34,11 @@ const NAME_TO_KEY = {
   paks: 'PKS', paksi: 'PKS', 'paksi se': 'PKS',
   anderlecht: 'AND', 'rsc anderlecht': 'AND', αντερλεχτ: 'AND',
   'cska 1948': 'CSK', 'cska sofia 1948': 'CSK', 'cska 1948 sofia': 'CSK',
-  'φκ τσκα 1948': 'CSK', τσκα: 'CSK',
+  'φκ τσκα 1948': 'CSK', 'τσκα 1948': 'CSK',
+  'cska sofia': 'CSS', 'pfc cska sofia': 'CSS', 'τσκα σοφιας': 'CSS', 'τσκα σοφία': 'CSS',
+  'levski sofia': 'LVS', levski: 'LVS', 'pfc levski sofia': 'LVS', λεβσκι: 'LVS',
+  brann: 'BRN', 'sk brann': 'BRN', μπραν: 'BRN',
+  'hradec kralove': 'HRK', hradec: 'HRK', 'fc hradec kralove': 'HRK',
 }
 
 export function resolveTeamKey(name, shortName) {

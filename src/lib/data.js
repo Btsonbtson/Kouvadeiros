@@ -24,6 +24,10 @@ export const TEAMS = {
   PKS: {name:'Paksi SE',abbr:'PKS',color:'#006400'},
   AND: {name:'Anderlecht',abbr:'AND',color:'#6c3'},
   CSK: {name:'CSKA 1948',abbr:'CSK',color:'#c41e1e'},
+  LVS: {name:'Levski Sofia',abbr:'LVS',color:'#0033a0'},
+  CSS: {name:'CSKA Sofia',abbr:'CSS',color:'#c41e1e'},
+  BRN: {name:'Brann',abbr:'BRN',color:'#c4122e'},
+  HRK: {name:'Hradec Králové',abbr:'HRK',color:'#000000'},
   TBD: {name:'TBD',abbr:'TBD',color:'#444444'},
 }
 
@@ -301,12 +305,18 @@ export const UEFA_FIXTURES = [
   // ΠΑΟΚ–Άντερλεχτ Q3 (UEFA 31/7): Πέμ 6/8 20:45 Τούμπα · Πέμ 13/8 21:30 Βρυξέλλες
   {id:'uel-paok-3', t:'UEL', greek:'PAOK', home:'PAOK',away:'AND', kickoff:'2026-08-06T17:45:00Z', round:'Q3 · Leg 1', leg:1, tie:'uel-paok-q3', venue:'Toumba, Θεσσαλονίκη'},
   {id:'uel-paok-4', t:'UEL', greek:'PAOK', home:'AND', away:'PAOK',kickoff:'2026-08-13T18:30:00Z', round:'Q3 · Leg 2', leg:2, tie:'uel-paok-q3', venue:'Lotto Park, Βρυξέλλες'},
-  // ΑΕΚ UCL playoffs: παράθυρο 18–19 & 25–26/8 — αντίπαλος+ώρα μετά κλήρωση
-  {id:'ucl-aek-1',  t:'UCL', greek:'AEK', home:'AEK', away:'TBD',  kickoff:'2026-08-19T18:00:00Z', round:'PO · Leg 1', leg:1, tie:'ucl-aek', venue:'OPAP Arena, Αθήνα', timeTbd:true},
-  {id:'ucl-aek-2',  t:'UCL', greek:'AEK', home:'TBD', away:'AEK',  kickoff:'2026-08-26T18:00:00Z', round:'PO · Leg 2', leg:2, tie:'ucl-aek', timeTbd:true},
-  // ΟΦΗ UEL playoffs — Πέμ 20/8 & 27/8, κλήρωση 3/8, αντίπαλος+ώρα TBD (όχι σήμερα)
-  {id:'uel-ofi-1',  t:'UEL', greek:'OFI', home:'OFI', away:'TBD',  kickoff:'2026-08-20T18:00:00Z', round:'PO · Leg 1', leg:1, tie:'uel-ofi', venue:'Πανκρήτιο, Ηράκλειο', timeTbd:true},
-  {id:'uel-ofi-2',  t:'UEL', greek:'OFI', home:'TBD', away:'OFI',  kickoff:'2026-08-27T18:00:00Z', round:'PO · Leg 2', leg:2, tie:'uel-ofi', venue:'Έδρα αντιπάλου', timeTbd:true},
+  // ΑΕΚ–Levski Sofia UCL PO (UEFA): Τρί 18/8 22:00 εκτός · Τετ 26/8 22:00 OPAP Arena
+  {id:'ucl-aek-1',  t:'UCL', greek:'AEK', home:'LVS', away:'AEK', kickoff:'2026-08-18T19:00:00Z', round:'PO · Leg 1', leg:1, tie:'ucl-aek', venue:'Georgi Asparuhov, Σόφια'},
+  {id:'ucl-aek-2',  t:'UCL', greek:'AEK', home:'AEK', away:'LVS', kickoff:'2026-08-26T19:00:00Z', round:'PO · Leg 2', leg:2, tie:'ucl-aek', venue:'OPAP Arena, Αθήνα'},
+  // ΟΦΗ–CSKA Sofia UEL PO: Πέμ 20/8 & 27/8 · 20:00 Αθήνα
+  {id:'uel-ofi-1',  t:'UEL', greek:'OFI', home:'OFI', away:'CSS', kickoff:'2026-08-20T17:00:00Z', round:'PO · Leg 1', leg:1, tie:'uel-ofi', venue:'Πανκρήτιο, Ηράκλειο'},
+  {id:'uel-ofi-2',  t:'UEL', greek:'OFI', home:'CSS', away:'OFI', kickoff:'2026-08-27T17:00:00Z', round:'PO · Leg 2', leg:2, tie:'uel-ofi', venue:'Balgarska Armiya, Σόφια'},
+  // ΠΑΟΚ–Brann UECL PO (μετά αποκλεισμό από Anderlecht): Πέμ 20/8 20:45 Τούμπα · Πέμ 27/8 20:00 Bergen
+  {id:'uecl-paok-1', t:'UECL', greek:'PAOK', home:'PAOK', away:'BRN', kickoff:'2026-08-20T17:45:00Z', round:'PO · Leg 1', leg:1, tie:'uecl-paok-po', venue:'Toumba, Θεσσαλονίκη'},
+  {id:'uecl-paok-2', t:'UECL', greek:'PAOK', home:'BRN', away:'PAOK', kickoff:'2026-08-27T17:00:00Z', round:'PO · Leg 2', leg:2, tie:'uecl-paok-po', venue:'Brann Stadion, Bergen'},
+  // ΠΑΟ–Hradec Králové UECL PO: Πέμ 20/8 21:30 ΟΑΚΑ · Πέμ 27/8 20:00 Hradec
+  {id:'uecl-pao-5', t:'UECL', greek:'PAO', home:'PAO', away:'HRK', kickoff:'2026-08-20T18:30:00Z', round:'PO · Leg 1', leg:1, tie:'uecl-pao-po', venue:'ΟΑΚΑ, Αθήνα'},
+  {id:'uecl-pao-6', t:'UECL', greek:'PAO', home:'HRK', away:'PAO', kickoff:'2026-08-27T17:00:00Z', round:'PO · Leg 2', leg:2, tie:'uecl-pao-po', venue:'Hradec Králové'},
 ]
 
 export const ALL_FIXTURES = [...SUPER_LEAGUE, ...UEFA_FIXTURES]
@@ -328,6 +338,11 @@ export const MATCH_ODDS = {
   'uecl-pao-4':  { h: 5.50, d: 3.80, a: 1.60 },   // CSK–PAO · 11/8 20:30
   'uel-paok-3':  { h: 1.70, d: 3.55, a: 4.40 },   // PAOK–AND · 6/8
   'uel-paok-4':  { h: 3.02, d: 3.52, a: 2.42 },   // AND–PAOK · 13/8 21:30
+  // UEFA — play-offs (book consensus Aug 2026; Leg 2 lines TBA)
+  'ucl-aek-1':   { h: 2.95, d: 3.20, a: 2.50 },   // LVS–AEK · 18/8 22:00
+  'uel-ofi-1':   { h: 1.72, d: 3.40, a: 2.05 },   // OFI–CSS · 20/8 20:00
+  'uecl-paok-1': { h: 1.60, d: 4.00, a: 5.30 },   // PAOK–BRN · 20/8 20:45
+  'uecl-pao-5':  { h: 1.45, d: 4.50, a: 7.50 },   // PAO–HRK · 20/8 21:30
   // Super League · Αγωνιστική 1 (OddsMath 3/8/2026)
   'sl-1-1':      { h: 1.19, d: 6.15, a: 17.50 },  // AEK–IRA
   'sl-1-2':      { h: 3.92, d: 3.06, a: 2.06 },   // KAL–ARI

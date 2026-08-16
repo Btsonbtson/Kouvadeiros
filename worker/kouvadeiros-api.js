@@ -155,12 +155,18 @@ const MATCHES = [
   // ΠΑΟΚ–Άντερλεχτ Q3: Πέμ 6/8 20:45 · Πέμ 13/8 21:30
   { id: 'uel-paok-3', kickoff: '2026-08-06T17:45:00Z', label: 'ΠΑΟΚ vs Άντερλεχτ', espnLeague: 'uefa.europa', homeTeam: 'PAOK', awayTeam: 'Anderlecht' },
   { id: 'uel-paok-4', kickoff: '2026-08-13T18:30:00Z', label: 'Άντερλεχτ vs ΠΑΟΚ', espnLeague: 'uefa.europa', homeTeam: 'Anderlecht', awayTeam: 'PAOK' },
-  // ΑΕΚ UCL playoffs — αντίπαλος TBA
-  { id: 'ucl-aek-1', kickoff: '2026-08-19T18:00:00Z', label: 'ΑΕΚ vs TBD', espnLeague: 'uefa.champions', homeTeam: 'AEK Athens', awayTeam: 'TBD', timeTbd: true },
-  { id: 'ucl-aek-2', kickoff: '2026-08-26T18:00:00Z', label: 'TBD vs ΑΕΚ', espnLeague: 'uefa.champions', homeTeam: 'TBD', awayTeam: 'AEK Athens', timeTbd: true },
-  // ΟΦΗ UEL playoffs — Πέμ 20/8 & 27/8 (όχι σήμερα)
-  { id: 'uel-ofi-1', kickoff: '2026-08-20T18:00:00Z', label: 'ΟΦΗ · UEL PO Leg 1', espnLeague: 'uefa.europa', homeTeam: 'OFI', awayTeam: 'TBD', timeTbd: true },
-  { id: 'uel-ofi-2', kickoff: '2026-08-27T18:00:00Z', label: 'ΟΦΗ · UEL PO Leg 2', espnLeague: 'uefa.europa', homeTeam: 'TBD', awayTeam: 'OFI', timeTbd: true },
+  // ΑΕΚ–Levski Sofia UCL PO: Τρί 18/8 22:00 · Τετ 26/8 22:00
+  { id: 'ucl-aek-1', kickoff: '2026-08-18T19:00:00Z', label: 'Levski vs ΑΕΚ', espnLeague: 'uefa.champions', homeTeam: 'Levski Sofia', awayTeam: 'AEK Athens' },
+  { id: 'ucl-aek-2', kickoff: '2026-08-26T19:00:00Z', label: 'ΑΕΚ vs Levski', espnLeague: 'uefa.champions', homeTeam: 'AEK Athens', awayTeam: 'Levski Sofia' },
+  // ΟΦΗ–CSKA Sofia UEL PO: Πέμ 20/8 & 27/8 · 20:00 Αθήνα
+  { id: 'uel-ofi-1', kickoff: '2026-08-20T17:00:00Z', label: 'ΟΦΗ vs CSKA Sofia', espnLeague: 'uefa.europa', homeTeam: 'OFI', awayTeam: 'CSKA Sofia' },
+  { id: 'uel-ofi-2', kickoff: '2026-08-27T17:00:00Z', label: 'CSKA Sofia vs ΟΦΗ', espnLeague: 'uefa.europa', homeTeam: 'CSKA Sofia', awayTeam: 'OFI' },
+  // ΠΑΟΚ–Brann UECL PO: Πέμ 20/8 20:45 · Πέμ 27/8 20:00
+  { id: 'uecl-paok-1', kickoff: '2026-08-20T17:45:00Z', label: 'ΠΑΟΚ vs Brann', espnLeague: 'uefa.europa.conf', homeTeam: 'PAOK', awayTeam: 'Brann' },
+  { id: 'uecl-paok-2', kickoff: '2026-08-27T17:00:00Z', label: 'Brann vs ΠΑΟΚ', espnLeague: 'uefa.europa.conf', homeTeam: 'Brann', awayTeam: 'PAOK' },
+  // ΠΑΟ–Hradec UECL PO: Πέμ 20/8 21:30 · Πέμ 27/8 20:00
+  { id: 'uecl-pao-5', kickoff: '2026-08-20T18:30:00Z', label: 'ΠΑΟ vs Hradec', espnLeague: 'uefa.europa.conf', homeTeam: 'Panathinaikos', awayTeam: 'Hradec Kralove' },
+  { id: 'uecl-pao-6', kickoff: '2026-08-27T17:00:00Z', label: 'Hradec vs ΠΑΟ', espnLeague: 'uefa.europa.conf', homeTeam: 'Hradec Kralove', awayTeam: 'Panathinaikos' },
   // Super League MD1 (Dnews / Super League, 28/7/2026)
   { id: 'sl-1-1', kickoff: '2026-08-22T17:00:00Z', label: 'ΑΕΚ vs ΗΡΑ', espnLeague: 'gre.1', homeTeam: 'AEK Athens', awayTeam: 'Iraklis' },
   { id: 'sl-1-2', kickoff: '2026-08-22T17:00:00Z', label: 'ΚΑΛ vs ΑΡΗΣ', espnLeague: 'gre.1', homeTeam: 'Kalamata', awayTeam: 'Aris' },
