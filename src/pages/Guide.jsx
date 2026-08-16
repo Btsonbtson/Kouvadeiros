@@ -63,7 +63,7 @@ export default function Guide({ onBack }) {
 
           <Section emoji="📅" title="Ποιοι αγώνες βαθμολογούνται;" accent={GOLD}>
             <Rule n="1" text="Super League Greece 2026/27" sub="Όλοι οι αγώνες της κανονικής σεζόν — 7 ομάδες ανά αγωνιστική"/>
-            <Rule n="2" text="UEFA — Ελληνικές ομάδες" sub="AEK (UCL), Ολυμπιακός (UCL), ΠΑΟΚ (UEL), ΠΑΟ (UECL) — όλα τα ματς"/>
+            <Rule n="2" text="UEFA — Ελληνικές ομάδες" sub="AEK (UCL), Ολυμπιακός (UCL), ΟΦΗ (UEL), ΠΑΟΚ (UECL), ΠΑΟ (UECL) — όλα τα ματς"/>
             <Rule n="3" text="Αγώνες δύο σκελών (Legs)" sub="Κάθε σκέλος βαθμολογείται ξεχωριστά"/>
           </Section>
 

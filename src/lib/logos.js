@@ -19,6 +19,10 @@ export const LOGOS = {
   PKS: '/logos/PKS.svg',
   AND: '/logos/AND.svg',
   CSK: '/logos/CSK.svg',
+  LVS: null,
+  CSS: null,
+  BRN: null,
+  HRK: null,
   TBD: null,
 }
 
@@ -27,7 +31,8 @@ export const TEAM_COLORS = {
   ARI:'#DAA520', ATR:'#003087', AST:'#FF6600', KIF:'#003F8A',
   LEV:'#006633', OFI:'#8B0000', PNE:'#6600AA', VOL:'#003366',
   IRA:'#0000CC', KAL:'#1a1a1a', DYN:'#003F87', NEC:'#CC0000',
-  PKS:'#006400', AND:'#6c3', CSK:'#c41e1e', TBD:'#444',
+  PKS:'#006400', AND:'#6c3', CSK:'#c41e1e', LVS:'#0033a0',
+  CSS:'#c41e1e', BRN:'#c4122e', HRK:'#000000', TBD:'#444',
 }
 
 /** Resolve logo URL with svg→png fallback for resilience */
