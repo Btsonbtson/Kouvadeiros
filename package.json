@@ -8,6 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "test:live": "node scripts/test-live-scores.mjs",
+    "test:tonight": "node scripts/smoke-tonight-points.mjs",
     "deploy:pages": "npm run build && node scripts/verify-pages-dist.mjs && wrangler pages deploy dist --project-name=kouvadeiros --commit-dirty=true"
   },
   "dependencies": {
