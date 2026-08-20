@@ -85,6 +85,10 @@ const SEEDED_RES={
   'uecl-pao-3':{h:1,a:1},
   // CSK–PAO Leg 2: tips on 90′ (1–1). AET 1–2 PAO → πρόκριση PAO (+1 all three).
   'uecl-pao-4':{h:1,a:1,overtime:true,otH:1,otA:2,qual:'PAO'},
+  // Play-off Leg 1 · 20/8/2026
+  'uel-ofi-1':{h:3,a:0},
+  'uecl-pao-5':{h:2,a:2},
+  'uecl-paok-1':{h:1,a:1},
 }
 
 function isUEFATie(id){return UEFA_FIXTURES.some(f=>f.id===id)}
