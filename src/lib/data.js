@@ -512,6 +512,36 @@ export const TIP_RESULT_LOCKS = {
   'uecl-pao-4': { h: 1, a: 1, overtime: true, otH: 1, otA: 2, qual: 'PAO' },
 }
 
+/**
+ * Seeded tips (fill missing players only — KV / later saves still win per player).
+ * Used so late admin tips (e.g. no DQ) show on game cards + scoring.
+ */
+export const SEEDED_PREDICTIONS = {
+  'uel-paok-1': {
+    boikos: { h: 2, a: 1, qual: 'DYN' },
+    mavromichalis: { h: 0, a: 0, qual: 'PAOK' },
+    chousiadas: { h: 2, a: 1, qual: 'DYN' },
+  },
+  'uecl-pao-1': {
+    boikos: { h: 0, a: 3, qual: 'PAO' },
+    mavromichalis: { h: 0, a: 1, qual: 'PAO' },
+    chousiadas: { h: 1, a: 2, qual: 'PAO' },
+  },
+  // 20/8 play-off Leg 1 — Chousiadas (admin late tip · no DQ)
+  'uel-ofi-1': { chousiadas: { h: 1, a: 1, qual: 'CSS' } },
+  'uecl-pao-5': { chousiadas: { h: 1, a: 1, qual: 'PAO' } },
+  'uecl-paok-1': { chousiadas: { h: 1, a: 1, qual: 'BRN' } },
+}
+
+/** Merge seeds under live tips (live tips win per player key). */
+export function mergeSeededPredictions(predictions = {}) {
+  const out = { ...(predictions || {}) }
+  for (const [mid, seeds] of Object.entries(SEEDED_PREDICTIONS)) {
+    out[mid] = { ...(seeds || {}), ...(out[mid] || {}) }
+  }
+  return out
+}
+
 export function applyTipResultLocks(results = {}) {
   const out = { ...(results || {}) }
   let changed = false

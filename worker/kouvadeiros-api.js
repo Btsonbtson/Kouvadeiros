@@ -22,6 +22,7 @@ import {
   athensYmd,
   athensHm,
   applyTipResultLocks,
+  mergeSeededPredictions,
 } from '../src/lib/data.js'
 import {
   pollGazzettaForMatches,
@@ -345,6 +346,7 @@ async function getState(env) {
   state.phones = { ...DEFAULT_PHONES, ...(state.phones || {}) }
   const locked = applyTipResultLocks(state.results)
   state.results = locked.results
+  state.predictions = mergeSeededPredictions(state.predictions)
   // Persist phone merge + tip-result locks so AET auto-FT cannot keep wiping 90′ scores / πρόκριση
   if (JSON.stringify(state.phones) !== beforePhones || locked.changed) {
     await env.KOUV.put('state', JSON.stringify(state))
@@ -1119,7 +1121,8 @@ export default {
     if (path === '/prediction' && request.method === 'PATCH') {
       const user = await getUser(request, env)
       if (!user) return json({ error: 'Unauthorized' }, 401)
-      const { matchId, h, a, qual, predOT, otH, otA, predPen, penH, penA } = await request.json()
+      const { matchId, h, a, qual, predOT, otH, otA, predPen, penH, penA, playerId } = await request.json()
+      const targetId = user.role === 'admin' && playerId ? playerId : user.id
       const state = await getState(env)
       const match = withOverrides(
         MATCHES.some((m) => m.id === matchId) ? MATCHES : ALL_FIXTURES,
@@ -1127,13 +1130,28 @@ export default {
       ).find((m) => m.id === matchId)
       if (match) {
         const minsUntil = (new Date(match.kickoff).getTime() - Date.now()) / 60000
-        if (!match.timeTbd && minsUntil <= LOCK_TARGET) return json({ error: 'Predictions locked (15′ before kickoff)' }, 403)
+        const adminForce = user.role === 'admin' && !!playerId
+        if (!match.timeTbd && minsUntil <= LOCK_TARGET && !adminForce) {
+          return json({ error: 'Predictions locked (15′ before kickoff)' }, 403)
+        }
       }
       if (!state.predictions) state.predictions = {}
       if (!state.predictions[matchId]) state.predictions[matchId] = {}
-      state.predictions[matchId][user.id] = { h, a, qual, predOT, otH, otA, predPen, penH, penA, savedAt: new Date().toISOString() }
+      state.predictions[matchId][targetId] = {
+        h,
+        a,
+        qual,
+        predOT,
+        otH,
+        otA,
+        predPen,
+        penH,
+        penA,
+        savedAt: new Date().toISOString(),
+        ...(user.role === 'admin' && playerId ? { setBy: user.id, via: 'admin' } : {}),
+      }
       await setState(env, state)
-      return json({ ok: true })
+      return json({ ok: true, playerId: targetId })
     }
 
     if (path === '/result' && request.method === 'PATCH') {
