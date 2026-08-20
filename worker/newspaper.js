@@ -15,6 +15,10 @@ export const FALLBACK_RESULTS = {
   'uecl-pao-3': { h: 1, a: 1 },
   // Tip score = 90′ 1–1; AET finished CSK 1–2 PAO → πρόκριση PAO (+1 all).
   'uecl-pao-4': { h: 1, a: 1, overtime: true, otH: 1, otA: 2, qual: 'PAO' },
+  // Play-off Leg 1 · 20/8/2026
+  'uel-ofi-1': { h: 3, a: 0 },
+  'uecl-pao-5': { h: 2, a: 2 },
+  'uecl-paok-1': { h: 1, a: 1 },
 }
 
 const PLAYER_COLORS = {
