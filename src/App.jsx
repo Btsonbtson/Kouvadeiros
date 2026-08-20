@@ -9,6 +9,7 @@ import {
   grTime, grDate, grKick, isToday, isLocked, isRevealOpen, nowGR, inLiveWindow,
   anyLiveScoreActivity, msUntilNextLiveScoreBand, inLiveScoreBand,
   applyKickoffOverrides, athensYmd, athensHm, applyTipResultLocks,
+  SEEDED_PREDICTIONS, mergeSeededPredictions,
 } from './lib/data'
 import { mapPipelineToLiveScores } from './lib/pipelineScores'
 import { TeamLogo, TPill, PtsBadge, ScorePill, Card, SLbl, Spinner } from './components/UI'
@@ -72,10 +73,7 @@ function TabBackdrop({ bgUrl, children, style, fillChildren=false }) {
   )
 }
 
-const SEEDED_PREDS={
-  'uel-paok-1':{boikos:{h:2,a:1,qual:'DYN'},mavromichalis:{h:0,a:0,qual:'PAOK'},chousiadas:{h:2,a:1,qual:'DYN'}},
-  'uecl-pao-1':{boikos:{h:0,a:3,qual:'PAO'},mavromichalis:{h:0,a:1,qual:'PAO'},chousiadas:{h:1,a:2,qual:'PAO'}},
-}
+const SEEDED_PREDS = SEEDED_PREDICTIONS
 const SEEDED_RES={
   'uel-paok-1':{h:2,a:3},
   'uecl-pao-1':{h:1,a:2},
@@ -1054,8 +1052,7 @@ export default function App({ user, onLogout }) {
       setPipelineHints(wantLive ? pipe.hints : {})
       setState({
         ...s,
-        predictions:{ ...SEEDED_PREDS,...s.predictions,
-          ...Object.fromEntries(Object.keys({...SEEDED_PREDS,...s.predictions}).map(mid=>[mid,{...(SEEDED_PREDS[mid]||{}),...(s.predictions[mid]||{})}])) },
+        predictions: mergeSeededPredictions(s.predictions),
         results: applyTipResultLocks({ ...SEEDED_RES, ...s.results }).results,
       })
       setSyncOk(true)
