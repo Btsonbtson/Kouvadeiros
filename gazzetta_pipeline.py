@@ -3,7 +3,8 @@
 KOUVADEIROS — Gazzetta.gr live score daemon
 
 Fetches daily schedule + live scores from Gazzetta (no API key), writes local
-JSON, and uploads to Cloudflare R2.
+JSON, and uploads to Cloudflare R2 — only while a ΠΡΟΓΡΑΜΜΑ match is in the
+Cloudflare ops window: 30′ before kickoff → 30′ after Full Time.
 
 Usage:
   python gazzetta_pipeline.py
@@ -24,7 +25,7 @@ import sys
 import tempfile
 import time
 import traceback
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -56,8 +57,15 @@ TODAY_KOUV_PATH = DATA_DIR / "today.json"
 POLL_SEC = 60
 IDLE_SLEEP_SEC = 300
 SCHEDULE_REFRESH_MIN = 60
-WINDOW_START_H = 14
-WINDOW_END_H = 24  # exclusive end → until midnight
+
+# Cloudflare R2 uploads only in the same window as Worker/CI:
+# 30′ pre-KO → FT+30′ (see scripts/cloud_ops_window.py / src/lib/data.js)
+sys.path.insert(0, str(ROOT / "scripts"))
+from cloud_ops_window import (  # noqa: E402
+    CLOUD_AFTER_FT_MIN,
+    CLOUD_BEFORE_MIN,
+    in_cloud_ops_window,
+)
 
 
 def setup_logging() -> logging.Logger:
@@ -162,8 +170,13 @@ def safe_upload(local_path: Path, key: str) -> None:
 
 
 def in_poll_window(now: datetime | None = None) -> bool:
-    now = now or datetime.now(ATHENS)
-    return WINDOW_START_H <= now.hour < WINDOW_END_H
+    """True only while a ΠΡΟΓΡΑΜΜΑ match is in the Cloudflare ops window."""
+    # Accept Athens or UTC; cloud helper normalizes to aware UTC.
+    if now is not None and now.tzinfo is None:
+        now = now.replace(tzinfo=ATHENS)
+    if now is not None:
+        now = now.astimezone(timezone.utc)
+    return in_cloud_ops_window(now)
 
 
 def write_kouv_from_provider(provider: GazzettaProvider) -> None:
@@ -329,17 +342,33 @@ def main() -> None:
     try:
         schedule = refresh_schedule(provider)
         last_schedule_at = datetime.now(timezone_utc())
-        try:
-            write_kouv_from_provider(provider)
-        except Exception:
-            log.error("Initial KOUV today/live write failed:\n%s", traceback.format_exc())
+        if in_poll_window():
+            try:
+                write_kouv_from_provider(provider)
+            except Exception:
+                log.error("Initial KOUV today/live write failed:\n%s", traceback.format_exc())
+        else:
+            log.info(
+                "Startup outside Cloudflare window (%s′ pre-KO → FT+%s′) — no R2 upload yet",
+                CLOUD_BEFORE_MIN,
+                CLOUD_AFTER_FT_MIN,
+            )
     except Exception:
         log.error("Initial schedule failed:\n%s", traceback.format_exc())
 
     while True:
         try:
             now_utc = datetime.now(timezone_utc())
-            now_ath = datetime.now(ATHENS)
+
+            if not in_poll_window(now_utc):
+                log.info(
+                    "Outside Cloudflare window (%s′ pre-KO → FT+%s′) — sleep %ss",
+                    CLOUD_BEFORE_MIN,
+                    CLOUD_AFTER_FT_MIN,
+                    IDLE_SLEEP_SEC,
+                )
+                time.sleep(IDLE_SLEEP_SEC)
+                continue
 
             if now_utc - last_schedule_at >= timedelta(minutes=SCHEDULE_REFRESH_MIN):
                 try:
@@ -348,16 +377,6 @@ def main() -> None:
                     write_kouv_from_provider(provider)
                 except Exception:
                     log.error("Schedule refresh failed:\n%s", traceback.format_exc())
-
-            if not in_poll_window(now_ath):
-                log.info(
-                    "Outside Greece poll window (%s–%s) — sleep %ss",
-                    WINDOW_START_H,
-                    WINDOW_END_H,
-                    IDLE_SLEEP_SEC,
-                )
-                time.sleep(IDLE_SLEEP_SEC)
-                continue
 
             if not schedule:
                 try:

@@ -8,6 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "test:live": "node scripts/test-live-scores.mjs",
+    "test:cloud-window": "node scripts/test-cloud-ops-window.mjs && python3 scripts/test_cloud_ops_window.py",
     "deploy:pages": "npm run build && node scripts/verify-pages-dist.mjs && wrangler pages deploy dist --project-name=kouvadeiros --commit-dirty=true"
   },
   "dependencies": {
