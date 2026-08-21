@@ -342,14 +342,28 @@ async function getState(env) {
       }
   if (!state.kickoffOverrides) state.kickoffOverrides = {}
   if (!state.results) state.results = {}
+  if (!state.predictions) state.predictions = {}
   const beforePhones = JSON.stringify(state.phones || {})
   state.phones = { ...DEFAULT_PHONES, ...(state.phones || {}) }
-  const locked = applyTipResultLocks(state.results)
-  state.results = locked.results
-  state.predictions = mergeSeededPredictions(state.predictions)
+  let locked = { results: state.results, changed: false }
+  try {
+    locked = applyTipResultLocks(state.results)
+    state.results = locked.results
+  } catch (e) {
+    console.log('tip locks skip', e?.message || e)
+  }
+  try {
+    state.predictions = mergeSeededPredictions(state.predictions)
+  } catch (e) {
+    console.log('seed tips skip', e?.message || e)
+  }
   // Persist phone merge + tip-result locks so AET auto-FT cannot keep wiping 90′ scores / πρόκριση
   if (JSON.stringify(state.phones) !== beforePhones || locked.changed) {
-    await env.KOUV.put('state', JSON.stringify(state))
+    try {
+      await env.KOUV.put('state', JSON.stringify(state))
+    } catch (e) {
+      console.log('state persist skip', e?.message || e)
+    }
   }
   return state
 }
@@ -1075,7 +1089,7 @@ export default {
   },
 
   // ── HTTP ──────────────────────────────────────────────────────────────────
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS })
     const url = new URL(request.url),
       path = url.pathname
@@ -1087,23 +1101,31 @@ export default {
       if (!user || user.password !== password) return json({ error: 'Invalid credentials' }, 401)
       const token = makeToken()
       await env.KOUV.put(`token:${token}`, email.toLowerCase(), { expirationTtl: 86400 * 30 })
-      const state = await getState(env)
-      const phone = state.phones?.[user.id]
-      const welcomed = state.welcomed || {}
-      if (phone && !welcomed[user.id]) {
-        const msg =
-          `🎉 *Καλωσόρισες στο KOUVADEIROS 2026/27!*\n\nΓεια σου ${user.name}! 🌶️\n\n` +
-          `📱 Κάνε προβλέψεις:\n• Μέσα από την εφαρμογή\n• Μέσω WhatsApp: \`PRED [match-id] [σκορ]\`\n\n` +
-          `🔔 Υπενθυμίσεις: *30′* και *20′* πριν κάθε αγώνα (κλείδωμα στις 15′)\n` +
-          `🔒 Κλείδωμα + αποκάλυψη: *15 λεπτά* πριν τη σέντρα\n` +
-          `⚡ Αν βγει ΘΑΥΜΑ ή ΩΣΑΝΑ... θα το μάθεις αμέσως!\n\n` +
-          `Καλή επιτυχία! Και το burger παίζει 🍔\n\n_kouvadeiros.pages.dev_`
-        await sendWA(env, phone, msg)
-        welcomed[user.id] = new Date().toISOString()
-        state.welcomed = welcomed
-        await setState(env, state)
-      }
-      return json({ token, name: user.name, id: user.id, email, role: user.role || 'player', phone: phone || null })
+      // Phone from defaults — never block login on KV/Twilio (that was CF 1101).
+      const phone = DEFAULT_PHONES[user.id] || null
+      const welcomeTask = (async () => {
+        try {
+          const state = await getState(env)
+          const welcomed = state.welcomed || {}
+          if (phone && !welcomed[user.id]) {
+            const msg =
+              `🎉 *Καλωσόρισες στο KOUVADEIROS 2026/27!*\n\nΓεια σου ${user.name}! 🌶️\n\n` +
+              `📱 Κάνε προβλέψεις:\n• Μέσα από την εφαρμογή\n• Μέσω WhatsApp: \`PRED [match-id] [σκορ]\`\n\n` +
+              `🔔 Υπενθυμίσεις: *30′* και *20′* πριν κάθε αγώνα (κλείδωμα στις 15′)\n` +
+              `🔒 Κλείδωμα + αποκάλυψη: *15 λεπτά* πριν τη σέντρα\n` +
+              `⚡ Αν βγει ΘΑΥΜΑ ή ΩΣΑΝΑ... θα το μάθεις αμέσως!\n\n` +
+              `Καλή επιτυχία! Και το burger παίζει 🍔\n\n_kouvadeiros.pages.dev_`
+            await sendWA(env, phone, msg)
+            const fresh = await getState(env)
+            fresh.welcomed = { ...(fresh.welcomed || {}), [user.id]: new Date().toISOString() }
+            await setState(env, fresh)
+          }
+        } catch (e) {
+          console.log('login welcome skip', e?.message || e)
+        }
+      })()
+      if (ctx?.waitUntil) ctx.waitUntil(welcomeTask)
+      return json({ token, name: user.name, id: user.id, email, role: user.role || 'player', phone })
     }
 
     if (path === '/logout' && request.method === 'POST') {
@@ -1601,12 +1623,13 @@ export default {
     if (path === '/ping')
       return json({
         ok: true,
-        version: 11,
+        version: 13,
         remind: REMIND_TARGETS,
         lock: LOCK_TARGET,
         newspaper: true,
         equalRoast: true,
         gazzetta: true,
+        loginFixed: true,
         ts: new Date().toISOString(),
       })
 

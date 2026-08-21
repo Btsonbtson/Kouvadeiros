@@ -1040,6 +1040,43 @@ function buildRumors(ranking, seed = 0, dqOffenders = []) {
   }
 }
 
+/**
+ * Forced frontpage copy for specific Athens edition dates.
+ * Merged over procedural pickHeadlines() in buildEdition().
+ */
+export const EDITION_HEADLINE_OVERRIDES = {
+  '2026-08-20': {
+    yell: 'ΝΕΟ ΣΚΑΝΔΑΛΟ',
+    splash: 'ΒΑΥΑΡΙΚΟΣ ΔΑΚΤΥΛΟΣ',
+    kicker:
+      'Προκαλεί την νοημοσύνη μας — τρεις μαγικοί πόντοι εμφανίζονται αντί για −3 βαθμούς ποινής.',
+    quote:
+      '«Βαυαρικός δάκτυλος προκαλεί την νοημοσύνη μας και τρεις μαγικοί πόντοι εμφανίζονται αντί για −3 βαθμούς ποινής.»',
+    amok: 'ΑΜΟΚ: −3 ποινή… και ξαφνικά +3. Η διοργανώτρια αρχή σκύβει το κεφάλι.',
+    frontTeasers: [
+      'Even the rocks are laughing',
+      'Νύχτα των κρυστάλλων',
+      'Άλλη παιδί δεν έκανε μόνο η Μαριώ τον Γιάννη',
+      'Νύχτα ντροπής για την διοργανώτρια αρχή',
+      'O tempora o mores',
+    ],
+    straps: [
+      'Even the rocks are laughing',
+      'Νύχτα των κρυστάλλων',
+      'Άλλη παιδί δεν έκανε μόνο η Μαριώ τον Γιάννη',
+      'Νύχτα ντροπής για την διοργανώτρια αρχή',
+      'O tempora o mores',
+      'Play-off Leg 1 · ΟΦΗ 3–0 · ΠΑΟ 2–2 · ΠΑΟΚ 1–1 — οι πόντοι μετρήθηκαν. Η ντροπή έμεινε.',
+    ],
+  },
+}
+
+function applyEditionHeadlineOverrides(ymd, headlines) {
+  const forced = EDITION_HEADLINE_OVERRIDES[ymd]
+  if (!forced) return headlines
+  return { ...headlines, ...forced }
+}
+
 function pickHeadlines(ranking, matchRows, round = 0, seasonRows = [], upcoming = [], rivalry = null) {
   if (!ranking.length || !matchRows.length) {
     return {
@@ -1332,7 +1369,10 @@ export function buildEdition(ymd, allMatches, state, users, opts = {}) {
   const seed = hashSeed(`${ymd}:fans:${round}`)
   const upcoming = buildUpcomingChallenges(allMatches, state, users, ymd, seed)
   const rivalry = buildRivalryDigest(allMatches, state, users, seed)
-  const headlines = pickHeadlines(ledger.ranking, ledger.matchRows, round, seasonRows, upcoming, rivalry)
+  const headlines = applyEditionHeadlineOverrides(
+    ymd,
+    pickHeadlines(ledger.ranking, ledger.matchRows, round, seasonRows, upcoming, rivalry),
+  )
   const visuals = pickVisuals(ymd, round)
   const editionDate = formatEditionDate(ymd)
   const apiBase = opts.apiBase || 'https://kouvadeiros-api.jboikos.workers.dev'

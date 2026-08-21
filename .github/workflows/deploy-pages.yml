@@ -17,10 +17,10 @@ jobs:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
-          node-version: '22'
+          node-version: '24'
           cache: npm
       - name: Install
         run: npm ci
@@ -35,10 +35,10 @@ jobs:
     if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
-          node-version: '22'
+          node-version: '24'
           cache: npm
       - name: Install
         run: npm ci
@@ -54,8 +54,16 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
         run: |
           if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            {
+              echo "## Pages manual deploy blocked — missing secrets"
+              echo ""
+              echo "Add \`CLOUDFLARE_API_TOKEN\` and \`CF_ACCOUNT_ID\` under"
+              echo "**Settings → Secrets and variables → Actions**."
+              echo ""
+              echo "Note: normal pushes already deploy via Cloudflare Git integration;"
+              echo "this job is only for manual \`workflow_dispatch\`."
+            } >> "$GITHUB_STEP_SUMMARY"
             echo "::error::Add CLOUDFLARE_API_TOKEN and CF_ACCOUNT_ID in repo Settings → Secrets → Actions."
-            echo "Token permissions: Account → Cloudflare Pages Edit."
             exit 1
           fi
       - name: Deploy to Cloudflare Pages
