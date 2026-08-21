@@ -1737,7 +1737,9 @@ function MatchPredictCard({match,result,scoringActual,predictions,allPredictions
 
   // ── Derived state ──────────────────────────────────────────────────────────
   const hasRes=result!=null
-  const locked=isLocked(match.kickoff)
+  const postponed=!!match.postponed
+  // Postponed: no tip required, no DQ — freeze inputs but don't use kickoff lock clock
+  const locked=postponed?true:(match.timeTbd?false:isLocked(match.kickoff))
   const isUEFA=isUEFATie(match.id)
   const isLeg1=match.leg===1
   const isLeg2=match.leg===2
@@ -1847,8 +1849,8 @@ function MatchPredictCard({match,result,scoringActual,predictions,allPredictions
           </span>}
         </div>
         <div style={{textAlign:'right'}}>
-          <div style={{fontSize:11,fontWeight:700,color:locked?RED:GREEN}}>
-            {locked?'🔒 Κλειδωμένο':(match.timeTbd?`Κλείνει TBA`:`Κλείνει ${grKick(match)}`)}
+          <div style={{fontSize:11,fontWeight:700,color:postponed?GOLD:locked?RED:GREEN}}>
+            {postponed?'⏸ ΑΝΑΒΛΗΘΗΚΕ · χωρίς DQ':locked?'🔒 Κλειδωμένο':(match.timeTbd?`Κλείνει TBA`:`Κλείνει ${grKick(match)}`)}
           </div>
           <div style={{fontSize:10,color:MUTED}}>{grDate(match.kickoff)} · {grKick(match)}</div>
         </div>

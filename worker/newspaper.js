@@ -159,6 +159,7 @@ function matchHadAnyTip(predictions, matchId) {
 }
 
 function scorePlayerMatchWorker(match, pred, actual, predictions, playerId) {
+  if (match?.postponed) return null
   if (actual == null) return null
   const missing = !pred || typeof pred.h !== 'number' || typeof pred.a !== 'number'
   if (missing) {
