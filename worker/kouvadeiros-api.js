@@ -1101,35 +1101,30 @@ export default {
       if (!user || user.password !== password) return json({ error: 'Invalid credentials' }, 401)
       const token = makeToken()
       await env.KOUV.put(`token:${token}`, email.toLowerCase(), { expirationTtl: 86400 * 30 })
-      // Never block login on welcome WA / state hydration (Twilio hangs → CF 1101).
-      let phone = null
-      try {
-        const state = await getState(env)
-        phone = state.phones?.[user.id] || null
-        const welcomed = state.welcomed || {}
-        if (phone && !welcomed[user.id]) {
-          const msg =
-            `🎉 *Καλωσόρισες στο KOUVADEIROS 2026/27!*\n\nΓεια σου ${user.name}! 🌶️\n\n` +
-            `📱 Κάνε προβλέψεις:\n• Μέσα από την εφαρμογή\n• Μέσω WhatsApp: \`PRED [match-id] [σκορ]\`\n\n` +
-            `🔔 Υπενθυμίσεις: *30′* και *20′* πριν κάθε αγώνα (κλείδωμα στις 15′)\n` +
-            `🔒 Κλείδωμα + αποκάλυψη: *15 λεπτά* πριν τη σέντρα\n` +
-            `⚡ Αν βγει ΘΑΥΜΑ ή ΩΣΑΝΑ... θα το μάθεις αμέσως!\n\n` +
-            `Καλή επιτυχία! Και το burger παίζει 🍔\n\n_kouvadeiros.pages.dev_`
-          const welcomeTask = (async () => {
-            try {
-              await sendWA(env, phone, msg)
-              const fresh = await getState(env)
-              fresh.welcomed = { ...(fresh.welcomed || {}), [user.id]: new Date().toISOString() }
-              await setState(env, fresh)
-            } catch (e) {
-              console.log('welcome WA skip', e?.message || e)
-            }
-          })()
-          if (ctx?.waitUntil) ctx.waitUntil(welcomeTask)
+      // Phone from defaults — never block login on KV/Twilio (that was CF 1101).
+      const phone = DEFAULT_PHONES[user.id] || null
+      const welcomeTask = (async () => {
+        try {
+          const state = await getState(env)
+          const welcomed = state.welcomed || {}
+          if (phone && !welcomed[user.id]) {
+            const msg =
+              `🎉 *Καλωσόρισες στο KOUVADEIROS 2026/27!*\n\nΓεια σου ${user.name}! 🌶️\n\n` +
+              `📱 Κάνε προβλέψεις:\n• Μέσα από την εφαρμογή\n• Μέσω WhatsApp: \`PRED [match-id] [σκορ]\`\n\n` +
+              `🔔 Υπενθυμίσεις: *30′* και *20′* πριν κάθε αγώνα (κλείδωμα στις 15′)\n` +
+              `🔒 Κλείδωμα + αποκάλυψη: *15 λεπτά* πριν τη σέντρα\n` +
+              `⚡ Αν βγει ΘΑΥΜΑ ή ΩΣΑΝΑ... θα το μάθεις αμέσως!\n\n` +
+              `Καλή επιτυχία! Και το burger παίζει 🍔\n\n_kouvadeiros.pages.dev_`
+            await sendWA(env, phone, msg)
+            const fresh = await getState(env)
+            fresh.welcomed = { ...(fresh.welcomed || {}), [user.id]: new Date().toISOString() }
+            await setState(env, fresh)
+          }
+        } catch (e) {
+          console.log('login welcome skip', e?.message || e)
         }
-      } catch (e) {
-        console.log('login state/welcome skip', e?.message || e)
-      }
+      })()
+      if (ctx?.waitUntil) ctx.waitUntil(welcomeTask)
       return json({ token, name: user.name, id: user.id, email, role: user.role || 'player', phone })
     }
 
@@ -1628,13 +1623,13 @@ export default {
     if (path === '/ping')
       return json({
         ok: true,
-        version: 12,
+        version: 13,
         remind: REMIND_TARGETS,
         lock: LOCK_TARGET,
         newspaper: true,
         equalRoast: true,
         gazzetta: true,
-        scandalHeadlines: true,
+        loginFixed: true,
         ts: new Date().toISOString(),
       })
 
