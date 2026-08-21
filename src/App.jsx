@@ -2094,17 +2094,20 @@ function FixtureList({fixtures,rankMap,formMap,setView,setH2hMatch}){
         </div>
         {gMatches.map(m=>{
           const ko=new Date(m.kickoff).getTime()
-          const isPast=ko<now
+          const isPast=!m.postponed&&ko<now
           const isSL=m.t==='SL'
           const homeRank=rankMap?.[m.home]||rankMap?.[TEAMS[m.home]?.name]
           const awayRank=rankMap?.[m.away]||rankMap?.[TEAMS[m.away]?.name]
           const homeForm=formMap?.[m.home]||formMap?.[TEAMS[m.home]?.name]||[]
           const awayForm=formMap?.[m.away]||formMap?.[TEAMS[m.away]?.name]||[]
-          return <div key={m.id} style={{background:SURF,border:'1px solid '+LINE,borderRadius:12,
+          return <div key={m.id} style={{background:SURF,border:`1px solid ${m.postponed?GOLD+'55':LINE}`,borderRadius:12,
             padding:'10px 14px',marginBottom:6,opacity:isPast?0.65:1}}>
             <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:6}}>
-              <TPill id={m.t}/>
-              <div style={{fontSize:10,color:MUTED,fontWeight:600}}>{grDate(m.kickoff)} · {grKick(m)}</div>
+              <div style={{display:'flex',alignItems:'center',gap:6}}>
+                <TPill id={m.t}/>
+                {m.postponed&&<span style={{fontSize:9,fontWeight:800,color:GOLD,letterSpacing:'.04em'}}>ΑΝΑΒΛΗΘΗΚΕ · χωρίς DQ</span>}
+              </div>
+              <div style={{fontSize:10,color:m.postponed?GOLD:MUTED,fontWeight:700}}>{grDate(m.kickoff)} · {grKick(m)}</div>
             </div>
             <div style={{display:'grid',gridTemplateColumns:'1fr auto 1fr',alignItems:'center',gap:8}}>
               <div style={{display:'flex',flexDirection:'column',alignItems:'flex-end',gap:3}}>
@@ -2115,7 +2118,7 @@ function FixtureList({fixtures,rankMap,formMap,setView,setH2hMatch}){
                 </div>
                 {isSL&&homeForm.length>0&&<div style={{display:'flex',justifyContent:'flex-end'}}><FormStrip form={homeForm.slice(-5)}/></div>}
               </div>
-              <span style={{fontSize:12,color:DIM,fontWeight:700}}>vs</span>
+              <span style={{fontSize:12,color:DIM,fontWeight:700}}>{m.postponed?'⏸':'vs'}</span>
               <div style={{display:'flex',flexDirection:'column',alignItems:'flex-start',gap:3}}>
                 <div style={{display:'flex',alignItems:'center',gap:5}}>
                   <TeamLogo k={m.away} size={22}/>
@@ -2125,7 +2128,7 @@ function FixtureList({fixtures,rankMap,formMap,setView,setH2hMatch}){
                 {isSL&&awayForm.length>0&&<FormStrip form={awayForm.slice(-5)}/>}
               </div>
             </div>
-            <OddsRow matchId={m.id} compact/>
+            {!m.postponed&&<OddsRow matchId={m.id} compact/>}
             <button onClick={()=>{setView('h2h');setH2hMatch(m.id)}}
               style={{marginTop:8,width:'100%',padding:'5px',borderRadius:7,
                 border:'1px solid '+LINE,background:'rgba(255,255,255,.04)',
