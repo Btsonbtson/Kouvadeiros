@@ -19,17 +19,32 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
-          node-version: '22'
+          node-version: '24'
       - name: Check Cloudflare credentials
+        id: creds
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
         run: |
           if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
-            echo "::error::Need CLOUDFLARE_API_TOKEN and CF_ACCOUNT_ID in repo Actions secrets."
+            {
+              echo "## Worker deploy blocked — missing GitHub Actions secrets"
+              echo ""
+              echo "Add these under **Settings → Secrets and variables → Actions**:"
+              echo ""
+              echo "| Name | Where to get it |"
+              echo "|------|-----------------|"
+              echo "| \`CLOUDFLARE_API_TOKEN\` | Cloudflare → My Profile → API Tokens → Create Token → template **Edit Cloudflare Workers** |"
+              echo "| \`CF_ACCOUNT_ID\` | Cloudflare dashboard URL / Workers overview (32-char hex) |"
+              echo ""
+              echo "Then re-run **Actions → Deploy Worker → Run workflow** on \`main\`."
+              echo ""
+              echo "Until the Worker redeploys, \`/login\` may return Cloudflare 1101 and the app cannot sign in."
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "::error::Missing CLOUDFLARE_API_TOKEN and/or CF_ACCOUNT_ID in repo Actions secrets. See job summary for how to add them."
             exit 1
           fi
           echo "CF_ACCOUNT_ID length: ${#CLOUDFLARE_ACCOUNT_ID}"
@@ -39,3 +54,13 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+      - name: Verify ping
+        run: |
+          sleep 3
+          curl -fsS 'https://kouvadeiros-api.jboikos.workers.dev/ping' | tee /tmp/ping.json
+          python3 - <<'PY'
+          import json
+          d=json.load(open('/tmp/ping.json'))
+          assert d.get('ok') is True, d
+          print('Worker OK version=', d.get('version'))
+          PY
