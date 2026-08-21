@@ -55,12 +55,13 @@ export const TEAMS = {
 //        PAOK, LEV(ΛΕΒΑΔΕΙΑΚΟΣ), ARI(ΑΡΗΣ)
 
 export const SUPER_LEAGUE = [
-  // ── 1η Αγωνιστική ── (ώρες: Super League / Dnews / SportDay, 28/7/2026)
+  // ── 1η Αγωνιστική ── (ώρες: πρόγραμμα 21/8/2026)
   {id:'sl-1-1',t:'SL',md:1,home:'AEK', away:'IRA', kickoff:'2026-08-22T17:00:00Z',round:'Αγωνιστική 1'}, // Σάβ 22/8 20:00
   {id:'sl-1-2',t:'SL',md:1,home:'KAL', away:'ARI', kickoff:'2026-08-22T17:00:00Z',round:'Αγωνιστική 1'}, // Σάβ 22/8 20:00
-  {id:'sl-1-3',t:'SL',md:1,home:'OLY', away:'ATR', kickoff:'2026-08-22T19:00:00Z',round:'Αγωνιστική 1'}, // Σάβ 22/8 22:00
+  {id:'sl-1-3',t:'SL',md:1,home:'OLY', away:'ATR', kickoff:'2026-08-22T18:30:00Z',round:'Αγωνιστική 1'}, // Σάβ 22/8 21:30
   {id:'sl-1-4',t:'SL',md:1,home:'OFI', away:'VOL', kickoff:'2026-08-23T16:30:00Z',round:'Αγωνιστική 1'}, // Κυρ 23/8 19:30
-  {id:'sl-1-5',t:'SL',md:1,home:'PAO', away:'KIF', kickoff:'2026-08-23T18:00:00Z',round:'Αγωνιστική 1'}, // Κυρ 23/8 21:00
+  // Παναθηναϊκός–Κηφισιά: αναβολή · χωρίς tip / χωρίς DQ
+  {id:'sl-1-5',t:'SL',md:1,home:'PAO', away:'KIF', kickoff:'2026-08-23T18:00:00Z',round:'Αγωνιστική 1', postponed:true, timeTbd:true},
   {id:'sl-1-6',t:'SL',md:1,home:'PNE', away:'AST', kickoff:'2026-08-23T18:30:00Z',round:'Αγωνιστική 1'}, // Κυρ 23/8 21:30
   {id:'sl-1-7',t:'SL',md:1,home:'PAOK',away:'LEV', kickoff:'2026-08-23T18:00:00Z',round:'Αγωνιστική 1'}, // Κυρ 23/8 21:00
 
@@ -439,6 +440,8 @@ export function scoreMatch(pred, actual, opts = {}) {
  * Missing tip → −1 DQ only if someone else tipped (match counted in the league).
  */
 export function scorePlayerMatch(match, pred, actual, predictions, fixtures, playerId) {
+  // Postponed fixtures never score and never DQ
+  if (match?.postponed) return null
   if (actual == null) return null
   if (isMissingTip(pred)) {
     if (!matchHadAnyTip(predictions, match?.id)) return null
@@ -645,7 +648,7 @@ export function formatLiveClock(live, match, now = Date.now()) {
 const TZ = 'Europe/Athens'
 const timeOpts = { timeZone:TZ, hour:'2-digit', minute:'2-digit', hour12:false }
 export const grTime  = iso => new Date(iso).toLocaleTimeString('el-GR', timeOpts)
-export const grKick  = m => m?.timeTbd ? 'Ώρα TBA' : grTime(m.kickoff)
+export const grKick  = m => m?.postponed ? 'ΑΝΑΒΛΗΘΗΚΕ' : m?.timeTbd ? 'Ώρα TBA' : grTime(m.kickoff)
 export const grShort = iso => new Date(iso).toLocaleDateString('el-GR',  { timeZone:TZ, day:'numeric', month:'short' })
 export const grDate  = iso => new Date(iso).toLocaleDateString('el-GR',  { timeZone:TZ, weekday:'short', day:'numeric', month:'short' })
 export const nowGR   = ()  => new Date().toLocaleTimeString('el-GR', timeOpts)
@@ -725,6 +728,8 @@ export function applyKickoffOverrides(fixtures = [], overrides = null) {
       ...m,
       kickoff: o.kickoff,
       timeTbd: o.timeTbd === true,
+      // Setting a real kickoff clears postponement
+      postponed: o.timeTbd === true ? !!m.postponed : false,
     }
   })
 }
@@ -767,9 +772,9 @@ export function inLiveScoreBand(iso, now = Date.now()) {
   return minsAfter >= -LIVE_WARMUP_MIN && minsAfter <= LIVE_AFTER_MIN
 }
 
-/** Fixture has a real kickoff (not TBA / TBD) — used by ΠΡΟΓΡΑΜΜΑ gates */
+/** Fixture has a real kickoff (not TBA / TBD / postponed) — used by ΠΡΟΓΡΑΜΜΑ gates */
 export function isSchedulableFixture(m) {
-  if (!m?.kickoff || m.timeTbd) return false
+  if (!m?.kickoff || m.timeTbd || m.postponed) return false
   const home = m.home ?? m.homeTeam
   const away = m.away ?? m.awayTeam
   return home !== 'TBD' && away !== 'TBD'
