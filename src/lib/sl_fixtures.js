@@ -6,14 +6,14 @@
 //        PAOK, LEV(ΛΕΒΑΔΕΙΑΚΟΣ), ARI(ΑΡΗΣ)
 
 export const SUPER_LEAGUE = [
-  // ── 1η Αγωνιστική ──
-  {id:'sl-1-1',t:'SL',md:1,home:'AEK', away:'IRA', kickoff:'2026-08-22T17:00:00Z',round:'Αγωνιστική 1'},
-  {id:'sl-1-2',t:'SL',md:1,home:'KAL', away:'ARI', kickoff:'2026-08-22T17:00:00Z',round:'Αγωνιστική 1'},
-  {id:'sl-1-3',t:'SL',md:1,home:'OLY', away:'ATR', kickoff:'2026-08-22T17:00:00Z',round:'Αγωνιστική 1'},
-  {id:'sl-1-4',t:'SL',md:1,home:'OFI', away:'VOL', kickoff:'2026-08-22T17:00:00Z',round:'Αγωνιστική 1'},
-  {id:'sl-1-5',t:'SL',md:1,home:'PAO', away:'KIF', kickoff:'2026-08-22T17:00:00Z',round:'Αγωνιστική 1'},
-  {id:'sl-1-6',t:'SL',md:1,home:'PNE', away:'AST', kickoff:'2026-08-22T17:00:00Z',round:'Αγωνιστική 1'},
-  {id:'sl-1-7',t:'SL',md:1,home:'PAOK',away:'LEV', kickoff:'2026-08-22T17:00:00Z',round:'Αγωνιστική 1'},
+  // ── 1η Αγωνιστική ── (ώρες: πρόγραμμα 21/8/2026)
+  {id:'sl-1-1',t:'SL',md:1,home:'AEK', away:'IRA', kickoff:'2026-08-22T17:00:00Z',round:'Αγωνιστική 1'}, // Σάβ 22/8 20:00
+  {id:'sl-1-2',t:'SL',md:1,home:'KAL', away:'ARI', kickoff:'2026-08-22T17:00:00Z',round:'Αγωνιστική 1'}, // Σάβ 22/8 20:00
+  {id:'sl-1-3',t:'SL',md:1,home:'OLY', away:'ATR', kickoff:'2026-08-22T18:30:00Z',round:'Αγωνιστική 1'}, // Σάβ 22/8 21:30
+  {id:'sl-1-4',t:'SL',md:1,home:'OFI', away:'VOL', kickoff:'2026-08-23T16:30:00Z',round:'Αγωνιστική 1'}, // Κυρ 23/8 19:30
+  {id:'sl-1-5',t:'SL',md:1,home:'PAO', away:'KIF', kickoff:'2026-08-23T18:00:00Z',round:'Αγωνιστική 1', postponed:true, timeTbd:true},
+  {id:'sl-1-6',t:'SL',md:1,home:'PNE', away:'AST', kickoff:'2026-08-23T18:30:00Z',round:'Αγωνιστική 1'}, // Κυρ 23/8 21:30
+  {id:'sl-1-7',t:'SL',md:1,home:'PAOK',away:'LEV', kickoff:'2026-08-23T18:00:00Z',round:'Αγωνιστική 1'}, // Κυρ 23/8 21:00
 
   // ── 2η Αγωνιστική ──
   {id:'sl-2-1',t:'SL',md:2,home:'AST', away:'OLY', kickoff:'2026-08-29T17:00:00Z',round:'Αγωνιστική 2'},

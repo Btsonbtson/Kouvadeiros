@@ -168,12 +168,12 @@ const MATCHES = [
   // ΠΑΟ–Hradec UECL PO: Πέμ 20/8 21:30 · Πέμ 27/8 20:00
   { id: 'uecl-pao-5', kickoff: '2026-08-20T18:30:00Z', label: 'ΠΑΟ vs Hradec', espnLeague: 'uefa.europa.conf', homeTeam: 'Panathinaikos', awayTeam: 'Hradec Kralove' },
   { id: 'uecl-pao-6', kickoff: '2026-08-27T17:00:00Z', label: 'Hradec vs ΠΑΟ', espnLeague: 'uefa.europa.conf', homeTeam: 'Hradec Kralove', awayTeam: 'Panathinaikos' },
-  // Super League MD1 (Dnews / Super League, 28/7/2026)
+  // Super League MD1 (πρόγραμμα 21/8/2026)
   { id: 'sl-1-1', kickoff: '2026-08-22T17:00:00Z', label: 'ΑΕΚ vs ΗΡΑ', espnLeague: 'gre.1', homeTeam: 'AEK Athens', awayTeam: 'Iraklis' },
   { id: 'sl-1-2', kickoff: '2026-08-22T17:00:00Z', label: 'ΚΑΛ vs ΑΡΗΣ', espnLeague: 'gre.1', homeTeam: 'Kalamata', awayTeam: 'Aris' },
-  { id: 'sl-1-3', kickoff: '2026-08-22T19:00:00Z', label: 'ΟΛΥ vs ΑΤΡ', espnLeague: 'gre.1', homeTeam: 'Olympiacos', awayTeam: 'Atromitos' },
+  { id: 'sl-1-3', kickoff: '2026-08-22T18:30:00Z', label: 'ΟΛΥ vs ΑΤΡ', espnLeague: 'gre.1', homeTeam: 'Olympiacos', awayTeam: 'Atromitos' },
   { id: 'sl-1-4', kickoff: '2026-08-23T16:30:00Z', label: 'ΟΦΗ vs ΒΟΛ', espnLeague: 'gre.1', homeTeam: 'OFI', awayTeam: 'Volos' },
-  { id: 'sl-1-5', kickoff: '2026-08-23T18:00:00Z', label: 'ΠΑΟ vs ΚΗΦ', espnLeague: 'gre.1', homeTeam: 'Panathinaikos', awayTeam: 'AE Kifisia' },
+  { id: 'sl-1-5', kickoff: '2026-08-23T18:00:00Z', label: 'ΠΑΟ vs ΚΗΦ', espnLeague: 'gre.1', homeTeam: 'Panathinaikos', awayTeam: 'AE Kifisia', postponed: true, timeTbd: true },
   { id: 'sl-1-6', kickoff: '2026-08-23T18:30:00Z', label: 'ΠΝΕ vs ΑΣΤ', espnLeague: 'gre.1', homeTeam: 'Panetolikos', awayTeam: 'Asteras Tripolis' },
   { id: 'sl-1-7', kickoff: '2026-08-23T18:00:00Z', label: 'ΠΑΟΚ vs ΛΕΒ', espnLeague: 'gre.1', homeTeam: 'PAOK', awayTeam: 'Levadiakos' },
 ]
@@ -183,9 +183,9 @@ const REMIND_TARGETS = [30, 20]
 /** Lock + reveal all predictions (minutes before kickoff) */
 const LOCK_TARGET = 15
 
-/** Real kickoff (not TBA) — same rules as ΠΡΟΓΡΑΜΜΑ / src/lib/data.js */
+/** Real kickoff (not TBA / postponed) — same rules as ΠΡΟΓΡΑΜΜΑ / src/lib/data.js */
 function isSchedulableMatch(m) {
-  if (!m?.kickoff || m.timeTbd) return false
+  if (!m?.kickoff || m.timeTbd || m.postponed) return false
   const home = m.homeTeam || m.home
   const away = m.awayTeam || m.away
   return home !== 'TBD' && away !== 'TBD'
@@ -1158,7 +1158,7 @@ export default {
       if (match) {
         const minsUntil = (new Date(match.kickoff).getTime() - Date.now()) / 60000
         const adminForce = user.role === 'admin' && !!playerId
-        if (!match.timeTbd && minsUntil <= LOCK_TARGET && !adminForce) {
+        if (!match.timeTbd && !match.postponed && minsUntil <= LOCK_TARGET && !adminForce) {
           return json({ error: 'Predictions locked (15′ before kickoff)' }, 403)
         }
       }
