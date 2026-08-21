@@ -487,7 +487,7 @@ export function buildUpcomingChallenges(allMatches, state, users, ymd, seed = 0)
     (m) => `ALARM!!! ${m.label} · tips ή χάος`,
     (m) => `THE FIXTURE FROM HELL… ${m.label}. Προφήτες στο εδώλιο!!!`,
     (m) => `${compTag(m)} CALLING… ${m.label}. Ποιος θα απαντήσει πρώτος;`,
-    (m) => `ΣΤΟ ΜΑΤΙ · ${m.label}. Χωρίς έλεος, χωρίς επανάληψη.`,
+    (m) => `ΣΤΟ ΜΑΤΙ · ${m.label}. Χωρίς έλεος.`,
     (m) => `ΚΛΕΙΔΩΣΕ TIP · ${m.label} πριν σε κλειδώσει ο Κουβάς!!!`,
   ]
 
@@ -1055,7 +1055,7 @@ function pickHeadlines(ranking, matchRows, round = 0, seasonRows = [], upcoming 
       equalBilling: 'Boikos · Mavromichalis · Chousiadas — ίσο μερίδιο, ίσο δηλητήριο',
       rumors: buildRumors([], round || 0, []),
       frontTeasers: [
-        '⚖️ ΙΣΗ ΚΑΛΥΨΗ: Boikos · Mavromichalis · Chousiadas',
+        'Boikos · Mavromichalis · Chousiadas — και οι τρεις στο στόχαστρο',
         'FANS FRONT PAGE · ακόμα κι αν σήμερα είναι κενό… τα επόμενα σε κυνηγάνε!!!',
         ...(upcoming?.[0] ? [`⏭ Επόμενο: ${upcoming[0].label}`] : []),
       ].slice(0, 3),
@@ -1088,9 +1088,9 @@ function pickHeadlines(ranking, matchRows, round = 0, seasonRows = [], upcoming 
 
   const splashPool = [
     tableSplash,
-    `ΙΣΗ ΚΑΛΥΨΗ: ${names.toUpperCase()}`,
     `ΚΑΝΕΙΣ ΑΘΩΟΣ — ${ranking.map((p) => p.name.toUpperCase()).join(' / ')}`,
     `ΤΡΕΙΣ ΠΡΟΦΗΤΕΣ · ${ranking.map((p) => `${p.pts}ΠΤ`).join(' · ')}`,
+    `${names.toUpperCase()} — όλοι στο ίδιο δηλητήριο`,
   ]
   const splash = dqPoison ? dqPoison.splash : splashPool[(seed >> 4) % splashPool.length]
 
@@ -1232,7 +1232,7 @@ function pickHeadlines(ranking, matchRows, round = 0, seasonRows = [], upcoming 
       captions[p.id] = pickFrom(
         [
           `${p.name} (${p.pts}πτ) — πάτος σήμερα!!! ${others} χαμογελούν. Το μπέργκερ σε περιμένει...`,
-          `${p.name} στο μηδενικό κλίμα (${p.pts}). Ίση κάλυψη: ίση ντροπή!!!`,
+          `${p.name} στο μηδενικό κλίμα (${p.pts}). Ίση ντροπή για όλους!!!`,
           `${p.name} έκλεισε τελευταίος (${p.pts})... Ο Κουβάς δεν κάνει εξαιρέσεις. Ποτέ.`,
         ],
         seed + i,
@@ -1281,7 +1281,7 @@ function pickHeadlines(ranking, matchRows, round = 0, seasonRows = [], upcoming 
     .join(' · ')
 
   const frontTeasers = [
-    `⚖️ ΙΣΗ ΚΑΛΥΨΗ: ${equalBilling}`,
+    equalBilling,
     pickFrom(
       dqPoison
         ? [
@@ -1295,7 +1295,7 @@ function pickHeadlines(ranking, matchRows, round = 0, seasonRows = [], upcoming 
             'FANS FRONT PAGE: διάβασε, θύμωσε, βάλε tip — ή μείνε ΝΤΟΝΑΤ!!!',
             'Το φύλλο των φιλάθλων… όχι των ευγενών. Welcome to the madhouse.',
             'Αν δεν σε έθιξε αυτό το φύλλο — δεν διάβασες αρκετά!!!',
-            'Μέσα: λίγα ματς μπροστά, λίγοι διαγκωνισμοί, μηδέν επανάληψη. Πάμε.',
+            'Μέσα: λίγα ματς μπροστά, λίγοι διαγκωνισμοί. Πάμε.',
           ],
       seed >> 17,
     ),
@@ -1794,7 +1794,7 @@ function renderHtml({ ymd, editionDate, headlines, ledger, seasonRows, timeline,
     </aside>
 
     <div class="fans-rail">⚽ FANS FRONT PAGE · tips · διαγκωνισμοί · upcoming insults · χωρίς έλεος</div>
-    <div class="fans-rail" style="background:#000;color:var(--yell)">⚖️ ΙΣΗ ΚΑΛΥΨΗ · ${esc(headlines.equalBilling || (ledger.ranking || []).map((p) => p.name).join(' · '))}</div>
+    <div class="fans-rail" style="background:#000;color:var(--yell)">${esc(headlines.equalBilling || (ledger.ranking || []).map((p) => p.name).join(' · '))}</div>
     ${frontList ? `<section class="teaser-box"><h2>ΣΤΟΠ · ΔΙΑΒΑΣΕ ΠΡΩΤΑ</h2><ul class="straps">${frontList}</ul></section>` : ''}
 
     <section class="block">
@@ -1803,7 +1803,7 @@ function renderHtml({ ymd, editionDate, headlines, ledger, seasonRows, timeline,
     </section>
 
     <section class="block alt">
-      <h2>🌶️ Διαγκωνισμοί · από την εφαρμογή</h2>
+      <h2>🌶️ Διαγκωνισμοί</h2>
       <ul class="straps">${rivalryList || '<li>Ακόμα λίγα δεδομένα… παίξτε κι άλλο!!!</li>'}</ul>
       <h2 style="margin-top:14px">Ενεργές διοργανώσεις</h2>
       ${campaignHtml || '<p class="credit">Καμπάνιες σε αναμονή.</p>'}
@@ -1851,7 +1851,7 @@ function renderHtml({ ymd, editionDate, headlines, ledger, seasonRows, timeline,
 
     <div class="split">
       <div class="col">
-        <h2>ΜΕΣΑ · χωρίς επανάληψη</h2>
+        <h2>ΜΕΣΑ</h2>
         <ul class="straps">${straps}</ul>
         <h2 style="margin-top:14px">Η ΕΞΟΝΤΩΣΗ</h2>
         ${roasts}
@@ -1949,7 +1949,7 @@ function renderWhatsApp({ editionDate, headlines, ledger, seasonRows, upcoming =
     `*Ο ΚΟΥΒΑΣ* · FANS FRONT PAGE · γύρος ${round + 1} !!!\n_${editionDate}_\n\n` +
     `*${headlines.yell || ''} ${headlines.splash}*\n` +
     `${headlines.kicker}\n\n` +
-    `⚖️ *ΙΣΗ ΚΑΛΥΨΗ:* ${equalLine}\n\n` +
+    `*${equalLine}*\n\n` +
     `${headlines.quote}\n\n` +
     dqShame +
     rumorBlock +
