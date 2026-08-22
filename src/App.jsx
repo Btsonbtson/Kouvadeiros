@@ -92,6 +92,7 @@ const SEEDED_RES={
   // Super League MD1 · 22/8/2026
   'sl-1-1':{h:4,a:0}, // AEK–IRA
   'sl-1-2':{h:2,a:3}, // KAL–ARI
+  'sl-1-3':{h:1,a:0}, // OLY–ATR
 }
 
 function isUEFATie(id){return UEFA_FIXTURES.some(f=>f.id===id)}

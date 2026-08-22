@@ -1,5 +1,5 @@
 /**
- * Smoke: SL MD1 FT locks AEK–IRA 4–0 · KAL–ARI 2–3 + tip points.
+ * Smoke: SL MD1 FT locks AEK–IRA 4–0 · KAL–ARI 2–3 · OLY–ATR 1–0 + tip points.
  * Optional: KOUV_TOKEN or live login to score against KV tips.
  * Run: node scripts/smoke-sl-md1-results.mjs
  */
@@ -15,10 +15,11 @@ import {
 } from '../src/lib/data.js'
 import { FALLBACK_RESULTS } from '../worker/newspaper.js'
 
-const MATCHES = ['sl-1-1', 'sl-1-2']
+const MATCHES = ['sl-1-1', 'sl-1-2', 'sl-1-3']
 const EXPECTED = {
   'sl-1-1': { h: 4, a: 0 },
   'sl-1-2': { h: 2, a: 3 },
+  'sl-1-3': { h: 1, a: 0 },
 }
 const API = process.env.KOUV_API || 'https://kouvadeiros-api.jboikos.workers.dev'
 
