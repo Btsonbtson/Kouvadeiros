@@ -1,5 +1,6 @@
 /**
  * Smoke: SL MD1 FT locks AEK–IRA 4–0 · KAL–ARI 2–3 · OLY–ATR 1–0 + tip points.
+ * Official Sat day totals: Chousiadas +3 · Mavromichalis +2 · Boikos +2.
  * Optional: KOUV_TOKEN or live login to score against KV tips.
  * Run: node scripts/smoke-sl-md1-results.mjs
  */
@@ -13,14 +14,16 @@ import {
   scorePlayerMatch,
   computeLeaderboard,
 } from '../src/lib/data.js'
-import { FALLBACK_RESULTS } from '../worker/newspaper.js'
+import { EDITION_HEADLINE_OVERRIDES, FALLBACK_RESULTS } from '../worker/newspaper.js'
 
 const MATCHES = ['sl-1-1', 'sl-1-2', 'sl-1-3']
-const EXPECTED = {
+const EXPECTED_FT = {
   'sl-1-1': { h: 4, a: 0 },
   'sl-1-2': { h: 2, a: 3 },
   'sl-1-3': { h: 1, a: 0 },
 }
+/** Official Saturday MD1 day points (three FT matches). */
+const EXPECTED_DAY = { chousiadas: 3, mavromichalis: 2, boikos: 2 }
 const API = process.env.KOUV_API || 'https://kouvadeiros-api.jboikos.workers.dev'
 
 const { results } = applyTipResultLocks({})
@@ -28,7 +31,7 @@ const { results } = applyTipResultLocks({})
 console.log('=== FT locks ===')
 for (const id of MATCHES) {
   const r = results[id] || FALLBACK_RESULTS[id]
-  const exp = EXPECTED[id]
+  const exp = EXPECTED_FT[id]
   console.log(id, r)
   if (!r || r.h !== exp.h || r.a !== exp.a) throw new Error(`lock mismatch ${id}`)
   if (!TIP_RESULT_LOCKS[id] || TIP_RESULT_LOCKS[id].h !== exp.h) {
@@ -38,6 +41,17 @@ for (const id of MATCHES) {
     throw new Error(`FALLBACK_RESULTS missing ${id}`)
   }
 }
+
+const forced = EDITION_HEADLINE_OVERRIDES['2026-08-22']
+if (!forced) throw new Error('missing 2026-08-22 headline override')
+if (!/CHOUSIADAS \+3/i.test(forced.splash)) throw new Error('splash mismatch')
+if (!/\+3/.test(forced.kicker) || !/\+2/.test(forced.kicker)) throw new Error('kicker points mismatch')
+if (!/ΑΕΚ 4–0/.test(forced.kicker) || !/ΟΛΥΜΠΙΑΚΟΣ 1–0/.test(forced.kicker)) {
+  throw new Error('kicker scoreline mismatch')
+}
+console.log('\n=== Ο Κουβάς 22/8 override ===')
+console.log(forced.yell, '|', forced.splash)
+console.log(forced.kicker)
 
 async function fetchLivePredictions() {
   let token = process.env.KOUV_TOKEN || ''
@@ -99,17 +113,23 @@ for (const m of fixtures) {
   }
 }
 
-console.log('\n=== Day totals (these two matches) ===')
-for (const p of PLAYERS) console.log(`${PLAYER_NAMES[p]}: ${day[p]}`)
+console.log('\n=== Day totals (Sat MD1 FT) ===')
+for (const p of PLAYERS) console.log(`${PLAYER_NAMES[p]}: ${day[p]} (expected ${EXPECTED_DAY[p]})`)
 
 if (livePreds && anyTip) {
+  for (const p of PLAYERS) {
+    if (day[p] !== EXPECTED_DAY[p]) {
+      throw new Error(`${p} day pts ${day[p]} != expected ${EXPECTED_DAY[p]}`)
+    }
+  }
   const board = computeLeaderboard(ALL_FIXTURES, predictions, results)
   console.log('\n=== Season board (locks + live/seeded tips) ===')
   for (const row of board) {
     console.log(row.rank, PLAYER_NAMES[row.player], row.pts, `exact=${row.exact}`, `dq=${row.dq}`)
   }
+  console.log('\nOK — FT locks + live day points match Chousiadas 3 / Mavro 2 / Boikos 2')
 } else if (!livePreds) {
-  console.log('\nOK — FT locks only (redeploy Worker + set KOUV_TOKEN to score live tips)')
+  console.log('\nOK — FT locks + Ο Κουβάς override (redeploy Worker to verify live day pts)')
 } else {
   console.log('\nOK — FT locks; no tips filed yet for these matches (no DQ until someone tips)')
 }
