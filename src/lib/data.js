@@ -517,6 +517,9 @@ export const TIP_RESULT_LOCKS = {
   'uel-ofi-1': { h: 3, a: 0 },
   'uecl-pao-5': { h: 2, a: 2 },
   'uecl-paok-1': { h: 1, a: 1 },
+  // Super League MD1 · 22/8/2026
+  'sl-1-1': { h: 4, a: 0 }, // AEK–IRA
+  'sl-1-2': { h: 2, a: 3 }, // KAL–ARI
 }
 
 /**
