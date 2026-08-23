@@ -25,7 +25,7 @@ export default function Login({ onLogin }) {
         try { await api.savePhone(phone) } catch {}
       }
       storeToken(user.token); storeUser({...user, phone: user.phone || phone}); onLogin({...user, phone: user.phone || phone})
-    } catch { setError('Λάθος email ή κωδικός') }
+    } catch { setError('Λάθος email ή κωδικός — ή ο server είναι κάτω') }
     finally { setLoading(false) }
   }
 

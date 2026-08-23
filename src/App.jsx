@@ -1,4 +1,4 @@
-// KOUVADEIROS v7 — build 2026-07-26
+// KOUVADEIROS v7 — build 2026-08-23 (Pages seeds + offline login fallback)
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { api, clearAuth, storeUser } from './lib/api'
 import {
@@ -1060,16 +1060,31 @@ export default function App({ user, onLogout }) {
       setPipelineHints(wantLive ? pipe.hints : {})
       setState({
         ...s,
+        // Always re-apply seeds so missing Chousiadas (etc.) tips never become false DQ
         predictions: mergeSeededPredictions(s.predictions),
         results: applyTipResultLocks({ ...SEEDED_RES, ...s.results }).results,
       })
-      setSyncOk(true)
+      setSyncOk(!s.offline)
       api.getSlStandings().then(d=>{
         if(d?.teams?.length) setState(prev=>({...prev,slStandings:d.teams}))
       }).catch(()=>{})
-    } catch { setSyncOk(false) }
+    } catch {
+      setSyncOk(false)
+      // Worker down / session flaky — keep UI usable with seeds + locked results
+      setState(prev => ({
+        ...prev,
+        predictions: mergeSeededPredictions(prev.predictions),
+        results: applyTipResultLocks({ ...SEEDED_RES, ...(prev.results || {}) }).results,
+      }))
+    }
     finally { setLoading(false) }
   },[pullPipelineScores])
+
+  // Belt-and-suspenders: every render sees seeded tips (KV blanks never wipe admin late tips)
+  const predictions = useMemo(
+    () => mergeSeededPredictions(state.predictions),
+    [state.predictions],
+  )
 
   // Live scores/results poll ONLY while a match is on (15′ warm-up → +200′). Idle = rare state sync.
   useEffect(()=>{
@@ -1172,10 +1187,10 @@ export default function App({ user, onLogout }) {
 
   const pc = PC[user.id] || PC.boikos
   const pages={
-    matchday:<MatchdayPage fixtures={fixtures} predictions={state.predictions} results={state.results} scoringResults={scoringResults} onRefresh={load} currentUser={user} revealed={state.revealed} onSave={savePrediction} liveScores={liveScores} pipelineHints={pipelineHints} slStandings={state.slStandings}/>,
-    league:  <LeaguePage   predictions={state.predictions} results={scoringResults} thavmaStats={state.thavmaStats}/>,
+    matchday:<MatchdayPage fixtures={fixtures} predictions={predictions} results={state.results} scoringResults={scoringResults} onRefresh={load} currentUser={user} revealed={state.revealed} onSave={savePrediction} liveScores={liveScores} pipelineHints={pipelineHints} slStandings={state.slStandings}/>,
+    league:  <LeaguePage   predictions={predictions} results={scoringResults} thavmaStats={state.thavmaStats}/>,
     schedule: <SchedulePage fixtures={fixtures} slStandings={state.slStandings}/>,
-    history: <HistoryPage  predictions={state.predictions} results={scoringResults}/>,
+    history: <HistoryPage  predictions={predictions} results={scoringResults}/>,
     banter:  <BanterPage   chat={state.chat} onSend={sendChat} onRead={markChatRead}/>,
   }
 
@@ -1357,7 +1372,7 @@ export default function App({ user, onLogout }) {
             height: screen==='banter' ? '100%' : undefined,
           }}>
             <div style={{position: screen==='banter' ? 'relative' : 'sticky', top: screen==='banter' ? undefined : 24, alignSelf:'start'}}>
-              <LeaderSidebar predictions={state.predictions} results={scoringResults}/>
+              <LeaderSidebar predictions={predictions} results={scoringResults}/>
             </div>
             <div style={{minWidth:0, display: screen==='banter' ? 'flex' : undefined, flexDirection:'column', minHeight: screen==='banter' ? 0 : undefined, flex: screen==='banter' ? 1 : undefined}}>
               {pages[screen]}
@@ -1381,10 +1396,10 @@ export default function App({ user, onLogout }) {
       >
         {screen!=='banter' && (
           <div style={{padding:'8px 16px 0'}}>
-            <LeaderSidebar predictions={state.predictions} results={scoringResults} compact/>
+            <LeaderSidebar predictions={predictions} results={scoringResults} compact/>
             <div style={{background:'rgba(8,9,13,.40)',backdropFilter:'blur(8px)',borderRadius:12,padding:'10px 12px',marginTop:6,border:'1px solid rgba(255,255,255,.10)'}}>
               <div style={{fontSize:10,fontWeight:700,letterSpacing:'.08em',textTransform:'uppercase',color:'rgba(255,255,255,.45)',marginBottom:6}}>📈 Εξέλιξη Διαγωνισμού</div>
-              <H2HGraph predictions={state.predictions} results={scoringResults}/>
+              <H2HGraph predictions={predictions} results={scoringResults}/>
             </div>
           </div>
         )}
