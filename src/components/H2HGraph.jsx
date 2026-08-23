@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { ALL_FIXTURES, PLAYERS, PLAYER_NAMES, scorePlayerMatch } from '../lib/data'
+import { ALL_FIXTURES, PLAYERS, PLAYER_NAMES, buildPointsTimeline } from '../lib/data'
 
 const PC = {
   boikos:        { color:'#ff2244', glow:'#ff224460', area:'#ff224415', dash:'none'    },
@@ -8,32 +8,6 @@ const PC = {
 }
 // Z-order: draw Boikos last so it's always on top
 const DRAW_ORDER = ['mavromichalis','chousiadas','boikos']
-
-function buildTimeline(predictions, results) {
-  const played = ALL_FIXTURES
-    .filter(m => results?.[m.id] != null)
-    .sort((a,b) => new Date(a.kickoff) - new Date(b.kickoff))
-  if (!played.length) return { events:[], maxPts:0, final:null }
-  let cum = { boikos:0, mavromichalis:0, chousiadas:0 }
-  const events = played.map(m => {
-    const actual = results[m.id]
-    const label  = (m.home||'?').substring(0,3)+' vs '+(m.away||'?').substring(0,3)
-    PLAYERS.forEach(p => {
-      const sc = scorePlayerMatch(m, predictions?.[m.id]?.[p], actual, predictions, ALL_FIXTURES, p)
-      cum[p] += sc?.points ?? 0
-    })
-    return {
-      id:m.id, label, pts:{...cum},
-      scores: Object.fromEntries(PLAYERS.map(p=>[p,{
-        pred: predictions?.[m.id]?.[p],
-        sc:   scorePlayerMatch(m, predictions?.[m.id]?.[p], actual, predictions, ALL_FIXTURES, p)
-      }])),
-      actual
-    }
-  })
-  const maxPts = Math.max(...PLAYERS.map(p=>cum[p]), 2)
-  return { events, maxPts, final:{...cum} }
-}
 
 function BurgerBg({ progress, W, H }) {
   const cx=W*0.72, cy=H*0.5
@@ -61,12 +35,12 @@ function BurgerBg({ progress, W, H }) {
 }
 
 export default function H2HGraph({ predictions, results }) {
-  const { events, maxPts, final } = buildTimeline(predictions, results)
+  const { events, maxPts, final, start } = buildPointsTimeline(ALL_FIXTURES, predictions, results)
   const [hovIdx, setHovIdx] = useState(null)
 
   const progress = events.length / Math.max(ALL_FIXTURES.length, 1)
 
-  if (!events.length) return (
+  if (!events.length && !final) return (
     <div style={{background:'#111318',border:'1px solid #ffffff0e',borderRadius:16,
       padding:'28px 20px',textAlign:'center',marginBottom:12}}>
       <div style={{fontSize:44,marginBottom:10}}>🍔</div>
@@ -75,11 +49,16 @@ export default function H2HGraph({ predictions, results }) {
     </div>
   )
 
+  // Show board even when only baseline (no post-Sat events yet)
+  if (!events.length && final) {
+    // fall through with a single baseline point
+  }
+
   const W=380, H=210
   const PAD={top:24,right:18,bottom:40,left:32}
   const gW=W-PAD.left-PAD.right, gH=H-PAD.top-PAD.bottom
-  const allPts=[{pts:{boikos:0,mavromichalis:0,chousiadas:0}},...events]
-  const N=allPts.length-1
+  const allPts=[{pts: start || {boikos:0,mavromichalis:0,chousiadas:0}},...events]
+  const N=Math.max(allPts.length-1, 1)
   const xFor=i=>PAD.left+(i/Math.max(N,1))*gW
   const yFor=v=>PAD.top+gH-(v/maxPts)*gH
 

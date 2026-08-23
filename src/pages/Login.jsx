@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react'
-import { api, storeToken, storeUser, QUICK_LOGIN, quickLocalLogin } from '../lib/api'
+import { useState } from 'react'
+import { api, storeToken, storeUser, ROSTER_CREDENTIALS, quickLocalLogin } from '../lib/api'
 
 const BG='#08090d', SURF='#111318', LINE='rgba(255,255,255,.1)'
-const GREEN='#00ff88', RED='#ff2244', MUTED='rgba(255,255,255,.4)'
+const GREEN='#00ff88', RED='#ff2244', MUTED='rgba(255,255,255,.4)', GOLD='#ffdd00'
 
 export default function Login({ onLogin }) {
   const [email, setEmail]   = useState('')
@@ -12,21 +12,6 @@ export default function Login({ onLogin }) {
   const [error,   setError]   = useState('')
   const [needsPhone, setNeedsPhone] = useState(false)
   const [pendingUser, setPendingUser] = useState(null)
-  const [workerDown, setWorkerDown] = useState(true)
-
-  useEffect(() => {
-    let cancelled = false
-    ;(async () => {
-      try {
-        const res = await fetch('https://kouvadeiros-api.jboikos.workers.dev/ping')
-        const d = await res.json()
-        if (!cancelled) setWorkerDown(!(Number(d?.version) >= 13))
-      } catch {
-        if (!cancelled) setWorkerDown(true)
-      }
-    })()
-    return () => { cancelled = true }
-  }, [])
 
   function finishLogin(user, phoneOverride) {
     const u = { ...user, phone: phoneOverride || user.phone || null }
@@ -35,7 +20,13 @@ export default function Login({ onLogin }) {
     onLogin(u)
   }
 
-  function enterAs(playerId) {
+  function fillRoster(row) {
+    setEmail(row.email)
+    setPass(row.password)
+    setError('')
+  }
+
+  async function enterAs(playerId) {
     setLoading(true); setError('')
     try {
       const user = quickLocalLogin(playerId)
@@ -65,7 +56,7 @@ export default function Login({ onLogin }) {
       setPendingUser(user)
       setNeedsPhone(true)
     } catch {
-      setError('Λάθος email ή κωδικός — ή πάτα το κουμπί Chousiadas από κάτω')
+      setError('Λάθος email ή κωδικός. Δοκίμασε τα στοιχεία κάτω από τη φόρμα.')
     } finally {
       setLoading(false)
     }
@@ -96,43 +87,15 @@ export default function Login({ onLogin }) {
         </div>
 
         <div style={{ background:SURF, border:`1px solid ${LINE}`, borderRadius:16, padding:28 }}>
-          {workerDown && (
-            <div style={{ fontSize:12, color:'#ffdd00', background:'rgba(255,221,0,.08)', border:'1px solid rgba(255,221,0,.25)', borderRadius:8, padding:'10px 12px', marginBottom:16, lineHeight:1.45, fontWeight:600 }}>
-              Server login προσωρινά down. Πάτα το όνομά σου από κάτω — μπαίνεις αμέσως.
-            </div>
-          )}
-
           {!needsPhone ? (
             <>
-              <div style={{ fontSize:12, fontWeight:700, color:MUTED, marginBottom:12, letterSpacing:'.08em', textTransform:'uppercase' }}>Γρήγορη είσοδος</div>
-              <div style={{ display:'flex', flexDirection:'column', gap:8, marginBottom:20 }}>
-                {QUICK_LOGIN.map((q) => (
-                  <button
-                    key={q.id}
-                    type="button"
-                    disabled={loading}
-                    onClick={() => enterAs(q.id)}
-                    style={{
-                      width:'100%', padding:'12px 14px', borderRadius:10, cursor:'pointer',
-                      border: q.id === 'chousiadas' ? `1px solid ${GREEN}66` : `1px solid ${LINE}`,
-                      background: q.id === 'chousiadas' ? 'rgba(0,255,136,.12)' : 'rgba(255,255,255,.04)',
-                      color: q.id === 'chousiadas' ? GREEN : '#e8e9ef',
-                      fontSize:14, fontWeight:800, letterSpacing:'.02em',
-                    }}
-                  >
-                    {q.name} →
-                  </button>
-                ))}
-              </div>
-
-              <div style={{ fontSize:11, fontWeight:700, color:MUTED, marginBottom:14, letterSpacing:'.08em', textTransform:'uppercase', textAlign:'center' }}>ή με email</div>
               <form onSubmit={handleSubmit}>
                 <div style={{ marginBottom:14 }}>
                   <div style={{ fontSize:10, fontWeight:700, color:MUTED, letterSpacing:'.08em', textTransform:'uppercase', marginBottom:7 }}>Email</div>
                   <input type="text" inputMode="email" autoCapitalize="none" autoCorrect="off" value={email} onChange={e=>setEmail(e.target.value)}
-                    placeholder="chousiadas.th@caredirect.com" autoComplete="username" required style={inp}/>
+                    placeholder="boikos.y@caredirect.com" autoComplete="username" required style={inp}/>
                 </div>
-                <div style={{ marginBottom:22 }}>
+                <div style={{ marginBottom:18 }}>
                   <div style={{ fontSize:10, fontWeight:700, color:MUTED, letterSpacing:'.08em', textTransform:'uppercase', marginBottom:7 }}>Password</div>
                   <input type="password" value={pass} onChange={e=>setPass(e.target.value)}
                     placeholder="••••" autoComplete="current-password" required style={inp}/>
@@ -142,6 +105,37 @@ export default function Login({ onLogin }) {
                   {loading ? 'Σύνδεση…' : 'Είσοδος →'}
                 </button>
               </form>
+
+              <div style={{ marginTop:22, paddingTop:18, borderTop:`1px solid ${LINE}` }}>
+                <div style={{ fontSize:10, fontWeight:700, color:MUTED, letterSpacing:'.08em', textTransform:'uppercase', marginBottom:10, textAlign:'center' }}>
+                  Πρωτότυποι κωδικοί
+                </div>
+                <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+                  {ROSTER_CREDENTIALS.map((q) => (
+                    <button
+                      key={q.id}
+                      type="button"
+                      disabled={loading}
+                      onClick={() => fillRoster(q)}
+                      onDoubleClick={() => enterAs(q.id)}
+                      style={{
+                        width:'100%', padding:'10px 12px', borderRadius:10, cursor:'pointer', textAlign:'left',
+                        border: `1px solid ${LINE}`,
+                        background: 'rgba(255,255,255,.03)',
+                        color: '#e8e9ef',
+                      }}
+                    >
+                      <div style={{ fontSize:13, fontWeight:800 }}>{q.name}</div>
+                      <div style={{ fontSize:11, color:MUTED, marginTop:2, fontFamily:'ui-monospace,monospace' }}>
+                        {q.email} · {q.password}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+                <div style={{ fontSize:10, color:GOLD, marginTop:10, textAlign:'center', lineHeight:1.4 }}>
+                  Πάτα μία φορά για συμπλήρωση · διπλό κλικ για άμεση είσοδο
+                </div>
+              </div>
             </>
           ) : (
             <>
@@ -173,7 +167,6 @@ export default function Login({ onLogin }) {
           Private · Invitation only · CareDirect FC
         </div>
       </div>
-      <style>{`@keyframes spin{to{transform:rotate(360deg);}}`}</style>
     </div>
   )
 }
