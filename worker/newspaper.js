@@ -19,6 +19,10 @@ export const FALLBACK_RESULTS = {
   'uel-ofi-1': { h: 3, a: 0 },
   'uecl-pao-5': { h: 2, a: 2 },
   'uecl-paok-1': { h: 1, a: 1 },
+  // Super League MD1 · 22/8/2026
+  'sl-1-1': { h: 4, a: 0 }, // AEK–IRA
+  'sl-1-2': { h: 2, a: 3 }, // KAL–ARI
+  'sl-1-3': { h: 1, a: 0 }, // OLY–ATR
 }
 
 const PLAYER_COLORS = {
@@ -1067,6 +1071,27 @@ export const EDITION_HEADLINE_OVERRIDES = {
       'Νύχτα ντροπής για την διοργανώτρια αρχή',
       'O tempora o mores',
       'Play-off Leg 1 · ΟΦΗ 3–0 · ΠΑΟ 2–2 · ΠΑΟΚ 1–1 — οι πόντοι μετρήθηκαν. Η ντροπή έμεινε.',
+    ],
+  },
+  // Super League MD1 Sat 22/8 — AEK 4–0 · KAL 2–3 · OLY 1–0
+  '2026-08-22': {
+    yell: 'ΠΡΩΤΗ ΑΓΩΝΙΣΤΙΚΗ!!!',
+    splash: 'CHOUSIADAS +3',
+    kicker:
+      'Chousiadas +3 · Mavromichalis +2 · Boikos +2 — ΑΕΚ 4–0 · ΚΑΛΑΜΑΤΑ 2–3 · ΟΛΥΜΠΙΑΚΟΣ 1–0.',
+    quote:
+      '«Τρεις τελικοί το Σάββατο. Ο Chousiadas φεύγει με +3· οι άλλοι δύο μοιράζονται το +2.»',
+    amok: 'ΑΜΟΚ: Πρώτη αγωνιστική — οι βαθμοί κλείδωσαν. Κυριακή έρχεται κι άλλη φωτιά.',
+    frontTeasers: [
+      'ΑΕΚ 4–0 ΗΡΑΚΛΗΣ',
+      'ΚΑΛΑΜΑΤΑ 2–3 ΑΡΗΣ',
+      'ΟΛΥΜΠΙΑΚΟΣ 1–0 ΑΤΡΟΜΗΤΟΣ',
+      'Chousiadas +3 · Mavromichalis +2 · Boikos +2',
+    ],
+    straps: [
+      'ΑΕΚ 4–0 · ΚΑΛ 2–3 · ΟΛΥ 1–0',
+      'Chousiadas +3 · Mavromichalis +2 · Boikos +2',
+      'Πρώτη αγωνιστική — οι πόντοι μετρήθηκαν.',
     ],
   },
 }
