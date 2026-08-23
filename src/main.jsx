@@ -2,7 +2,7 @@ import React, { useState, Component } from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'
 import Login from './pages/Login'
-import { getStoredUser, storeUser } from './lib/api'
+import { getStoredUser, storeUser, hasSession, clearAuth } from './lib/api'
 
 function showError(msg) {
   var el = document.getElementById('root')
@@ -44,15 +44,17 @@ class ErrorBoundary extends Component {
 }
 
 function Root() {
-  var user = getStoredUser()
-  var [u, setU] = useState(user)
+  // Require both user + token — orphan user records caused 401 reload loops on login
+  var initial = hasSession() ? getStoredUser() : null
+  if (!initial && getStoredUser()) clearAuth()
+  var [u, setU] = useState(initial)
   function handleLogin(u2) { storeUser(u2); setU(u2) }
-  function handleLogout() { setU(null) }
+  function handleLogout() { clearAuth(); setU(null) }
   if (!u) return React.createElement(Login, { onLogin: handleLogin })
   return React.createElement(App, { user: u, onLogout: handleLogout })
 }
 
-console.log('KOUVADEIROS v7 2026-07-30')
+console.log('KOUVADEIROS v7 2026-08-23 login-fix')
 
 try {
   ReactDOM.createRoot(document.getElementById('root')).render(
