@@ -12,6 +12,7 @@ import {
   SEEDED_PREDICTIONS, mergeSeededPredictions,
 } from './lib/data'
 import { mapPipelineToLiveScores } from './lib/pipelineScores'
+import { fetchClientLiveScores } from './lib/clientLiveScores'
 import { TeamLogo, TPill, PtsBadge, ScorePill, Card, SLbl, Spinner } from './components/UI'
 import H2HGraph from './components/H2HGraph'
 import Guide from './pages/Guide'
@@ -1022,13 +1023,14 @@ export default function App({ user, onLogout }) {
     if (fromOther) playChatBell()
   }, [state.chat, user?.name, user?.id])
 
-  const pullPipelineScores = useCallback(async () => {
+  const pullPipelineScores = useCallback(async (fixturesNow = ALL_FIXTURES) => {
     // Live pipeline only during match windows — not idle all day
-    if (!anyLiveScoreActivity(ALL_FIXTURES)) return { live: {}, hints: {} }
+    if (!anyLiveScoreActivity(fixturesNow)) return { live: {}, hints: {} }
     try {
-      const [livePayload, todayPayload] = await Promise.all([
+      const [livePayload, todayPayload, client] = await Promise.all([
         api.getLiveScores('live').catch(() => ({ matches: [] })),
         api.getTodayScores().catch(() => ({ matches: [] })),
+        fetchClientLiveScores(fixturesNow).catch(() => ({ live: {}, hints: {} })),
       ])
       const byExt = {}
       ;[...(livePayload.matches || []), ...(todayPayload.matches || [])].forEach(m => {
@@ -1040,9 +1042,17 @@ export default function App({ user, onLogout }) {
         if (v.final) hints[id] = v
         else live[id] = v
       })
-      return { live, hints }
+      // ESPN client fills gaps / overrides stale KV (scores Worker often weeks old)
+      return {
+        live: { ...live, ...(client.live || {}) },
+        hints: { ...hints, ...(client.hints || {}) },
+      }
     } catch {
-      return { live: {}, hints: {} }
+      try {
+        return await fetchClientLiveScores(fixturesNow)
+      } catch {
+        return { live: {}, hints: {} }
+      }
     }
   }, [])
 
@@ -1055,12 +1065,12 @@ export default function App({ user, onLogout }) {
       Object.entries(s).forEach(([k,v])=>{
         if(k.startsWith('live_')&&v) fromKv[k.replace('live_','')]=v
       })
-      const pipe = wantLive ? await pullPipelineScores() : { live: {}, hints: {} }
-      setLiveScores(wantLive ? { ...pipe.live, ...fromKv } : { ...fromKv })
+      const pipe = wantLive ? await pullPipelineScores(fixturesNow) : { live: {}, hints: {} }
+      // Client ESPN (inside pipe) wins over stale KV live_* rows
+      setLiveScores(wantLive ? { ...fromKv, ...pipe.live } : { ...fromKv })
       setPipelineHints(wantLive ? pipe.hints : {})
       setState({
         ...s,
-        // Always re-apply seeds so missing Chousiadas (etc.) tips never become false DQ
         predictions: mergeSeededPredictions(s.predictions),
         results: applyTipResultLocks({ ...SEEDED_RES, ...s.results }).results,
       })
@@ -1070,7 +1080,14 @@ export default function App({ user, onLogout }) {
       }).catch(()=>{})
     } catch {
       setSyncOk(false)
-      // Worker down / session flaky — keep UI usable with seeds + locked results
+      // Worker down — still pull ESPN live scores in the browser
+      if (opts.live !== false && anyLiveScoreActivity(ALL_FIXTURES)) {
+        try {
+          const pipe = await pullPipelineScores(ALL_FIXTURES)
+          setLiveScores(pipe.live || {})
+          setPipelineHints(pipe.hints || {})
+        } catch { /* ignore */ }
+      }
       setState(prev => ({
         ...prev,
         predictions: mergeSeededPredictions(prev.predictions),
