@@ -430,6 +430,57 @@ export function predictionsLookIncomplete(predictions) {
   return withAll < Math.ceil(withAny * 0.5)
 }
 
+export function usesPointsBaseline(predictions) {
+  return predictionsLookIncomplete(predictions)
+}
+
+/** Fixtures after Sat MD1 baseline date contribute on top of POINTS_BASELINE. */
+export function matchAfterPointsBaseline(match) {
+  if (!match?.kickoff) return false
+  return athensYmd(match.kickoff) > POINTS_BASELINE.asOfDate
+}
+
+export function startingPointsMap(predictions) {
+  if (usesPointsBaseline(predictions)) {
+    return { ...POINTS_BASELINE.pts }
+  }
+  return Object.fromEntries(PLAYERS.map((p) => [p, 0]))
+}
+
+/**
+ * Cumulative points timeline — same rules as computeLeaderboard
+ * (baseline + post-baseline fixtures when tip ledger is sparse).
+ */
+export function buildPointsTimeline(fixtures, predictions, results) {
+  const useBaseline = usesPointsBaseline(predictions)
+  const start = startingPointsMap(predictions)
+  const cum = { ...start }
+  const played = [...(fixtures || [])]
+    .filter((m) => results?.[m.id] != null)
+    .filter((m) => !useBaseline || matchAfterPointsBaseline(m))
+    .sort((a, b) => new Date(a.kickoff) - new Date(b.kickoff))
+
+  const events = played.map((m) => {
+    const actual = results[m.id]
+    const scores = {}
+    PLAYERS.forEach((p) => {
+      const sc = scorePlayerMatch(m, predictions?.[m.id]?.[p], actual, predictions, fixtures, p)
+      if (sc) cum[p] += sc.points
+      scores[p] = { pred: predictions?.[m.id]?.[p] || null, sc }
+    })
+    return {
+      id: m.id,
+      match: m,
+      label: `${(m.home || '?').substring(0, 3)} vs ${(m.away || '?').substring(0, 3)}`,
+      pts: { ...cum },
+      scores,
+      actual,
+    }
+  })
+  const maxPts = Math.max(...PLAYERS.map((p) => cum[p]), ...PLAYERS.map((p) => start[p] ?? 0), 1)
+  return { events, maxPts, final: { ...cum }, start, useBaseline }
+}
+
 function dqScore(actual) {
   return {
     exact: false,
@@ -501,10 +552,12 @@ export function scorePlayerMatch(match, pred, actual, predictions, fixtures, pla
 
 /** Per-match ledger for one player (finished fixtures only). */
 export function buildPlayerMatchLedger(fixtures, predictions, results, playerId) {
+  const useBaseline = usesPointsBaseline(predictions)
   const rows = []
   for (const m of fixtures || []) {
     const actual = results?.[m.id]
     if (actual == null) continue
+    if (useBaseline && !matchAfterPointsBaseline(m)) continue
     const pred = predictions?.[m.id]?.[playerId]
     const sc = scorePlayerMatch(m, pred, actual, predictions, fixtures, playerId)
     if (!sc) continue
@@ -664,11 +717,12 @@ export function mergeScoringResults(results = {}, liveScores = {}, finishedHints
 }
 
 export function computeLeaderboard(fixtures, predictions, results) {
-  const useBaseline = predictionsLookIncomplete(predictions)
+  const useBaseline = usesPointsBaseline(predictions)
   const t = {}
+  const start = startingPointsMap(predictions)
   PLAYERS.forEach((p) => {
     t[p] = {
-      pts: useBaseline ? (POINTS_BASELINE.pts[p] ?? 0) : 0,
+      pts: start[p] ?? 0,
       exact: 0,
       correct: 0,
       qual: 0,
@@ -679,11 +733,7 @@ export function computeLeaderboard(fixtures, predictions, results) {
   fixtures.forEach((m) => {
     const actual = results?.[m.id]
     if (actual == null) return
-    // Incomplete tip ledger: keep locked Saturday totals; only add later fixtures
-    if (useBaseline) {
-      const day = m.kickoff ? athensYmd(m.kickoff) : null
-      if (!day || day <= POINTS_BASELINE.asOfDate) return
-    }
+    if (useBaseline && !matchAfterPointsBaseline(m)) return
     PLAYERS.forEach((p) => {
       const sc = scorePlayerMatch(m, predictions?.[m.id]?.[p], actual, predictions, fixtures, p)
       if (!sc) return

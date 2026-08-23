@@ -5,7 +5,7 @@ import {
   ALL_FIXTURES, SUPER_LEAGUE, UEFA_FIXTURES,
   TEAMS, PLAYERS, PLAYER_NAMES, PCOL, getMatchOdds,
   scoreMatch, scorePlayerMatch, resolveQualTip, computeLeaderboard, mergeScoringResults, scorelineToActual,
-  buildPlayerMatchLedger, formatLiveClock,
+  buildPlayerMatchLedger, formatLiveClock, buildPointsTimeline,
   grTime, grDate, grKick, isToday, isLocked, isRevealOpen, nowGR, inLiveWindow,
   anyLiveScoreActivity, msUntilNextLiveScoreBand, inLiveScoreBand,
   applyKickoffOverrides, athensYmd, athensHm, applyTipResultLocks,
@@ -282,10 +282,9 @@ function OddsRow({matchId, compact}){
 // ─── MATCH CARD ───────────────────────────────────────────────────────────────
 
 function H2HChart({predictions,results}){
-  const played=[...ALL_FIXTURES].filter(m=>results?.[m.id]!=null)
-    .sort((a,b)=>new Date(a.kickoff)-new Date(b.kickoff))
+  const { events: timeline, maxPts, final: running } = buildPointsTimeline(ALL_FIXTURES, predictions, results)
 
-  if(played.length===0) return(
+  if(timeline.length===0) return(
     <div style={{padding:'40px 20px',textAlign:'center'}}>
       <div style={{fontSize:32,marginBottom:12}}>⚡</div>
       <div style={{fontSize:14,fontWeight:700,color:TEXT,marginBottom:6}}>Η μάχη δεν έχει αρχίσει</div>
@@ -293,23 +292,6 @@ function H2HChart({predictions,results}){
     </div>
   )
 
-  // Build cumulative points per player after each match
-  const timeline=[]
-  const running={boikos:0,mavromichalis:0,chousiadas:0}
-  played.forEach(m=>{
-    const actual=results[m.id]
-    PLAYERS.forEach(p=>{
-      const sc=scorePlayerMatch(m,predictions?.[m.id]?.[p],actual,predictions,ALL_FIXTURES,p)
-      running[p]+=(sc?.points||0)
-    })
-    timeline.push({
-      match:m,
-      pts:{...running},
-      label: TEAMS[m.home]?.abbr+'–'+TEAMS[m.away]?.abbr,
-    })
-  })
-
-  const maxPts=Math.max(...PLAYERS.map(p=>running[p]),1)
   const W=320,H=180,PAD={t:20,r:16,b:36,l:28}
   const cw=W-PAD.l-PAD.r,ch=H-PAD.t-PAD.b
   const n=timeline.length
@@ -337,7 +319,7 @@ function H2HChart({predictions,results}){
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
           <div>
             <div style={{fontSize:12,fontWeight:700,color:TEXT,marginBottom:2}}>Εξέλιξη Αγώνα</div>
-            <div style={{fontSize:10,color:MUTED}}>Σωρευτικοί πόντοι · {played.length} αγ</div>
+            <div style={{fontSize:10,color:MUTED}}>Σωρευτικοί πόντοι · {timeline.length} αγ</div>
           </div>
           {/* Live standings */}
           <div style={{display:'flex',gap:6}}>

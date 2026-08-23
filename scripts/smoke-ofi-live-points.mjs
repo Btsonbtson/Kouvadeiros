@@ -16,6 +16,7 @@ import {
   computeLeaderboard,
   predictionsLookIncomplete,
   tipCountForMatch,
+  buildPointsTimeline,
 } from '../src/lib/data.js'
 
 const predictions = mergeSeededPredictions({})
@@ -71,4 +72,11 @@ for (const p of PLAYERS) {
   }
 }
 
-console.log('\nOK — live OFI board Chousiadas 14 / Mavromichalis 8 / Boikos 8')
+const { final } = buildPointsTimeline(ALL_FIXTURES, predictions, scoring)
+for (const p of PLAYERS) {
+  if (final[p] !== expected[p]) {
+    throw new Error(`${p} timeline ${final[p]} != expected ${expected[p]}`)
+  }
+}
+
+console.log('\nOK — live OFI board + graph Chousiadas 14 / Mavromichalis 8 / Boikos 8')
