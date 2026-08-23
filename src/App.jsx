@@ -2051,7 +2051,8 @@ function MatchPredictCard({match,result,scoringActual,predictions,allPredictions
                 const shownQual=isLeg1
                   ? pred?.qual
                   : resolveQualTip(allPredictions||{},ALL_FIXTURES,match,playerKey)
-                const isDq=!!sc?.dq||(!pred&&showAllPreds&&!!actualForScore)
+                // Only show DQ from the scorer — never invent it for live/provisional or missing tips
+                const isDq=!!sc?.dq
                 return (
                   <div key={playerKey} style={{flex:1,
                     background:sc?.dq?`${RED}12`:sc?.exact?`${GREEN}15`:sc?.correct?`${GOLD}0a`:'rgba(255,255,255,.04)',
@@ -2059,7 +2060,7 @@ function MatchPredictCard({match,result,scoringActual,predictions,allPredictions
                     borderRadius:9,padding:'7px 6px',textAlign:'center',
                     opacity:isProvisional&&sc?0.92:1}}>
                     <div style={{fontSize:9,fontWeight:700,color:pc.p,marginBottom:3,letterSpacing:'.04em'}}>{PLAYER_NAMES[playerKey].substring(0,4).toUpperCase()}</div>
-                    <div style={{fontSize:13,fontWeight:800,color:TEXT,fontVariantNumeric:'tabular-nums'}}>{pred?`${pred.h}–${pred.a}`:(showAllPreds?'DQ':'–')}</div>
+                    <div style={{fontSize:13,fontWeight:800,color:TEXT,fontVariantNumeric:'tabular-nums'}}>{pred?`${pred.h}–${pred.a}`:(isDq?'DQ':'–')}</div>
                     {pred?.predOT&&typeof pred.otH==='number'&&<div style={{fontSize:9,color:GOLD,marginTop:1}}>ET {pred.otH}–{pred.otA}</div>}
                     {pred?.predPen&&typeof pred.penH==='number'&&<div style={{fontSize:9,color:RED,marginTop:1}}>ΠΕΝ {pred.penH}–{pred.penA}</div>}
                     {shownQual&&<div style={{fontSize:9,color:MUTED,marginTop:1}}>→{shownQual}</div>}

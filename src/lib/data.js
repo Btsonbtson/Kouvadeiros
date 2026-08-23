@@ -392,6 +392,44 @@ export function matchHadAnyTip(predictions, matchId) {
   return Object.values(tips).some((t) => !isMissingTip(t))
 }
 
+/** How many players filed a complete scoreline tip for this match. */
+export function tipCountForMatch(predictions, matchId) {
+  const tips = predictions?.[matchId] || {}
+  return PLAYERS.filter((p) => !isMissingTip(tips[p])).length
+}
+
+/**
+ * Locked season totals after Super League MD1 Saturday (Athens 2026-08-22).
+ * Offline / sparse seed sessions cannot rebuild the full tip ledger from KV,
+ * so the board starts here and only scores fixtures after this Athens date.
+ */
+export const POINTS_BASELINE = {
+  asOfDate: '2026-08-22',
+  pts: {
+    chousiadas: 13,
+    mavromichalis: 8,
+    boikos: 8,
+  },
+}
+
+/**
+ * True when tip history looks sparse (e.g. only admin late-tip seeds).
+ * Full Worker KV tips have (nearly) every tipped fixture filled for all three.
+ */
+export function predictionsLookIncomplete(predictions) {
+  let withAny = 0
+  let withAll = 0
+  for (const byPlayer of Object.values(predictions || {})) {
+    if (!byPlayer || typeof byPlayer !== 'object') continue
+    const n = PLAYERS.filter((p) => !isMissingTip(byPlayer[p])).length
+    if (n === 0) continue
+    withAny += 1
+    if (n >= PLAYERS.length) withAll += 1
+  }
+  if (withAny === 0) return true
+  return withAll < Math.ceil(withAny * 0.5)
+}
+
 function dqScore(actual) {
   return {
     exact: false,
@@ -437,14 +475,18 @@ export function scoreMatch(pred, actual, opts = {}) {
  * Full UEFA-aware score for one player on one fixture.
  * Leg 1: scoreline only (πρόκριση tip stored, not scored yet).
  * Leg 2: scoreline from Leg 2 tip + πρόκριση from Leg 1 tip vs result.qual.
- * Missing tip → −1 DQ only if someone else tipped (match counted in the league).
+ * Missing tip → −1 DQ only on official results when ≥2 players tipped
+ * (real no-show). Never DQ on live/provisional scorelines or sparse 1-tip seeds.
  */
 export function scorePlayerMatch(match, pred, actual, predictions, fixtures, playerId) {
   // Postponed fixtures never score and never DQ
   if (match?.postponed) return null
   if (actual == null) return null
   if (isMissingTip(pred)) {
-    if (!matchHadAnyTip(predictions, match?.id)) return null
+    // Live boards must not invent DQs while the match is still in play
+    if (actual.provisional) return null
+    // Sparse offline seeds (only one tipper) are not a league no-show
+    if (tipCountForMatch(predictions, match?.id) < 2) return null
     return dqScore(actual)
   }
   if (match?.leg === 1) {
@@ -622,24 +664,40 @@ export function mergeScoringResults(results = {}, liveScores = {}, finishedHints
 }
 
 export function computeLeaderboard(fixtures, predictions, results) {
+  const useBaseline = predictionsLookIncomplete(predictions)
   const t = {}
-  PLAYERS.forEach(p => { t[p] = { pts:0, exact:0, correct:0, qual:0, dq:0, played:0 } })
-  fixtures.forEach(m => {
+  PLAYERS.forEach((p) => {
+    t[p] = {
+      pts: useBaseline ? (POINTS_BASELINE.pts[p] ?? 0) : 0,
+      exact: 0,
+      correct: 0,
+      qual: 0,
+      dq: 0,
+      played: 0,
+    }
+  })
+  fixtures.forEach((m) => {
     const actual = results?.[m.id]
     if (actual == null) return
-    PLAYERS.forEach(p => {
+    // Incomplete tip ledger: keep locked Saturday totals; only add later fixtures
+    if (useBaseline) {
+      const day = m.kickoff ? athensYmd(m.kickoff) : null
+      if (!day || day <= POINTS_BASELINE.asOfDate) return
+    }
+    PLAYERS.forEach((p) => {
       const sc = scorePlayerMatch(m, predictions?.[m.id]?.[p], actual, predictions, fixtures, p)
       if (!sc) return
-      t[p].pts    += sc.points
+      t[p].pts += sc.points
       t[p].played += 1
-      if (sc.dq)         t[p].dq++
-      if (sc.exact)      t[p].exact++
-      if (sc.correct)    t[p].correct++
+      if (sc.dq) t[p].dq++
+      if (sc.exact) t[p].exact++
+      if (sc.correct) t[p].correct++
       if (sc.qualCorrect) t[p].qual++
     })
   })
-  return PLAYERS.slice().sort((a, b) => t[b].pts - t[a].pts)
-    .map((p, i) => ({ player: p, rank: i+1, ...t[p] }))
+  return PLAYERS.slice()
+    .sort((a, b) => t[b].pts - t[a].pts)
+    .map((p, i) => ({ player: p, rank: i + 1, ...t[p] }))
 }
 
 /** Display clock under live score — never show a fake 0'. */

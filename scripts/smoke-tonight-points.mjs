@@ -52,7 +52,7 @@ for (const m of fixtures) {
 console.log('\n=== Day totals ===')
 for (const p of PLAYERS) console.log(`${PLAYER_NAMES[p]}: ${day[p]}`)
 
-const expected = { chousiadas: 3, boikos: -3, mavromichalis: -3 }
+const expected = { chousiadas: 3, boikos: 0, mavromichalis: 0 }
 for (const p of PLAYERS) {
   if (day[p] !== expected[p]) {
     throw new Error(`${p} expected ${expected[p]} got ${day[p]}`)
