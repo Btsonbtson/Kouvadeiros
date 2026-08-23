@@ -1,20 +1,18 @@
 const BASE = (typeof __WORKER_URL__ !== 'undefined' && __WORKER_URL__)
   ? __WORKER_URL__
   : 'https://kouvadeiros-api.jboikos.workers.dev'
-/** Dedicated scores Worker (pipeline JSON). Falls back to API host if unset. */
 const SCORES_BASE = (typeof __SCORES_URL__ !== 'undefined' && __SCORES_URL__)
   ? __SCORES_URL__
   : 'https://kouvadeiros-scores.jboikos.workers.dev'
 
 /**
- * Same roster as worker/kouvadeiros-api.js BASE_USERS (+ common email aliases).
- * Used when Worker /login is down (CF 1101 / v11 hang) so players can still enter.
+ * Roster (same as Worker BASE_USERS) + aliases.
+ * While Worker login is broken (v11 / CF 1101), Pages authenticates locally.
  */
 const LOCAL_USERS = {
   'boikos.y@caredirect.com': { password: '1453', name: 'Boikos', id: 'boikos', role: 'admin' },
   'mavromichalis.y@caredirect.com': { password: '1821', name: 'Mavromichalis', id: 'mavromichalis', role: 'player' },
   'chousiadas.th@caredirect.com': { password: '1940', name: 'Chousiadas', id: 'chousiadas', role: 'player' },
-  // Aliases people actually type
   'chousiadas@caredirect.com': { password: '1940', name: 'Chousiadas', id: 'chousiadas', role: 'player' },
   'chousiadas.t@caredirect.com': { password: '1940', name: 'Chousiadas', id: 'chousiadas', role: 'player' },
 }
@@ -23,6 +21,13 @@ const LOCAL_PHONES = {
   chousiadas: '+306932662864',
   mavromichalis: '+306932851343',
 }
+
+/** Quick-enter cards on the login screen (Worker outage). */
+export const QUICK_LOGIN = [
+  { id: 'chousiadas', name: 'Chousiadas', email: 'chousiadas.th@caredirect.com', password: '1940' },
+  { id: 'boikos', name: 'Boikos', email: 'boikos.y@caredirect.com', password: '1453' },
+  { id: 'mavromichalis', name: 'Mavromichalis', email: 'mavromichalis.y@caredirect.com', password: '1821' },
+]
 
 function token() { return localStorage.getItem('kouv_token') || '' }
 export function isOfflineToken(t = token()) {
@@ -33,7 +38,7 @@ function offlineState() {
   return {
     predictions: {},
     results: {},
-    chat: [{ p: 'Boikos', t: 'Offline mode — Worker login down; tips from Pages seeds.', ts: '—', a: true }],
+    chat: [{ p: 'Boikos', t: 'Offline mode — tips from Pages seeds (Worker login down).', ts: '—', a: true }],
     phones: { ...LOCAL_PHONES },
     welcomed: {},
     revealed: {},
@@ -58,20 +63,49 @@ function localLogin(email, password) {
   }
 }
 
+/** Promote/store an offline session for a known roster id (no password). */
+export function ensureOfflineSession(userLike) {
+  const id = userLike?.id
+  if (!id || !LOCAL_PHONES[id]) return null
+  const name = userLike.name || ({ boikos: 'Boikos', mavromichalis: 'Mavromichalis', chousiadas: 'Chousiadas' })[id]
+  const role = userLike.role || (id === 'boikos' ? 'admin' : 'player')
+  const email = userLike.email || QUICK_LOGIN.find((q) => q.id === id)?.email || `${id}@caredirect.com`
+  const session = {
+    token: `local:${id}:${Date.now()}`,
+    name,
+    id,
+    email,
+    role,
+    phone: userLike.phone || LOCAL_PHONES[id],
+    offline: true,
+  }
+  storeToken(session.token)
+  storeUser(session)
+  return session
+}
+
+function abortableTimeout(ms) {
+  const ctrl = new AbortController()
+  const t = setTimeout(() => ctrl.abort(), ms)
+  return { signal: ctrl.signal, clear: () => clearTimeout(t) }
+}
+
 /** Worker v11 hangs on successful /login (CF 1101). v13+ is safe. */
 async function workerLoginBroken() {
+  const { signal, clear } = abortableTimeout(3000)
   try {
-    const res = await fetch(`${BASE}/ping`, { signal: AbortSignal.timeout(3000) })
+    const res = await fetch(`${BASE}/ping`, { signal })
+    clear()
     if (!res.ok) return true
     const d = await res.json()
     return !(Number(d?.version) >= 13)
   } catch {
+    clear()
     return true
   }
 }
 
 async function call(method, path, body) {
-  // Offline session: never hit Worker (would 401 → wipe session → login 1101 loop)
   if (isOfflineToken()) {
     if (path === '/state' && method === 'GET') return offlineState()
     if (path === '/logout' && method === 'POST') return { ok: true }
@@ -79,30 +113,46 @@ async function call(method, path, body) {
     return { ok: true, offline: true }
   }
 
+  // Capture token used for THIS request — ignore stale 401s after a newer login
+  const authToken = token()
+
   let res
   try {
     res = await fetch(`${BASE}${path}`, {
       method,
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token()}` },
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${authToken}` },
       body: body ? JSON.stringify(body) : undefined,
     })
-  } catch (e) {
+  } catch {
     throw new Error(`${method} ${path} → network`)
   }
 
   if (res.status === 401) {
-    const had = !!token()
-    localStorage.removeItem('kouv_token')
-    localStorage.removeItem('kouv_user')
-    // Only force reload when a real (non-local) session just died — not during login
-    if (had) window.location.reload()
+    // Stale response from an older session — do NOT wipe the current token
+    if (token() !== authToken) {
+      throw new Error('Session expired')
+    }
+
+    // Known roster player: demote to offline instead of locking them out
+    const prev = getStoredUser()
+    if (prev?.id && LOCAL_PHONES[prev.id]) {
+      ensureOfflineSession(prev)
+      if (path === '/state' && method === 'GET') return offlineState()
+      if (method === 'GET') return {}
+      return { ok: true, offline: true }
+    }
+
+    clearAuth()
+    // Soft return to login without hard reload loops when possible
+    try {
+      window.dispatchEvent(new Event('kouv:session-lost'))
+    } catch {}
     throw new Error('Session expired')
   }
   if (!res.ok) throw new Error(`${method} ${path} → ${res.status}`)
   return res.json()
 }
 
-/** Public GET against scores Worker (pipeline R2/KV) */
 async function publicScoresGet(path) {
   const res = await fetch(`${SCORES_BASE}${path}`, { headers: { Accept: 'application/json' } })
   if (!res.ok) {
@@ -117,26 +167,26 @@ async function loginWithFallback(email, password) {
   const emailNorm = String(email || '').trim().toLowerCase()
   const passNorm = String(password || '').trim()
 
-  // Fast path: broken Worker (v11 / down) → local auth immediately (no 30s 1101 hang)
+  // Always try local first while Worker login is known-broken — never hang on 1101
   if (await workerLoginBroken()) {
     const local = localLogin(emailNorm, passNorm)
     if (local) return local
     throw new Error('POST /login → 401')
   }
 
+  const { signal, clear } = abortableTimeout(8000)
   try {
     const res = await fetch(`${BASE}/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: emailNorm, password: passNorm }),
-      signal: AbortSignal.timeout(8000),
+      signal,
     })
+    clear()
     if (res.ok) return res.json()
-    if (res.status === 401 || res.status === 403) {
-      throw new Error(`POST /login → ${res.status}`)
-    }
-    // 5xx — fall through to local
+    if (res.status === 401 || res.status === 403) throw new Error(`POST /login → ${res.status}`)
   } catch (e) {
+    clear()
     const msg = String(e?.message || e)
     if (msg.includes('→ 401') || msg.includes('→ 403')) throw e
   }
@@ -144,6 +194,13 @@ async function loginWithFallback(email, password) {
   const local = localLogin(emailNorm, passNorm)
   if (local) return local
   throw new Error('POST /login → failed')
+}
+
+/** One-tap login for a roster player (used on lockout / Worker outage). */
+export function quickLocalLogin(playerId) {
+  const row = QUICK_LOGIN.find((q) => q.id === playerId)
+  if (!row) return null
+  return localLogin(row.email, row.password)
 }
 
 export const api = {
