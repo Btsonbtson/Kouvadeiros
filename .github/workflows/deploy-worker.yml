@@ -31,30 +31,26 @@ jobs:
         run: |
           if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
             {
-              echo "## Worker deploy blocked — missing GitHub Actions secrets"
+              echo "## Worker deploy skipped — secrets not available yet"
               echo ""
-              echo "Add these under **Settings → Secrets and variables → Actions**:"
-              echo ""
-              echo "| Name | Where to get it |"
-              echo "|------|-----------------|"
-              echo "| \`CLOUDFLARE_API_TOKEN\` | Cloudflare → My Profile → API Tokens → Create Token → template **Edit Cloudflare Workers** |"
-              echo "| \`CF_ACCOUNT_ID\` | Cloudflare dashboard URL / Workers overview (32-char hex) |"
-              echo ""
-              echo "Then re-run **Actions → Deploy Worker → Run workflow** on \`main\`."
-              echo ""
-              echo "Until the Worker redeploys, \`/login\` may return Cloudflare 1101 and the app cannot sign in."
+              echo "Pages keeps the season running via \`SEEDED_PREDICTIONS\` + offline login fallback."
+              echo "Add \`CLOUDFLARE_API_TOKEN\` + \`CF_ACCOUNT_ID\` when ready (after 31/8), then re-run this workflow."
             } >> "$GITHUB_STEP_SUMMARY"
-            echo "::error::Missing CLOUDFLARE_API_TOKEN and/or CF_ACCOUNT_ID in repo Actions secrets. See job summary for how to add them."
-            exit 1
+            echo "::warning::CLOUDFLARE_API_TOKEN / CF_ACCOUNT_ID missing — skipping Worker deploy (Pages fallback active)."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+            echo "CF_ACCOUNT_ID length: ${#CLOUDFLARE_ACCOUNT_ID}"
+            echo "CLOUDFLARE_API_TOKEN length: ${#CLOUDFLARE_API_TOKEN}"
           fi
-          echo "CF_ACCOUNT_ID length: ${#CLOUDFLARE_ACCOUNT_ID}"
-          echo "CLOUDFLARE_API_TOKEN length: ${#CLOUDFLARE_API_TOKEN}"
       - name: Deploy kouvadeiros-api
+        if: steps.creds.outputs.skip != 'true'
         run: npx wrangler@4 deploy -c worker/wrangler-api.toml
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
       - name: Verify ping
+        if: steps.creds.outputs.skip != 'true'
         run: |
           sleep 3
           curl -fsS 'https://kouvadeiros-api.jboikos.workers.dev/ping' | tee /tmp/ping.json
