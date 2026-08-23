@@ -542,6 +542,10 @@ export const SEEDED_PREDICTIONS = {
   'uel-ofi-1': { chousiadas: { h: 1, a: 1, qual: 'CSS' } },
   'uecl-pao-5': { chousiadas: { h: 1, a: 1, qual: 'PAO' } },
   'uecl-paok-1': { chousiadas: { h: 1, a: 1, qual: 'BRN' } },
+  // 23/8 SL MD1 — Chousiadas (admin late tip · no DQ)
+  'sl-1-4': { chousiadas: { h: 2, a: 1 } }, // OFI–VOL
+  'sl-1-7': { chousiadas: { h: 2, a: 1 } }, // PAOK–LEV
+  'sl-1-6': { chousiadas: { h: 1, a: 1 } }, // PNE–AST
 }
 
 /** Merge seeds under live tips (live tips win per player key). */
