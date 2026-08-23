@@ -1,3 +1,5 @@
+import { mergeSeededPredictions, applyTipResultLocks } from './data.js'
+
 const BASE = (typeof __WORKER_URL__ !== 'undefined' && __WORKER_URL__)
   ? __WORKER_URL__
   : 'https://kouvadeiros-api.jboikos.workers.dev'
@@ -40,13 +42,18 @@ export function isOfflineToken(t = token()) {
 }
 
 function offlineState() {
+  const { results } = applyTipResultLocks({})
+  const predictions = mergeSeededPredictions({})
+  const revealed = Object.fromEntries(Object.keys(results).map((id) => [id, true]))
+  // Sunday tips also visible while live
+  for (const id of ['sl-1-4', 'sl-1-6', 'sl-1-7']) revealed[id] = true
   return {
-    predictions: {},
-    results: {},
-    chat: [{ p: 'Boikos', t: 'Offline mode — tips from Pages seeds (Worker login down).', ts: '—', a: true }],
+    predictions,
+    results,
+    chat: [{ p: 'Boikos', t: 'Offline mode — full tip ledger from Pages seeds (Worker login down).', ts: '—', a: true }],
     phones: { ...LOCAL_PHONES },
     welcomed: {},
-    revealed: {},
+    revealed,
     thavmaStats: {},
     kickoffOverrides: {},
     offline: true,

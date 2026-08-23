@@ -1008,34 +1008,27 @@ export default function App({ user, onLogout }) {
   const pullPipelineScores = useCallback(async (fixturesNow = ALL_FIXTURES) => {
     // Live pipeline only during match windows — not idle all day
     if (!anyLiveScoreActivity(fixturesNow)) return { live: {}, hints: {} }
+    // Browser ESPN first (reliable). Stale scores-Worker KV is secondary.
+    const client = await fetchClientLiveScores(fixturesNow).catch(() => ({ live: {}, hints: {} }))
+    let live = { ...(client.live || {}) }
+    let hints = { ...(client.hints || {}) }
     try {
-      const [livePayload, todayPayload, client] = await Promise.all([
+      const [livePayload, todayPayload] = await Promise.all([
         api.getLiveScores('live').catch(() => ({ matches: [] })),
         api.getTodayScores().catch(() => ({ matches: [] })),
-        fetchClientLiveScores(fixturesNow).catch(() => ({ live: {}, hints: {} })),
       ])
       const byExt = {}
       ;[...(livePayload.matches || []), ...(todayPayload.matches || [])].forEach(m => {
         if (m?.external_id) byExt[m.external_id] = m
       })
       const mapped = mapPipelineToLiveScores(Object.values(byExt))
-      const live = {}, hints = {}
       Object.entries(mapped).forEach(([id, v]) => {
+        if (live[id] || hints[id]) return // ESPN already has it
         if (v.final) hints[id] = v
         else live[id] = v
       })
-      // ESPN client fills gaps / overrides stale KV (scores Worker often weeks old)
-      return {
-        live: { ...live, ...(client.live || {}) },
-        hints: { ...hints, ...(client.hints || {}) },
-      }
-    } catch {
-      try {
-        return await fetchClientLiveScores(fixturesNow)
-      } catch {
-        return { live: {}, hints: {} }
-      }
-    }
+    } catch { /* ignore pipeline */ }
+    return { live, hints }
   }, [])
 
   const load = useCallback(async (opts = {}) => {
