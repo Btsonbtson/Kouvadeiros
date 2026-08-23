@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { api, storeToken, storeUser } from '../lib/api'
 
 const BG='#08090d', SURF='#111318', LINE='rgba(255,255,255,.1)'
@@ -11,22 +11,40 @@ export default function Login({ onLogin }) {
   const [loading, setLoading] = useState(false)
   const [error,   setError]   = useState('')
   const [needsPhone, setNeedsPhone] = useState(false)
+  const [pendingUser, setPendingUser] = useState(null)
+
+  function finishLogin(user, phoneOverride) {
+    const u = { ...user, phone: phoneOverride || user.phone || null }
+    storeToken(u.token)
+    storeUser(u)
+    onLogin(u)
+  }
 
   async function handleSubmit(e) {
     e.preventDefault(); setLoading(true); setError('')
     try {
-      const user = await api.login(email.trim().toLowerCase(), pass)
-      // If user has no phone stored, ask for it
-      if (!user.phone && !needsPhone) {
-        setNeedsPhone(true); setLoading(false); return
-      }
-      if (needsPhone) {
-        // Save phone via API
+      if (needsPhone && pendingUser) {
+        // Token already known — never call savePhone without a stored session
+        storeToken(pendingUser.token)
         try { await api.savePhone(phone) } catch {}
+        finishLogin(pendingUser, phone)
+        return
       }
-      storeToken(user.token); storeUser({...user, phone: user.phone || phone}); onLogin({...user, phone: user.phone || phone})
-    } catch { setError('Λάθος email ή κωδικός — ή ο server είναι κάτω') }
-    finally { setLoading(false) }
+
+      const user = await api.login(email.trim().toLowerCase(), pass.trim())
+      // Offline / roster users always have a phone — skip the gate
+      if (user.offline || user.phone) {
+        finishLogin(user)
+        return
+      }
+      // Rare: Worker login without phone → ask once, keep user in memory
+      setPendingUser(user)
+      setNeedsPhone(true)
+    } catch {
+      setError('Λάθος email ή κωδικός. Δοκίμασε: chousiadas.th@caredirect.com')
+    } finally {
+      setLoading(false)
+    }
   }
 
   const inp = {
@@ -61,12 +79,12 @@ export default function Login({ onLogin }) {
                 <div style={{ marginBottom:14 }}>
                   <div style={{ fontSize:10, fontWeight:700, color:MUTED, letterSpacing:'.08em', textTransform:'uppercase', marginBottom:7 }}>Email</div>
                   <input type="email" value={email} onChange={e=>setEmail(e.target.value)}
-                    placeholder="name@caredirect.com" required style={inp}/>
+                    placeholder="chousiadas.th@caredirect.com" autoComplete="username" required style={inp}/>
                 </div>
                 <div style={{ marginBottom:22 }}>
                   <div style={{ fontSize:10, fontWeight:700, color:MUTED, letterSpacing:'.08em', textTransform:'uppercase', marginBottom:7 }}>Password</div>
                   <input type="password" value={pass} onChange={e=>setPass(e.target.value)}
-                    placeholder="••••" required style={inp}/>
+                    placeholder="••••" autoComplete="current-password" required style={inp}/>
                 </div>
                 {error && <div style={{ fontSize:12, color:RED, background:'rgba(255,34,68,.1)', border:`1px solid rgba(255,34,68,.25)`, borderRadius:8, padding:'9px 12px', marginBottom:14, textAlign:'center', fontWeight:600 }}>{error}</div>}
                 <button type="submit" disabled={loading} style={{ width:'100%', padding:14, borderRadius:10, border:'none', background:loading?'#ffffff12':GREEN, color:loading?MUTED:'#08090d', fontSize:14, fontWeight:800, cursor:'pointer', letterSpacing:'.03em' }}>
@@ -90,7 +108,10 @@ export default function Login({ onLogin }) {
                 <button type="submit" disabled={loading} style={{ width:'100%', padding:14, borderRadius:10, border:'none', background:loading?'#ffffff12':GREEN, color:'#08090d', fontSize:14, fontWeight:800, cursor:'pointer' }}>
                   {loading ? 'Αποθήκευση…' : 'Αποθήκευση & Είσοδος →'}
                 </button>
-                <button type="button" onClick={()=>{storeToken('');setNeedsPhone(false)}} style={{ width:'100%', padding:10, borderRadius:10, border:`1px solid ${LINE}`, background:'transparent', color:MUTED, fontSize:13, cursor:'pointer', marginTop:10 }}>
+                <button type="button" onClick={()=>{
+                  if (pendingUser) finishLogin(pendingUser)
+                  else { setNeedsPhone(false); setPendingUser(null) }
+                }} style={{ width:'100%', padding:10, borderRadius:10, border:`1px solid ${LINE}`, background:'transparent', color:MUTED, fontSize:13, cursor:'pointer', marginTop:10 }}>
                   Παράλειψη προς το παρόν
                 </button>
               </form>
