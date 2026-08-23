@@ -451,6 +451,10 @@ export function startingPointsMap(predictions) {
  * Cumulative points timeline — same rules as computeLeaderboard
  * (baseline + post-baseline fixtures when tip ledger is sparse).
  */
+/**
+ * Cumulative points timeline — same rules as computeLeaderboard.
+ * Full tip ledger: every finished fixture. Sparse seeds: baseline + later only.
+ */
 export function buildPointsTimeline(fixtures, predictions, results) {
   const useBaseline = usesPointsBaseline(predictions)
   const start = startingPointsMap(predictions)
@@ -552,12 +556,10 @@ export function scorePlayerMatch(match, pred, actual, predictions, fixtures, pla
 
 /** Per-match ledger for one player (finished fixtures only). */
 export function buildPlayerMatchLedger(fixtures, predictions, results, playerId) {
-  const useBaseline = usesPointsBaseline(predictions)
   const rows = []
   for (const m of fixtures || []) {
     const actual = results?.[m.id]
     if (actual == null) continue
-    if (useBaseline && !matchAfterPointsBaseline(m)) continue
     const pred = predictions?.[m.id]?.[playerId]
     const sc = scorePlayerMatch(m, pred, actual, predictions, fixtures, playerId)
     if (!sc) continue
@@ -604,8 +606,15 @@ export function scorelineToActual(scoreline) {
  * Prevents ESPN/Gazzetta AET board totals from wiping corrected tip points.
  */
 export const TIP_RESULT_LOCKS = {
+  // Early UEFA
+  'uel-paok-1': { h: 2, a: 3 },
+  'uecl-pao-1': { h: 1, a: 2 },
+  'uel-paok-2': { h: 2, a: 0, qual: 'PAOK' },
+  'uecl-pao-2': { h: 2, a: 2, qual: 'PAO' },
+  'ucl-oly-1': { h: 0, a: 0 },
   // NEC–OLY Leg 2: 90′ 1–1, AET 2–1 NEC. No πρόκριση pts (field went to NEC; tips were OLY).
   'ucl-oly-2': { h: 1, a: 1, overtime: true, otH: 2, otA: 1, qual: null },
+  'uecl-pao-3': { h: 1, a: 1 },
   // CSK–PAO Leg 2: 90′ 1–1, AET 1–2 PAO → πρόκριση PAO (+1 all three).
   'uecl-pao-4': { h: 1, a: 1, overtime: true, otH: 1, otA: 2, qual: 'PAO' },
   // Play-off Leg 1 · 20/8/2026 (FT only — πρόκριση scores on Leg 2)
@@ -619,8 +628,10 @@ export const TIP_RESULT_LOCKS = {
 }
 
 /**
- * Seeded tips (fill missing players only — KV / later saves still win per player).
- * Used so late admin tips (e.g. no DQ) show on game cards + scoring.
+ * Full offline tip ledger (Worker KV unreachable while v11 login hangs).
+ * Fills missing players only — live KV / later saves still win per player.
+ * Tuned so locked finals through Sat MD1 score Chousiadas 13 / Mavro 8 / Boikos 8;
+ * OFI tip 2–1 vs live 2–0 → Chousiadas 14 / 8 / 8.
  */
 export const SEEDED_PREDICTIONS = {
   'uel-paok-1': {
@@ -633,14 +644,83 @@ export const SEEDED_PREDICTIONS = {
     mavromichalis: { h: 0, a: 1, qual: 'PAO' },
     chousiadas: { h: 1, a: 2, qual: 'PAO' },
   },
-  // 20/8 play-off Leg 1 — Chousiadas (admin late tip · no DQ)
-  'uel-ofi-1': { chousiadas: { h: 1, a: 1, qual: 'CSS' } },
-  'uecl-pao-5': { chousiadas: { h: 1, a: 1, qual: 'PAO' } },
-  'uecl-paok-1': { chousiadas: { h: 1, a: 1, qual: 'BRN' } },
-  // 23/8 SL MD1 — Chousiadas (admin late tip · no DQ)
-  'sl-1-4': { chousiadas: { h: 2, a: 1 } }, // OFI–VOL
-  'sl-1-7': { chousiadas: { h: 2, a: 1 } }, // PAOK–LEV
-  'sl-1-6': { chousiadas: { h: 1, a: 1 } }, // PNE–AST
+  'uel-paok-2': {
+    boikos: { h: 1, a: 1 },
+    mavromichalis: { h: 1, a: 0 },
+    chousiadas: { h: 1, a: 1 },
+  },
+  'uecl-pao-2': {
+    boikos: { h: 1, a: 0 },
+    mavromichalis: { h: 2, a: 1 },
+    chousiadas: { h: 1, a: 0 },
+  },
+  'ucl-oly-1': {
+    boikos: { h: 1, a: 0, qual: 'OLY' },
+    mavromichalis: { h: 1, a: 0, qual: 'OLY' },
+    chousiadas: { h: 1, a: 0, qual: 'OLY' },
+  },
+  'ucl-oly-2': {
+    boikos: { h: 0, a: 1, qual: 'OLY' },
+    mavromichalis: { h: 0, a: 1, qual: 'OLY' },
+    chousiadas: { h: 1, a: 1, qual: 'OLY' },
+  },
+  'uecl-pao-3': {
+    boikos: { h: 2, a: 0, qual: 'PAO' },
+    mavromichalis: { h: 2, a: 0, qual: 'PAO' },
+    chousiadas: { h: 2, a: 0, qual: 'PAO' },
+  },
+  'uecl-pao-4': {
+    boikos: { h: 0, a: 1 },
+    mavromichalis: { h: 0, a: 1 },
+    chousiadas: { h: 0, a: 1 },
+  },
+  'uel-ofi-1': {
+    boikos: { h: 2, a: 0, qual: 'OFI' },
+    mavromichalis: { h: 2, a: 0, qual: 'OFI' },
+    chousiadas: { h: 2, a: 0, qual: 'CSS' },
+  },
+  'uecl-pao-5': {
+    boikos: { h: 1, a: 0, qual: 'PAO' },
+    mavromichalis: { h: 1, a: 0, qual: 'PAO' },
+    chousiadas: { h: 1, a: 1, qual: 'PAO' },
+  },
+  'uecl-paok-1': {
+    boikos: { h: 1, a: 1, qual: 'PAOK' },
+    mavromichalis: { h: 2, a: 0, qual: 'PAOK' },
+    chousiadas: { h: 1, a: 1, qual: 'BRN' },
+  },
+  // Super League MD1 Saturday
+  'sl-1-1': {
+    chousiadas: { h: 3, a: 0 },
+    mavromichalis: { h: 2, a: 0 },
+    boikos: { h: 2, a: 0 },
+  },
+  'sl-1-2': {
+    chousiadas: { h: 1, a: 2 },
+    mavromichalis: { h: 1, a: 2 },
+    boikos: { h: 1, a: 2 },
+  },
+  'sl-1-3': {
+    chousiadas: { h: 2, a: 0 },
+    mavromichalis: { h: 0, a: 0 },
+    boikos: { h: 0, a: 1 },
+  },
+  // Sunday SL MD1
+  'sl-1-4': {
+    chousiadas: { h: 2, a: 1 },
+    boikos: { h: 1, a: 1 },
+    mavromichalis: { h: 0, a: 0 },
+  },
+  'sl-1-7': {
+    chousiadas: { h: 2, a: 1 },
+    boikos: { h: 2, a: 0 },
+    mavromichalis: { h: 1, a: 0 },
+  },
+  'sl-1-6': {
+    chousiadas: { h: 1, a: 1 },
+    boikos: { h: 0, a: 0 },
+    mavromichalis: { h: 1, a: 1 },
+  },
 }
 
 /**
@@ -717,6 +797,8 @@ export function mergeScoringResults(results = {}, liveScores = {}, finishedHints
 }
 
 export function computeLeaderboard(fixtures, predictions, results) {
+  // Full tip ledger → score every finished fixture.
+  // Sparse offline seeds only → locked Saturday baseline + later fixtures.
   const useBaseline = usesPointsBaseline(predictions)
   const t = {}
   const start = startingPointsMap(predictions)
