@@ -89,7 +89,13 @@ export function findMatchScore(board, match) {
     const inPlay = /in_play|inprogress|halftime|status_in_progress|STATUS_HALFTIME|STATUS_FIRST_HALF|STATUS_SECOND_HALF/i.test(state)
       || status.state === 'in'
     const clock = ev.status?.displayClock || comps.status?.displayClock || ''
-    const minRaw = parseInt(String(clock).replace(/[^\d]/g, ''), 10)
+    // "45'+5'" must NOT become 455 — take the regulation minute, then stoppage
+    const stoppage = String(clock).match(/(\d+)\s*['′]?\s*\+\s*(\d+)/)
+    const plain = String(clock).match(/(\d+)/)
+    let minRaw = NaN
+    if (stoppage) minRaw = Number(stoppage[1]) + Number(stoppage[2])
+    else if (plain) minRaw = Number(plain[1])
+    if (Number.isFinite(minRaw) && minRaw > 130) minRaw = NaN
     const period = ev.status?.period || comps.status?.period
     let min = Number.isFinite(minRaw) ? minRaw : 0
     if (!min && period === 2) min = 45
