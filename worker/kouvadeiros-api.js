@@ -344,6 +344,7 @@ async function getState(env) {
   if (!state.results) state.results = {}
   if (!state.predictions) state.predictions = {}
   const beforePhones = JSON.stringify(state.phones || {})
+  const beforePreds = JSON.stringify(state.predictions || {})
   state.phones = { ...DEFAULT_PHONES, ...(state.phones || {}) }
   let locked = { results: state.results, changed: false }
   try {
@@ -353,12 +354,15 @@ async function getState(env) {
     console.log('tip locks skip', e?.message || e)
   }
   try {
+    // Fill missing players from SEEDED_PREDICTIONS (admin late tips · no DQ).
+    // Must persist into KV or the next cron/newspaper pass still sees blanks → fake DQ.
     state.predictions = mergeSeededPredictions(state.predictions)
   } catch (e) {
     console.log('seed tips skip', e?.message || e)
   }
-  // Persist phone merge + tip-result locks so AET auto-FT cannot keep wiping 90′ scores / πρόκριση
-  if (JSON.stringify(state.phones) !== beforePhones || locked.changed) {
+  const predsFilled = JSON.stringify(state.predictions || {}) !== beforePreds
+  // Persist phone merge + tip-result locks + newly filled seed tips
+  if (JSON.stringify(state.phones) !== beforePhones || locked.changed || predsFilled) {
     try {
       await env.KOUV.put('state', JSON.stringify(state))
     } catch (e) {

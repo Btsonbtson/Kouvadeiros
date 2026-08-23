@@ -11,6 +11,7 @@
     "test:tonight": "node scripts/smoke-tonight-points.mjs",
     "test:sl-md1": "node scripts/smoke-sl-md1-schedule.mjs",
     "test:sl-md1-results": "node scripts/smoke-sl-md1-results.mjs",
+    "test:chousiadas-tips": "node scripts/smoke-chousiadas-sl-md1-tips.mjs",
     "deploy:pages": "npm run build && node scripts/verify-pages-dist.mjs && wrangler pages deploy dist --project-name=kouvadeiros --commit-dirty=true"
   },
   "dependencies": {
