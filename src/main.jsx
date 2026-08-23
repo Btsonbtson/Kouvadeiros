@@ -1,8 +1,8 @@
-import React, { useState, Component } from 'react'
+import React, { useState, useEffect, Component } from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'
 import Login from './pages/Login'
-import { getStoredUser, storeUser, hasSession, clearAuth } from './lib/api'
+import { getStoredUser, storeUser, hasSession, clearAuth, ensureOfflineSession, isOfflineToken } from './lib/api'
 
 function showError(msg) {
   var el = document.getElementById('root')
@@ -43,18 +43,48 @@ class ErrorBoundary extends Component {
   }
 }
 
+function bootUser() {
+  if (hasSession()) {
+    const u = getStoredUser()
+    // If somehow we have a real token while Worker login is still broken,
+    // keep the user but mark offline on next 401 demotion. Don't clear here.
+    return u
+  }
+  // Orphan user record without token → try offline demotion instead of wipe
+  const orphan = getStoredUser()
+  if (orphan?.id) {
+    const offline = ensureOfflineSession(orphan)
+    if (offline) return offline
+  }
+  clearAuth()
+  return null
+}
+
 function Root() {
-  // Require both user + token — orphan user records caused 401 reload loops on login
-  var initial = hasSession() ? getStoredUser() : null
-  if (!initial && getStoredUser()) clearAuth()
-  var [u, setU] = useState(initial)
+  var [u, setU] = useState(() => bootUser())
+
+  useEffect(() => {
+    function onLost() {
+      // Prefer offline demotion for known users; only then show login
+      const prev = getStoredUser()
+      if (prev?.id && !isOfflineToken()) {
+        const offline = ensureOfflineSession(prev)
+        if (offline) { setU(offline); return }
+      }
+      clearAuth()
+      setU(null)
+    }
+    window.addEventListener('kouv:session-lost', onLost)
+    return () => window.removeEventListener('kouv:session-lost', onLost)
+  }, [])
+
   function handleLogin(u2) { storeUser(u2); setU(u2) }
   function handleLogout() { clearAuth(); setU(null) }
   if (!u) return React.createElement(Login, { onLogin: handleLogin })
   return React.createElement(App, { user: u, onLogout: handleLogout })
 }
 
-console.log('KOUVADEIROS v7 2026-08-23 login-fix')
+console.log('KOUVADEIROS v7 2026-08-23 lockout-fix')
 
 try {
   ReactDOM.createRoot(document.getElementById('root')).render(

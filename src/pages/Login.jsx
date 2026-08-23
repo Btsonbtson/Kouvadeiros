@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { api, storeToken, storeUser } from '../lib/api'
+import { useState, useEffect } from 'react'
+import { api, storeToken, storeUser, QUICK_LOGIN, quickLocalLogin } from '../lib/api'
 
 const BG='#08090d', SURF='#111318', LINE='rgba(255,255,255,.1)'
 const GREEN='#00ff88', RED='#ff2244', MUTED='rgba(255,255,255,.4)'
@@ -12,6 +12,21 @@ export default function Login({ onLogin }) {
   const [error,   setError]   = useState('')
   const [needsPhone, setNeedsPhone] = useState(false)
   const [pendingUser, setPendingUser] = useState(null)
+  const [workerDown, setWorkerDown] = useState(true)
+
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      try {
+        const res = await fetch('https://kouvadeiros-api.jboikos.workers.dev/ping')
+        const d = await res.json()
+        if (!cancelled) setWorkerDown(!(Number(d?.version) >= 13))
+      } catch {
+        if (!cancelled) setWorkerDown(true)
+      }
+    })()
+    return () => { cancelled = true }
+  }, [])
 
   function finishLogin(user, phoneOverride) {
     const u = { ...user, phone: phoneOverride || user.phone || null }
@@ -20,11 +35,22 @@ export default function Login({ onLogin }) {
     onLogin(u)
   }
 
+  function enterAs(playerId) {
+    setLoading(true); setError('')
+    try {
+      const user = quickLocalLogin(playerId)
+      if (!user) throw new Error('unknown')
+      finishLogin(user)
+    } catch {
+      setError('Αποτυχία εισόδου')
+      setLoading(false)
+    }
+  }
+
   async function handleSubmit(e) {
     e.preventDefault(); setLoading(true); setError('')
     try {
       if (needsPhone && pendingUser) {
-        // Token already known — never call savePhone without a stored session
         storeToken(pendingUser.token)
         try { await api.savePhone(phone) } catch {}
         finishLogin(pendingUser, phone)
@@ -32,16 +58,14 @@ export default function Login({ onLogin }) {
       }
 
       const user = await api.login(email.trim().toLowerCase(), pass.trim())
-      // Offline / roster users always have a phone — skip the gate
       if (user.offline || user.phone) {
         finishLogin(user)
         return
       }
-      // Rare: Worker login without phone → ask once, keep user in memory
       setPendingUser(user)
       setNeedsPhone(true)
     } catch {
-      setError('Λάθος email ή κωδικός. Δοκίμασε: chousiadas.th@caredirect.com')
+      setError('Λάθος email ή κωδικός — ή πάτα το κουμπί Chousiadas από κάτω')
     } finally {
       setLoading(false)
     }
@@ -72,13 +96,40 @@ export default function Login({ onLogin }) {
         </div>
 
         <div style={{ background:SURF, border:`1px solid ${LINE}`, borderRadius:16, padding:28 }}>
+          {workerDown && (
+            <div style={{ fontSize:12, color:'#ffdd00', background:'rgba(255,221,0,.08)', border:'1px solid rgba(255,221,0,.25)', borderRadius:8, padding:'10px 12px', marginBottom:16, lineHeight:1.45, fontWeight:600 }}>
+              Server login προσωρινά down. Πάτα το όνομά σου από κάτω — μπαίνεις αμέσως.
+            </div>
+          )}
+
           {!needsPhone ? (
             <>
-              <div style={{ fontSize:12, fontWeight:700, color:MUTED, marginBottom:18, letterSpacing:'.08em', textTransform:'uppercase' }}>Είσοδος</div>
+              <div style={{ fontSize:12, fontWeight:700, color:MUTED, marginBottom:12, letterSpacing:'.08em', textTransform:'uppercase' }}>Γρήγορη είσοδος</div>
+              <div style={{ display:'flex', flexDirection:'column', gap:8, marginBottom:20 }}>
+                {QUICK_LOGIN.map((q) => (
+                  <button
+                    key={q.id}
+                    type="button"
+                    disabled={loading}
+                    onClick={() => enterAs(q.id)}
+                    style={{
+                      width:'100%', padding:'12px 14px', borderRadius:10, cursor:'pointer',
+                      border: q.id === 'chousiadas' ? `1px solid ${GREEN}66` : `1px solid ${LINE}`,
+                      background: q.id === 'chousiadas' ? 'rgba(0,255,136,.12)' : 'rgba(255,255,255,.04)',
+                      color: q.id === 'chousiadas' ? GREEN : '#e8e9ef',
+                      fontSize:14, fontWeight:800, letterSpacing:'.02em',
+                    }}
+                  >
+                    {q.name} →
+                  </button>
+                ))}
+              </div>
+
+              <div style={{ fontSize:11, fontWeight:700, color:MUTED, marginBottom:14, letterSpacing:'.08em', textTransform:'uppercase', textAlign:'center' }}>ή με email</div>
               <form onSubmit={handleSubmit}>
                 <div style={{ marginBottom:14 }}>
                   <div style={{ fontSize:10, fontWeight:700, color:MUTED, letterSpacing:'.08em', textTransform:'uppercase', marginBottom:7 }}>Email</div>
-                  <input type="email" value={email} onChange={e=>setEmail(e.target.value)}
+                  <input type="text" inputMode="email" autoCapitalize="none" autoCorrect="off" value={email} onChange={e=>setEmail(e.target.value)}
                     placeholder="chousiadas.th@caredirect.com" autoComplete="username" required style={inp}/>
                 </div>
                 <div style={{ marginBottom:22 }}>
@@ -103,7 +154,6 @@ export default function Login({ onLogin }) {
                   <div style={{ fontSize:10, fontWeight:700, color:MUTED, letterSpacing:'.08em', textTransform:'uppercase', marginBottom:7 }}>Κινητό (με πρόθεμα)</div>
                   <input type="tel" value={phone} onChange={e=>setPhone(e.target.value)}
                     placeholder="+30 694 000 0000" required style={inp}/>
-                  <div style={{ fontSize:11, color:MUTED, marginTop:6 }}>Μορφή: +30XXXXXXXXXX</div>
                 </div>
                 <button type="submit" disabled={loading} style={{ width:'100%', padding:14, borderRadius:10, border:'none', background:loading?'#ffffff12':GREEN, color:'#08090d', fontSize:14, fontWeight:800, cursor:'pointer' }}>
                   {loading ? 'Αποθήκευση…' : 'Αποθήκευση & Είσοδος →'}
