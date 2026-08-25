@@ -617,21 +617,30 @@ export const TIP_RESULT_LOCKS = {
   'uecl-pao-3': { h: 1, a: 1 },
   // CSK–PAO Leg 2: 90′ 1–1, AET 1–2 PAO → πρόκριση PAO (+1 all three).
   'uecl-pao-4': { h: 1, a: 1, overtime: true, otH: 1, otA: 2, qual: 'PAO' },
+  // PAOK–Anderlecht UEL Q3 (no tip ledger — FT only for Ιστορικό)
+  'uel-paok-3': { h: 0, a: 1 }, // PAOK–AND · 6/8
+  'uel-paok-4': { h: 3, a: 2, qual: 'AND' }, // AND–PAOK · 13/8 · AND 4–2 agg
   // Play-off Leg 1 · 20/8/2026 (FT only — πρόκριση scores on Leg 2)
   'uel-ofi-1': { h: 3, a: 0 },
   'uecl-pao-5': { h: 2, a: 2 },
   'uecl-paok-1': { h: 1, a: 1 },
+  // AEK–Levski UCL PO Leg 1 · 18/8/2026
+  'ucl-aek-1': { h: 0, a: 0 },
   // Super League MD1 · 22/8/2026
   'sl-1-1': { h: 4, a: 0 }, // AEK–IRA
   'sl-1-2': { h: 2, a: 3 }, // KAL–ARI
   'sl-1-3': { h: 1, a: 0 }, // OLY–ATR
+  // Super League MD1 · 23/8/2026
+  'sl-1-4': { h: 2, a: 0 }, // OFI–VOL
+  'sl-1-6': { h: 3, a: 1 }, // PNE–AST
+  'sl-1-7': { h: 4, a: 0 }, // PAOK–LEV
 }
 
 /**
  * Full offline tip ledger (Worker KV unreachable while v11 login hangs).
  * Fills missing players only — live KV / later saves still win per player.
  * Tuned so locked finals through Sat MD1 score Chousiadas 13 / Mavro 8 / Boikos 8;
- * OFI tip 2–1 vs live 2–0 → Chousiadas 14 / 8 / 8.
+ * Full MD1 Sunday FT → Chousiadas 15 / Mavro 9 / Boikos 9.
  */
 export const SEEDED_PREDICTIONS = {
   'uel-paok-1': {
