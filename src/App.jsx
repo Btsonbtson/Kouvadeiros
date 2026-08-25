@@ -959,9 +959,9 @@ function AppHeader({
         <div style={{display:'flex',alignItems:'center',gap:7,flexShrink:0}}>
           <div style={{width:isDesktop?32:26,height:isDesktop?32:26,borderRadius:'50%',background:pc.p,
             display:'flex',alignItems:'center',justifyContent:'center',fontSize:isDesktop?13:11,fontWeight:900,color:'#08090d'}}>
-            {user.name.substring(0,1)}
+            {(user?.name || '?').substring(0,1)}
           </div>
-          {isDesktop && <span style={{fontSize:12,fontWeight:700,color:pc.p}}>{user.name}</span>}
+          {isDesktop && <span style={{fontSize:12,fontWeight:700,color:pc.p}}>{user?.name}</span>}
         </div>
         {isDesktop && (
           <button type="button" onClick={handleLogout}
@@ -1329,6 +1329,13 @@ export default function App({ user, onLogout }) {
     [state.results, liveScores, pipelineHints],
   )
 
+  const pc = PC[user?.id] || PC.boikos
+
+  const navIcon = useCallback((navItem) => {
+    if (navItem.id === 'banter' && banterUnread) return '🔔'
+    return navItem.icon
+  }, [banterUnread])
+
   if(showGuide) return <Guide onBack={()=>setShowGuide(false)}/>
 
   if(loading) return(
@@ -1338,7 +1345,6 @@ export default function App({ user, onLogout }) {
     </div>
   )
 
-  const pc = PC[user.id] || PC.boikos
   const pages={
     matchday:<MatchdayPage fixtures={fixtures} predictions={predictions} results={state.results} scoringResults={scoringResults} onRefresh={load} currentUser={user} revealed={state.revealed} onSave={savePrediction} liveScores={liveScores} pipelineHints={pipelineHints} slStandings={state.slStandings}/>,
     league:  <LeaguePage   predictions={predictions} results={scoringResults} thavmaStats={state.thavmaStats}/>,
@@ -1346,11 +1352,6 @@ export default function App({ user, onLogout }) {
     history: <HistoryPage  predictions={predictions} results={scoringResults}/>,
     banter:  <BanterPage   chat={state.chat} onSend={sendChat} onRead={markChatRead}/>,
   }
-
-  const navIcon = useCallback((navItem) => {
-    if (navItem.id === 'banter' && banterUnread) return '🔔'
-    return navItem.icon
-  }, [banterUnread])
 
   const headerProps = {
     isDesktop, isTablet, screen, setScreen, banterUnread, navIcon,
