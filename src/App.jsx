@@ -86,14 +86,23 @@ const SEEDED_RES={
   'uecl-pao-3':{h:1,a:1},
   // CSK–PAO Leg 2: tips on 90′ (1–1). AET 1–2 PAO → πρόκριση PAO (+1 all three).
   'uecl-pao-4':{h:1,a:1,overtime:true,otH:1,otA:2,qual:'PAO'},
+  // PAOK–Anderlecht UEL Q3
+  'uel-paok-3':{h:0,a:1},
+  'uel-paok-4':{h:3,a:2,qual:'AND'},
   // Play-off Leg 1 · 20/8/2026
   'uel-ofi-1':{h:3,a:0},
   'uecl-pao-5':{h:2,a:2},
   'uecl-paok-1':{h:1,a:1},
+  // AEK–Levski UCL PO Leg 1 · 18/8/2026
+  'ucl-aek-1':{h:0,a:0},
   // Super League MD1 · 22/8/2026
   'sl-1-1':{h:4,a:0}, // AEK–IRA
   'sl-1-2':{h:2,a:3}, // KAL–ARI
   'sl-1-3':{h:1,a:0}, // OLY–ATR
+  // Super League MD1 · 23/8/2026
+  'sl-1-4':{h:2,a:0}, // OFI–VOL
+  'sl-1-6':{h:3,a:1}, // PNE–AST
+  'sl-1-7':{h:4,a:0}, // PAOK–LEV
 }
 
 function isUEFATie(id){return UEFA_FIXTURES.some(f=>f.id===id)}
@@ -1667,13 +1676,16 @@ function MatchdayPage({fixtures=ALL_FIXTURES,predictions,results,scoringResults,
   const sorted=[...fixtures]
     .filter(m=>{
       const ko=new Date(m.kickoff).getTime()
-      const res=results?.[m.id]
-      // Hide finished matches after 1 hour post-kickoff
-      if(res && now > ko + ONE_HOUR) return false
+      const official=results?.[m.id]
+      const scored=scoringResults?.[m.id]
+      // Postponed (no FT yet) stays on Προβλέψεις
+      if(m.postponed && !official) return true
+      // Official or live/pipeline FT → Ιστορικό after 1h post-kickoff
+      if((official || scored) && now > ko + ONE_HOUR) return false
       return true
     })
     .sort((a,b)=>{
-      const aRes=results?.[a.id], bRes=results?.[b.id]
+      const aRes=results?.[a.id]||scoringResults?.[a.id], bRes=results?.[b.id]||scoringResults?.[b.id]
       const aLive=isLive(a,aRes), bLive=isLive(b,bRes)
       // Live games first, then chronological kickoff
       if(aLive&&!bLive) return -1
