@@ -4,40 +4,81 @@ import App from './App'
 import Login from './pages/Login'
 import { getStoredUser, storeUser, hasSession, clearAuth, ensureOfflineSession, isOfflineToken } from './lib/api'
 
-function showError(msg) {
-  var el = document.getElementById('root')
-  if (!el) return
-  var d = document.createElement('div')
-  d.style.cssText = 'min-height:100vh;background:#08090d;color:#ff4d6d;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;gap:16px;font-family:monospace'
-  var icon = document.createElement('div')
-  icon.textContent = '❌'
-  icon.style.fontSize = '32px'
-  var title = document.createElement('div')
-  title.textContent = 'ΚΟΥΒΑΔΕΪΡΟΣ — Error'
-  title.style.cssText = 'font-size:16px;font-weight:700;color:#fff'
-  var err = document.createElement('div')
-  err.textContent = String(msg)
-  err.style.cssText = 'font-size:11px;color:#ff8fa3;max-width:460px;word-break:break-all;padding:12px;background:rgba(255,77,109,.1);border-radius:8px;line-height:1.5'
-  var btn = document.createElement('button')
-  btn.textContent = 'Ανανέωση'
-  btn.style.cssText = 'background:#ff4d6d;color:#fff;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:700;cursor:pointer'
-  btn.onclick = function() { window.location.reload() }
-  d.appendChild(icon)
-  d.appendChild(title)
-  d.appendChild(err)
-  d.appendChild(btn)
-  el.innerHTML = ''
-  el.appendChild(d)
+/** React-safe fatal UI — never wipe #root with innerHTML (that causes removeChild cascades). */
+function FatalScreen({ title, message }) {
+  return React.createElement(
+    'div',
+    {
+      style: {
+        minHeight: '100vh',
+        background: '#08090d',
+        color: '#ff4d6d',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 24,
+        gap: 16,
+        fontFamily: 'monospace',
+      },
+    },
+    React.createElement('div', { style: { fontSize: 32 } }, '❌'),
+    React.createElement('div', { style: { fontSize: 16, fontWeight: 700, color: '#fff' } }, title || 'ΚΟΥΒΑΔΕΪΡΟΣ — Error'),
+    React.createElement(
+      'div',
+      {
+        style: {
+          fontSize: 11,
+          color: '#ff8fa3',
+          maxWidth: 460,
+          wordBreak: 'break-all',
+          padding: 12,
+          background: 'rgba(255,77,109,.1)',
+          borderRadius: 8,
+          lineHeight: 1.5,
+          whiteSpace: 'pre-wrap',
+        },
+      },
+      String(message || 'Unknown error'),
+    ),
+    React.createElement(
+      'button',
+      {
+        type: 'button',
+        onClick: () => window.location.reload(),
+        style: {
+          background: '#ff4d6d',
+          color: '#fff',
+          border: 'none',
+          borderRadius: 8,
+          padding: '10px 24px',
+          fontSize: 14,
+          fontWeight: 700,
+          cursor: 'pointer',
+        },
+      },
+      'Ανανέωση',
+    ),
+  )
 }
 
 class ErrorBoundary extends Component {
-  constructor(props) { super(props); this.state = { error: null } }
-  static getDerivedStateFromError(e) { return { error: e } }
-  componentDidCatch(e) { showError('React: ' + e.message) }
+  constructor(props) {
+    super(props)
+    this.state = { error: null }
+  }
+  static getDerivedStateFromError(e) {
+    return { error: e }
+  }
+  componentDidCatch(e, info) {
+    console.error('KOUVADEIROS ErrorBoundary', e, info)
+  }
   render() {
     if (this.state.error) {
-      showError('React: ' + this.state.error.message)
-      return null
+      return React.createElement(FatalScreen, {
+        title: 'ΚΟΥΒΑΔΕΪΡΟΣ — Error',
+        message: 'React: ' + (this.state.error?.message || String(this.state.error)),
+      })
     }
     return this.props.children
   }
@@ -69,7 +110,10 @@ function Root() {
       const prev = getStoredUser()
       if (prev?.id && !isOfflineToken()) {
         const offline = ensureOfflineSession(prev)
-        if (offline) { setU(offline); return }
+        if (offline) {
+          setU(offline)
+          return
+        }
       }
       clearAuth()
       setU(null)
@@ -78,18 +122,39 @@ function Root() {
     return () => window.removeEventListener('kouv:session-lost', onLost)
   }, [])
 
-  function handleLogin(u2) { storeUser(u2); setU(u2) }
-  function handleLogout() { clearAuth(); setU(null) }
+  function handleLogin(u2) {
+    storeUser(u2)
+    setU(u2)
+  }
+  function handleLogout() {
+    clearAuth()
+    setU(null)
+  }
   if (!u) return React.createElement(Login, { onLogin: handleLogin })
   return React.createElement(App, { user: u, onLogout: handleLogout })
 }
 
-console.log('KOUVADEIROS v7 2026-08-23 lockout-fix')
+console.log('KOUVADEIROS v7 2026-08-25 removechild-fix')
+
+const rootEl = document.getElementById('root')
+window.__KOUV_REACT_MOUNTED__ = false
 
 try {
-  ReactDOM.createRoot(document.getElementById('root')).render(
-    React.createElement(ErrorBoundary, null, React.createElement(Root))
+  ReactDOM.createRoot(rootEl).render(
+    React.createElement(ErrorBoundary, null, React.createElement(Root)),
   )
-} catch(e) {
-  showError('Boot: ' + e.message + '\n' + (e.stack||'').split('\n').slice(0,3).join('\n'))
+  window.__KOUV_REACT_MOUNTED__ = true
+} catch (e) {
+  // React never mounted — safe to replace root contents once
+  if (rootEl) {
+    rootEl.textContent = ''
+    const wrap = document.createElement('div')
+    rootEl.appendChild(wrap)
+    ReactDOM.createRoot(wrap).render(
+      React.createElement(FatalScreen, {
+        title: 'ΚΟΥΒΑΔΕΪΡΟΣ — Boot Error',
+        message: 'Boot: ' + e.message + '\n' + (e.stack || '').split('\n').slice(0, 3).join('\n'),
+      }),
+    )
+  }
 }

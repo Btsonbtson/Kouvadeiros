@@ -76,10 +76,19 @@
 <body>
   <script>
   window.onerror = function(msg, src, line, col, err) {
+    // After React mounts, never wipe #root — that causes removeChild cascades.
+    if (window.__KOUV_REACT_MOUNTED__) {
+      console.error('KOUVADEIROS window.onerror', msg, src, line, col, err);
+      return false;
+    }
     var el = document.getElementById('root');
     if (el) el.innerHTML = '<div style="min-height:100vh;background:#08090d;color:#ff4d6d;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;font-family:monospace;gap:12px;font-size:12px"><div style=\"font-size:28px\">❌</div><div style=\"font-size:15px;font-weight:700;color:#fff\">JS Error</div><div style=\"color:#ff8fa3;max-width:460px;word-break:break-all\">' + msg + '<br><br>' + src + ':' + line + ':' + col + '</div><button onclick=\"location.reload()\" style=\"background:#ff4d6d;color:#fff;border:none;border-radius:8px;padding:10px 24px;font-size:14px;cursor:pointer;margin-top:8px\">Ανανέωση</button></div>';
   };
   window.addEventListener('unhandledrejection', function(e) {
+    if (window.__KOUV_REACT_MOUNTED__) {
+      console.error('KOUVADEIROS unhandledrejection', e.reason);
+      return;
+    }
     window.onerror(String(e.reason), 'promise', 0, 0, e.reason);
   });
   </script>
