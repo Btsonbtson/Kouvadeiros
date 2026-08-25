@@ -702,7 +702,7 @@ function LeaderHero({board,maxPts}){
 
 function HistoryPage({predictions,results}){
   const played=[...ALL_FIXTURES].filter(m=>results?.[m.id]!=null).sort((a,b)=>new Date(b.kickoff)-new Date(a.kickoff))
-  return <div style={{padding:'16px 16px 80px'}}>
+  return <div style={{padding:'16px 16px 20px'}}>
     <SLbl>Αποτελέσματα · {played.length} αγώνες</SLbl>
     {!played.length&&<div style={{textAlign:'center',padding:40,color:MUTED,fontSize:13}}>Δεν υπάρχουν αποτελέσματα ακόμα</div>}
     {played.map(m=>{
@@ -852,11 +852,11 @@ function LeaderSidebar({ predictions, results, compact }) {
 
 // ─── APP SHELL (RESPONSIVE) ─────────────────────────────────────────────────
 const NAV=[
-  {id:'matchday', l:'ΠΡΟΒΛΕΨΕΙΣ',      icon:'⚽'},
-  {id:'schedule', l:'ΠΡΟΓΡΑΜΜΑ',       icon:'📅'},
-  {id:'league',   l:'Διαγωνισμός',    icon:'🏆'},
-  {id:'history',  l:'Ιστορικό',       icon:'📋'},
-  {id:'banter',   l:'ΙΕΡΑ ΕΞΕΤΑΣΗ',   icon:'🔥'},
+  {id:'matchday', l:'Προβλέψεις', short:'Προβλ.', icon:'⚽'},
+  {id:'schedule', l:'Πρόγραμμα',  short:'Πρόγρ.', icon:'📅'},
+  {id:'league',   l:'Διαγωνισμός', short:'Διαγ.',  icon:'🏆'},
+  {id:'history',  l:'Ιστορικό',    short:'Ιστορ.', icon:'📋'},
+  {id:'banter',   l:'Ιερά Εξέταση', short:'Ιερά',  icon:'🔥'},
 ]
 
 function useBreakpoint() {
@@ -1215,15 +1215,16 @@ export default function App({ user, onLogout }) {
 
       {/* Desktop nav — inline in header */}
       {isDesktop && (
-        <div style={{display:'flex',gap:4}}>
+        <div style={{display:'flex',gap:2,flex:1,justifyContent:'center',minWidth:0,overflowX:'auto',scrollbarWidth:'none',msOverflowStyle:'none',WebkitOverflowScrolling:'touch',padding:'0 8px'}}>
           {NAV.map(navItem=>(
-            <button key={navItem.id} onClick={()=>setScreen(navItem.id)} style={{
-              display:'flex',alignItems:'center',gap:7,padding:'8px 14px',
-              borderRadius:8, border:'none',
+            <button key={navItem.id} type="button" onClick={()=>setScreen(navItem.id)} style={{
+              display:'flex',alignItems:'center',gap:6,padding:'8px 12px',
+              borderRadius:8, border:'none', flexShrink:0,
               background:screen===navItem.id?'rgba(255,255,255,.1)':'transparent',
               color:screen===navItem.id?TEXT:MUTED,cursor:'pointer',fontSize:13,fontWeight:600,
               borderBottom:screen===navItem.id?`2px solid ${GREEN}`:'2px solid transparent',
-              transition:'all .15s', position:'relative'
+              transition:'all .15s', position:'relative',
+              touchAction:'manipulation', WebkitTapHighlightColor:'transparent',
             }}>
               <span style={{position:'relative'}}>
                 {navIcon(navItem)}
@@ -1322,33 +1323,56 @@ export default function App({ user, onLogout }) {
     </div>
   )
 
-  // ── BOTTOM NAV (mobile/tablet only) ─────────────────────────────────────────
+  // ── BOTTOM NAV (mobile/tablet only) — in-flow so taps never miss under content
   const BottomNav = () => (
-    <div style={{ background:'#0a0b0f', borderTop:`1px solid ${LINE}`,
-      display:'flex', justifyContent:'space-around',
-      padding:`6px 0 ${isMobile?'max(8px,env(safe-area-inset-bottom))':'8px'}`,
-      position:'fixed', bottom:0, left:0, right:0, zIndex:20 }}>
-      {NAV.map(navItem=>(
-        <button key={navItem.id} onClick={()=>setScreen(navItem.id)}
-          style={{display:'flex',flexDirection:'column',alignItems:'center',gap:3,
-            padding:'3px 8px',background:'none',border:'none',cursor:'pointer',minWidth:44,flex:1,position:'relative'}}>
-          <span style={{fontSize:isTablet?22:19,filter:screen===navItem.id||(navItem.id==='banter'&&banterUnread)?undefined:'grayscale(.6) opacity(.5)',position:'relative'}}>
-            {navIcon(navItem)}
-            {navItem.id==='banter'&&banterUnread&&(
-              <span style={{position:'absolute',top:-2,right:-6,width:8,height:8,borderRadius:'50%',background:RED,boxShadow:`0 0 0 2px #0a0b0f`}}/>
-            )}
-          </span>
-          <span style={{fontSize:isTablet?10:9,fontWeight:700,letterSpacing:'.04em',color:screen===navItem.id?GREEN:(navItem.id==='banter'&&banterUnread?GOLD:MUTED),textTransform:'uppercase'}}>{navItem.l}</span>
-          {screen===navItem.id&&<div style={{width:16,height:2,background:GREEN,borderRadius:1}}/>}
-        </button>
-      ))}
-      <button onClick={handleLogout}
-        style={{display:'flex',flexDirection:'column',alignItems:'center',gap:3,
-          padding:'3px 8px',background:'none',border:'none',cursor:'pointer',minWidth:44,flex:1}}>
-        <span style={{fontSize:19}}>🚪</span>
-        <span style={{fontSize:9,fontWeight:700,color:'#ff4d6d',textTransform:'uppercase'}}>Έξοδος</span>
-      </button>
-    </div>
+    <nav aria-label="Κύρια πλοήγηση" style={{
+      background:'#0a0b0f', borderTop:`1px solid ${LINE}`,
+      display:'flex', justifyContent:'space-between', alignItems:'stretch',
+      padding:`4px 2px max(8px,env(safe-area-inset-bottom))`,
+      flexShrink:0, zIndex:40, position:'relative',
+      WebkitTapHighlightColor:'transparent',
+    }}>
+      {NAV.map(navItem=>{
+        const active = screen===navItem.id
+        const hot = navItem.id==='banter'&&banterUnread
+        return (
+          <button key={navItem.id} type="button" onClick={()=>setScreen(navItem.id)}
+            aria-current={active?'page':undefined}
+            style={{
+              display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center',
+              gap:2, flex:1, minWidth:0, minHeight:52, maxWidth:'20%',
+              padding:'6px 2px 4px', margin:0,
+              background: active ? 'rgba(0,255,136,.08)' : 'transparent',
+              border:'none', borderRadius:10, cursor:'pointer',
+              touchAction:'manipulation', WebkitTapHighlightColor:'transparent',
+              position:'relative',
+            }}>
+            <span style={{
+              fontSize:isTablet?22:20, lineHeight:1,
+              filter:active||hot?undefined:'grayscale(.55) opacity(.55)',
+              position:'relative',
+            }}>
+              {navIcon(navItem)}
+              {hot&&(
+                <span style={{position:'absolute',top:-2,right:-6,width:8,height:8,borderRadius:'50%',background:RED,boxShadow:`0 0 0 2px #0a0b0f`}}/>
+              )}
+            </span>
+            <span style={{
+              fontSize:isTablet?11:10, fontWeight:700, letterSpacing:'.02em', lineHeight:1.15,
+              color:active?GREEN:(hot?GOLD:MUTED),
+              whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis',
+              maxWidth:'100%',
+            }}>
+              {isMobile ? navItem.short : navItem.l}
+            </span>
+            <div style={{
+              width:active?18:0, height:2, background:GREEN, borderRadius:1,
+              transition:'width .12s ease', marginTop:1,
+            }}/>
+          </button>
+        )
+      })}
+    </nav>
   )
 
   // ── DESKTOP SIDEBAR LAYOUT ──────────────────────────────────────────────────
@@ -1393,7 +1417,6 @@ export default function App({ user, onLogout }) {
       <TabBackdrop
         bgUrl={tabBgs[screen]}
         fillChildren={screen==='banter'}
-        style={{paddingBottom: isTablet?72:64}}
       >
         {screen!=='banter' && (
           <div style={{padding:'8px 16px 0'}}>
@@ -1422,11 +1445,17 @@ function LeaguePage({predictions,results,thavmaStats}){
   }
   function isCatOpen(pid, cat) { return !!openCat[`${pid}:${cat}`] }
 
-  return <div style={{padding:'16px 16px 80px'}}>
-    <div style={{display:'flex',gap:6,marginBottom:16,overflowX:'auto',scrollbarWidth:'none',msOverflowStyle:'none'}}>
-      {[{id:'standings',l:'Συγκομιδή'},{id:'rivalry',l:'🌶️ Διαγκωνισμοί'},{id:'analytics',l:'Αναλυτικά'},{id:'campaigns',l:'Ενεργές Διοργανώσεις'}].map(tabItem=>(
-        <button key={tabItem.id} onClick={()=>setTab(tabItem.id)}
-          style={{fontSize:11,fontWeight:700,padding:'6px 13px',borderRadius:7,whiteSpace:'nowrap',
+  return <div style={{padding:'16px 16px 20px'}}>
+    <div style={{display:'flex',gap:6,marginBottom:16,overflowX:'auto',WebkitOverflowScrolling:'touch',scrollbarWidth:'none',msOverflowStyle:'none',paddingBottom:2}}>
+      {[
+        {id:'standings',l:'Συγκομιδή'},
+        {id:'rivalry',l:'🌶️ Διαγκωνισμοί'},
+        {id:'analytics',l:'Αναλυτικά'},
+        {id:'campaigns',l:'Διοργανώσεις'},
+      ].map(tabItem=>(
+        <button key={tabItem.id} type="button" onClick={()=>setTab(tabItem.id)}
+          style={{fontSize:12,fontWeight:700,padding:'10px 14px',borderRadius:9,whiteSpace:'nowrap',
+            flexShrink:0, minHeight:40, touchAction:'manipulation',
             border:'1px solid '+(tab===tabItem.id?'rgba(255,255,255,.3)':LINE),
             background:tab===tabItem.id?'rgba(255,255,255,.12)':'transparent',
             color:tab===tabItem.id?TEXT:MUTED,cursor:'pointer'}}>
@@ -1692,7 +1721,7 @@ function MatchdayPage({fixtures=ALL_FIXTURES,predictions,results,scoringResults,
       if(bLive&&!aLive) return 1
       return new Date(a.kickoff).getTime()-new Date(b.kickoff).getTime()
     })
-  return <div style={{padding:'12px 16px 80px'}}>
+  return <div style={{padding:'12px 16px 20px'}}>
     <div style={{fontSize:10,fontWeight:700,letterSpacing:'.08em',textTransform:'uppercase',color:MUTED,marginBottom:14}}>
       Χρονολογικά · Ζωντανοί αγώνες επάνω · πόντοι live
     </div>
@@ -2230,7 +2259,7 @@ function SchedulePage({fixtures:programFixtures,slStandings}){
 
   const allTeams = [...new Set(ALL_FIXTURES.flatMap(m=>[m.home,m.away]))].sort()
 
-  return <div style={{padding:'12px 16px 80px'}}>
+  return <div style={{padding:'12px 16px 20px'}}>
 
     {/* Controls */}
     <div style={{display:'flex',gap:8,marginBottom:14,flexWrap:'wrap',alignItems:'center'}}>
