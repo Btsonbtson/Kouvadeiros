@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, memo } from 'react'
 import { ALL_FIXTURES, PLAYERS, PLAYER_NAMES, buildPointsTimeline } from '../lib/data'
 
 const PC = {
@@ -34,7 +34,7 @@ function BurgerBg({ progress, W, H }) {
   )
 }
 
-export default function H2HGraph({ predictions, results }) {
+function H2HGraphInner({ predictions, results }) {
   const { events, maxPts, final, start } = buildPointsTimeline(ALL_FIXTURES, predictions, results)
   const [hovIdx, setHovIdx] = useState(null)
 
@@ -325,3 +325,6 @@ export default function H2HGraph({ predictions, results }) {
     </div>
   )
 }
+
+const H2HGraph = memo(H2HGraphInner)
+export default H2HGraph

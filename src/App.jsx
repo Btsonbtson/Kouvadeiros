@@ -1,5 +1,5 @@
-// KOUVADEIROS v7 — build 2026-08-23 (Pages seeds + offline login fallback)
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+// KOUVADEIROS v7 — build 2026-08-25 (history locks + responsive shell)
+import { useState, useEffect, useRef, useCallback, useMemo, memo, startTransition } from 'react'
 import { api, clearAuth, storeUser } from './lib/api'
 import {
   ALL_FIXTURES, SUPER_LEAGUE, UEFA_FIXTURES,
@@ -31,10 +31,10 @@ const PC={boikos:{p:'#ff2244',bg:'rgba(255,34,68,.18)',b:'rgba(255,34,68,.38)'},
 const MEDALS=['🥇','🥈','🥉']
 
 /**
- * Fixed stadium photo (does not scroll). Content scrolls over a light scrim.
- * Same pattern as ΙΕΡΑ ΕΞΕΤΑΣΗ for every tab.
+ * Stadium photo stays fixed; content scrolls over a light scrim.
+ * Background layers never receive pointer events — scroll/taps stay on content.
  */
-function TabBackdrop({ bgUrl, children, style, fillChildren=false }) {
+function TabBackdrop({ bgUrl, children, fillChildren=false }) {
   return (
     <div style={{
       position:'relative',
@@ -43,7 +43,7 @@ function TabBackdrop({ bgUrl, children, style, fillChildren=false }) {
       overflow:'hidden',
       display:'flex',
       flexDirection:'column',
-      ...style,
+      isolation:'isolate',
     }}>
       {bgUrl && <>
         <div aria-hidden style={{
@@ -67,6 +67,8 @@ function TabBackdrop({ bgUrl, children, style, fillChildren=false }) {
         flexDirection: fillChildren ? 'column' : undefined,
         overflowY: fillChildren ? 'hidden' : 'auto',
         WebkitOverflowScrolling:'touch',
+        overscrollBehavior:'contain',
+        touchAction:'pan-y',
       }}>
         {children}
       </div>
@@ -702,7 +704,7 @@ function LeaderHero({board,maxPts}){
 
 function HistoryPage({predictions,results}){
   const played=[...ALL_FIXTURES].filter(m=>results?.[m.id]!=null).sort((a,b)=>new Date(b.kickoff)-new Date(a.kickoff))
-  return <div style={{padding:'16px 16px 20px'}}>
+  return <div style={{padding:'16px 16px 24px'}}>
     <SLbl>Αποτελέσματα · {played.length} αγώνες</SLbl>
     {!played.length&&<div style={{textAlign:'center',padding:40,color:MUTED,fontSize:13}}>Δεν υπάρχουν αποτελέσματα ακόμα</div>}
     {played.map(m=>{
@@ -799,7 +801,7 @@ function AddPlayerModal({ onClose, onAdded }) {
 
 
 // ─── DESKTOP SIDEBAR ─────────────────────────────────────────────────────────
-function LeaderSidebar({ predictions, results, compact }) {
+const LeaderSidebar = memo(function LeaderSidebar({ predictions, results, compact }) {
   const board = computeLeaderboard(ALL_FIXTURES, predictions, results)
   const maxPts = ALL_FIXTURES.filter(m=>results?.[m.id]!=null).length*2
   const hasLivePts = Object.values(results||{}).some(r=>r?.provisional)
@@ -848,16 +850,166 @@ function LeaderSidebar({ predictions, results, compact }) {
       <H2HGraph predictions={predictions} results={results}/>
     </div>
   )
-}
+})
 
 // ─── APP SHELL (RESPONSIVE) ─────────────────────────────────────────────────
 const NAV=[
-  {id:'matchday', l:'Προβλέψεις', short:'Προβλ.', icon:'⚽'},
-  {id:'schedule', l:'Πρόγραμμα',  short:'Πρόγρ.', icon:'📅'},
-  {id:'league',   l:'Διαγωνισμός', short:'Διαγ.',  icon:'🏆'},
-  {id:'history',  l:'Ιστορικό',    short:'Ιστορ.', icon:'📋'},
-  {id:'banter',   l:'Ιερά Εξέταση', short:'Ιερά',  icon:'🔥'},
+  {id:'matchday', l:'ΠΡΟΒΛΕΨΕΙΣ',    icon:'⚽'},
+  {id:'schedule', l:'ΠΡΟΓΡΑΜΜΑ',     icon:'📅'},
+  {id:'league',   l:'Διαγωνισμός',   icon:'🏆'},
+  {id:'history',  l:'Ιστορικό',      icon:'📋'},
+  {id:'banter',   l:'ΙΕΡΑ ΕΞΕΤΑΣΗ',  icon:'🔥'},
 ]
+
+/** Stable header — defined outside App so live polls do not remount it. */
+function AppHeader({
+  isDesktop, isTablet, screen, setScreen, banterUnread, navIcon,
+  syncOk, syncing, user, pc,
+  timesBusy, syncTbaTimes, gazzetta, gazzettaBusy, toggleGazzetta,
+  setShowAddPlayer, setShowGuide, handleLogout,
+}) {
+  return (
+    <div style={{ background:'#0a0b0f', borderBottom:`1px solid ${LINE}`,
+      display:'flex', alignItems:'center', justifyContent:'space-between',
+      padding: isDesktop ? '0 32px' : '0 16px',
+      height: isDesktop ? 56 : 48,
+      position:'relative', zIndex:30, flexShrink:0 }}>
+      <div style={{display:'flex',alignItems:'center',gap:10,flexShrink:0}}>
+        <div style={{fontSize:isDesktop?18:15,fontWeight:800,letterSpacing:'-.01em',color:TEXT}}>ΚΟΥΒΑΔΕΪΡΟΣ</div>
+        <div style={{fontSize:9,fontWeight:700,letterSpacing:'.08em',color:GREEN,background:`${GREEN}18`,border:`1px solid ${GREEN}35`,borderRadius:4,padding:'2px 6px'}}>26/27</div>
+      </div>
+
+      {isDesktop && (
+        <div style={{display:'flex',gap:4,flexShrink:1,minWidth:0,overflowX:'auto',scrollbarWidth:'none'}}>
+          {NAV.map(navItem=>(
+            <button key={navItem.id} type="button"
+              onClick={()=>startTransition(()=>setScreen(navItem.id))}
+              style={{
+                display:'flex',alignItems:'center',gap:7,padding:'8px 14px',
+                borderRadius:8, border:'none', flexShrink:0,
+                background:screen===navItem.id?'rgba(255,255,255,.1)':'transparent',
+                color:screen===navItem.id?TEXT:MUTED,cursor:'pointer',fontSize:13,fontWeight:600,
+                borderBottom:screen===navItem.id?`2px solid ${GREEN}`:'2px solid transparent',
+                transition:'background .15s, color .15s', position:'relative',
+              }}>
+              <span style={{position:'relative'}}>
+                {navIcon(navItem)}
+                {navItem.id==='banter'&&banterUnread&&(
+                  <span style={{position:'absolute',top:-4,right:-8,width:8,height:8,borderRadius:'50%',background:RED,boxShadow:`0 0 0 2px #0a0b0f`}}/>
+                )}
+              </span>
+              {navItem.l}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <div style={{display:'flex',alignItems:'center',gap:isDesktop?10:6,flexShrink:0,minWidth:0}}>
+        <div style={{width:7,height:7,borderRadius:'50%',flexShrink:0,background:syncOk?GREEN:RED,animation:syncing?'pulse-d .7s infinite':undefined}}/>
+        {user?.role==='admin' && (
+          <button type="button" onClick={syncTbaTimes} disabled={timesBusy}
+            title="Ενημέρωση ωρών TBA από internet (ESPN / Gazzetta)"
+            style={{
+              display:'flex', alignItems:'center', gap:5, flexShrink:0,
+              padding: isDesktop ? '5px 10px' : '4px 7px',
+              borderRadius: 8, border: `1px solid ${BLUE}55`, background: `${BLUE}14`, color: BLUE,
+              cursor: timesBusy ? 'wait' : 'pointer', fontSize: isDesktop ? 11 : 9, fontWeight: 700,
+            }}>
+            <i className={`ti ${timesBusy?'ti-loader-2':'ti-clock-edit'}`} style={{fontSize:13,animation:timesBusy?'spin .7s linear infinite':undefined}}/>
+            {isDesktop ? (timesBusy?'…':'Ώρες') : '🕒'}
+          </button>
+        )}
+        {user?.role==='admin' && (
+          <button type="button" onClick={toggleGazzetta} disabled={gazzettaBusy || gazzetta.loading}
+            title={
+              gazzetta.enabled === false
+                ? 'Gazzetta OFF — πάτα για ενεργοποίηση (30′ πριν → FT+30′)'
+                : gazzetta.healthy
+                  ? `Gazzetta ON · live feed ${gazzetta.liveFeedCount ?? '—'} · matched ${gazzetta.matchedLive ?? 0}`
+                  : `Gazzetta πρόβλημα${gazzetta.lastError ? ': ' + gazzetta.lastError : ''} — πάτα για refresh`
+            }
+            style={{
+              display:'flex', alignItems:'center', gap:5, flexShrink:0,
+              padding: isDesktop ? '5px 10px' : '4px 7px', borderRadius: 8,
+              border: `1px solid ${gazzetta.enabled === false ? 'rgba(255,77,109,.45)' : gazzetta.healthy ? 'rgba(0,255,136,.45)' : 'rgba(255,77,109,.55)'}`,
+              background: gazzetta.enabled === false ? 'rgba(255,77,109,.12)' : gazzetta.healthy ? 'rgba(0,255,136,.12)' : 'rgba(255,77,109,.18)',
+              color: gazzetta.enabled === false || !gazzetta.healthy ? '#ff4d6d' : '#00ff88',
+              cursor: gazzettaBusy ? 'wait' : 'pointer',
+              fontSize: isDesktop ? 11 : 9, fontWeight: 800, letterSpacing: '.03em',
+              textTransform: 'uppercase', opacity: gazzettaBusy ? 0.7 : 1, whiteSpace: 'nowrap',
+            }}>
+            <span style={{
+              width: 7, height: 7, borderRadius: '50%', flexShrink: 0,
+              background: gazzetta.enabled === false || !gazzetta.healthy ? '#ff4d6d' : '#00ff88',
+              boxShadow: gazzetta.healthy && gazzetta.enabled !== false ? '0 0 6px #00ff88' : undefined,
+            }}/>
+            {isDesktop ? 'Gazzetta' : 'GZ'}
+          </button>
+        )}
+        {user?.role==='admin' && (
+          <button type="button" onClick={()=>setShowAddPlayer(true)} title="Προσθήκη παίκτη"
+            style={{background:'none',border:'none',cursor:'pointer',color:MUTED,display:'flex',alignItems:'center',padding:'4px 6px',borderRadius:8,fontSize:isDesktop?16:14,flexShrink:0}}>
+            ➕
+          </button>
+        )}
+        <button type="button" onClick={()=>setShowGuide(true)} title="Οδηγός & Κανόνες"
+          style={{background:'none',border:'none',cursor:'pointer',color:MUTED,display:'flex',alignItems:'center',padding:'4px 6px',borderRadius:8,fontSize:isDesktop?17:15,flexShrink:0}}>
+          ℹ️
+        </button>
+        <div style={{display:'flex',alignItems:'center',gap:7,flexShrink:0}}>
+          <div style={{width:isDesktop?32:26,height:isDesktop?32:26,borderRadius:'50%',background:pc.p,
+            display:'flex',alignItems:'center',justifyContent:'center',fontSize:isDesktop?13:11,fontWeight:900,color:'#08090d'}}>
+            {user.name.substring(0,1)}
+          </div>
+          {isDesktop && <span style={{fontSize:12,fontWeight:700,color:pc.p}}>{user.name}</span>}
+        </div>
+        {isDesktop && (
+          <button type="button" onClick={handleLogout}
+            style={{background:'rgba(255,77,109,.12)',border:'1px solid rgba(255,77,109,.3)',cursor:'pointer',color:'#ff4d6d',display:'flex',alignItems:'center',padding:'5px 10px',borderRadius:8,fontSize:12,fontWeight:700,gap:4,flexShrink:0}}>
+            🚪 Έξοδος
+          </button>
+        )}
+      </div>
+    </div>
+  )
+}
+
+/**
+ * Classic compact bottom nav + Logout.
+ * In document flow (not fixed) so TabBackdrop scroll layers cannot steal taps.
+ */
+function AppBottomNav({ isMobile, isTablet, screen, setScreen, banterUnread, navIcon, handleLogout }) {
+  return (
+    <div style={{
+      background:'#0a0b0f', borderTop:`1px solid ${LINE}`,
+      display:'flex', justifyContent:'space-around',
+      padding:`6px 0 ${isMobile?'max(8px,env(safe-area-inset-bottom))':'8px'}`,
+      flexShrink:0, position:'relative', zIndex:40,
+    }}>
+      {NAV.map(navItem=>(
+        <button key={navItem.id} type="button"
+          onClick={()=>startTransition(()=>setScreen(navItem.id))}
+          style={{display:'flex',flexDirection:'column',alignItems:'center',gap:3,
+            padding:'3px 8px',background:'none',border:'none',cursor:'pointer',minWidth:44,flex:1,position:'relative'}}>
+          <span style={{fontSize:isTablet?22:19,filter:screen===navItem.id||(navItem.id==='banter'&&banterUnread)?undefined:'grayscale(.6) opacity(.5)',position:'relative'}}>
+            {navIcon(navItem)}
+            {navItem.id==='banter'&&banterUnread&&(
+              <span style={{position:'absolute',top:-2,right:-6,width:8,height:8,borderRadius:'50%',background:RED,boxShadow:`0 0 0 2px #0a0b0f`}}/>
+            )}
+          </span>
+          <span style={{fontSize:isTablet?10:9,fontWeight:700,letterSpacing:'.04em',color:screen===navItem.id?GREEN:(navItem.id==='banter'&&banterUnread?GOLD:MUTED),textTransform:'uppercase'}}>{navItem.l}</span>
+          {screen===navItem.id&&<div style={{width:16,height:2,background:GREEN,borderRadius:1}}/>}
+        </button>
+      ))}
+      <button type="button" onClick={handleLogout}
+        style={{display:'flex',flexDirection:'column',alignItems:'center',gap:3,
+          padding:'3px 8px',background:'none',border:'none',cursor:'pointer',minWidth:44,flex:1}}>
+        <span style={{fontSize:19}}>🚪</span>
+        <span style={{fontSize:9,fontWeight:700,color:'#ff4d6d',textTransform:'uppercase'}}>Έξοδος</span>
+      </button>
+    </div>
+  )
+}
 
 function useBreakpoint() {
   const [bp, setBp] = useState(() => {
@@ -1195,192 +1347,24 @@ export default function App({ user, onLogout }) {
     banter:  <BanterPage   chat={state.chat} onSend={sendChat} onRead={markChatRead}/>,
   }
 
-  function navIcon(navItem) {
+  const navIcon = useCallback((navItem) => {
     if (navItem.id === 'banter' && banterUnread) return '🔔'
     return navItem.icon
+  }, [banterUnread])
+
+  const headerProps = {
+    isDesktop, isTablet, screen, setScreen, banterUnread, navIcon,
+    syncOk, syncing, user, pc,
+    timesBusy, syncTbaTimes, gazzetta, gazzettaBusy, toggleGazzetta,
+    setShowAddPlayer, setShowGuide, handleLogout,
   }
-
-  // ── HEADER ───────────────────────────────────────────────────────────────────
-  const Header = () => (
-    <div style={{ background:'#0a0b0f', borderBottom:`1px solid ${LINE}`,
-      display:'flex', alignItems:'center', justifyContent:'space-between',
-      padding: isDesktop ? '0 32px' : '0 16px',
-      height: isDesktop ? 56 : 48,
-      position:'sticky', top:0, zIndex:20, flexShrink:0 }}>
-      {/* Brand */}
-      <div style={{display:'flex',alignItems:'center',gap:10}}>
-        <div style={{fontSize:isDesktop?18:15,fontWeight:800,letterSpacing:'-.01em',color:TEXT}}>ΚΟΥΒΑΔΕΪΡΟΣ</div>
-        <div style={{fontSize:9,fontWeight:700,letterSpacing:'.08em',color:GREEN,background:`${GREEN}18`,border:`1px solid ${GREEN}35`,borderRadius:4,padding:'2px 6px'}}>26/27</div>
-      </div>
-
-      {/* Desktop nav — inline in header */}
-      {isDesktop && (
-        <div style={{display:'flex',gap:2,flex:1,justifyContent:'center',minWidth:0,overflowX:'auto',scrollbarWidth:'none',msOverflowStyle:'none',WebkitOverflowScrolling:'touch',padding:'0 8px'}}>
-          {NAV.map(navItem=>(
-            <button key={navItem.id} type="button" onClick={()=>setScreen(navItem.id)} style={{
-              display:'flex',alignItems:'center',gap:6,padding:'8px 12px',
-              borderRadius:8, border:'none', flexShrink:0,
-              background:screen===navItem.id?'rgba(255,255,255,.1)':'transparent',
-              color:screen===navItem.id?TEXT:MUTED,cursor:'pointer',fontSize:13,fontWeight:600,
-              borderBottom:screen===navItem.id?`2px solid ${GREEN}`:'2px solid transparent',
-              transition:'all .15s', position:'relative',
-              touchAction:'manipulation', WebkitTapHighlightColor:'transparent',
-            }}>
-              <span style={{position:'relative'}}>
-                {navIcon(navItem)}
-                {navItem.id==='banter'&&banterUnread&&(
-                  <span style={{position:'absolute',top:-4,right:-8,width:8,height:8,borderRadius:'50%',background:RED,boxShadow:`0 0 0 2px #0a0b0f`}}/>
-                )}
-              </span>
-              {navItem.l}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {/* Right controls */}
-      <div style={{display:'flex',alignItems:'center',gap:isDesktop?10:6,flexShrink:0,minWidth:0}}>
-        <div style={{width:7,height:7,borderRadius:'50%',flexShrink:0,background:syncOk?GREEN:RED,animation:syncing?'pulse-d .7s infinite':undefined}}/>
-        {user?.role==='admin' && (
-          <button
-            type="button"
-            onClick={syncTbaTimes}
-            disabled={timesBusy}
-            title="Ενημέρωση ωρών TBA από internet (ESPN / Gazzetta)"
-            style={{
-              display:'flex', alignItems:'center', gap:5, flexShrink:0,
-              padding: isDesktop ? '5px 10px' : '4px 7px',
-              borderRadius: 8,
-              border: `1px solid ${BLUE}55`,
-              background: `${BLUE}14`,
-              color: BLUE,
-              cursor: timesBusy ? 'wait' : 'pointer',
-              fontSize: isDesktop ? 11 : 9,
-              fontWeight: 700,
-            }}
-          >
-            <i className={`ti ${timesBusy?'ti-loader-2':'ti-clock-edit'}`} style={{fontSize:13,animation:timesBusy?'spin .7s linear infinite':undefined}}/>
-            {isDesktop ? (timesBusy?'…':'Ώρες') : '🕒'}
-          </button>
-        )}
-        {user?.role==='admin' && (
-          <button
-            type="button"
-            onClick={toggleGazzetta}
-            disabled={gazzettaBusy || gazzetta.loading}
-            title={
-              gazzetta.enabled === false
-                ? 'Gazzetta OFF — πάτα για ενεργοποίηση (30′ πριν → FT+30′)'
-                : gazzetta.healthy
-                  ? `Gazzetta ON · live feed ${gazzetta.liveFeedCount ?? '—'} · matched ${gazzetta.matchedLive ?? 0}`
-                  : `Gazzetta πρόβλημα${gazzetta.lastError ? ': ' + gazzetta.lastError : ''} — πάτα για refresh`
-            }
-            style={{
-              display:'flex', alignItems:'center', gap:5, flexShrink:0,
-              padding: isDesktop ? '5px 10px' : '4px 7px',
-              borderRadius: 8,
-              border: `1px solid ${gazzetta.enabled === false ? 'rgba(255,77,109,.45)' : gazzetta.healthy ? 'rgba(0,255,136,.45)' : 'rgba(255,77,109,.55)'}`,
-              background: gazzetta.enabled === false ? 'rgba(255,77,109,.12)' : gazzetta.healthy ? 'rgba(0,255,136,.12)' : 'rgba(255,77,109,.18)',
-              color: gazzetta.enabled === false || !gazzetta.healthy ? '#ff4d6d' : '#00ff88',
-              cursor: gazzettaBusy ? 'wait' : 'pointer',
-              fontSize: isDesktop ? 11 : 9,
-              fontWeight: 800,
-              letterSpacing: '.03em',
-              textTransform: 'uppercase',
-              opacity: gazzettaBusy ? 0.7 : 1,
-              whiteSpace: 'nowrap',
-            }}
-          >
-            <span style={{
-              width: 7, height: 7, borderRadius: '50%', flexShrink: 0,
-              background: gazzetta.enabled === false || !gazzetta.healthy ? '#ff4d6d' : '#00ff88',
-              boxShadow: gazzetta.healthy && gazzetta.enabled !== false ? '0 0 6px #00ff88' : undefined,
-            }}/>
-            {isDesktop ? 'Gazzetta' : 'GZ'}
-          </button>
-        )}
-        {user?.role==='admin' && (
-          <button onClick={()=>setShowAddPlayer(true)} title="Προσθήκη παίκτη"
-            style={{background:'none',border:'none',cursor:'pointer',color:MUTED,display:'flex',alignItems:'center',padding:'4px 6px',borderRadius:8,fontSize:isDesktop?16:14,flexShrink:0}}>
-          ➕
-        </button>
-        )}
-        <button onClick={()=>setShowGuide(true)} title="Οδηγός & Κανόνες"
-          style={{background:'none',border:'none',cursor:'pointer',color:MUTED,display:'flex',alignItems:'center',padding:'4px 6px',borderRadius:8,fontSize:isDesktop?17:15,flexShrink:0}}>
-          ℹ️
-        </button>
-        <div style={{display:'flex',alignItems:'center',gap:7,flexShrink:0}}>
-          <div style={{width:isDesktop?32:26,height:isDesktop?32:26,borderRadius:'50%',background:pc.p,
-            display:'flex',alignItems:'center',justifyContent:'center',fontSize:isDesktop?13:11,fontWeight:900,color:'#08090d'}}>
-            {user.name.substring(0,1)}
-          </div>
-          {isDesktop && <span style={{fontSize:12,fontWeight:700,color:pc.p}}>{user.name}</span>}
-        </div>
-        <button onClick={handleLogout} style={{background:'rgba(255,77,109,.12)',border:'1px solid rgba(255,77,109,.3)',cursor:'pointer',color:'#ff4d6d',display:'flex',alignItems:'center',padding:isDesktop?'5px 10px':'5px 8px',borderRadius:8,fontSize:12,fontWeight:700,gap:4,flexShrink:0}}>
-          🚪 {isDesktop?'Έξοδος':''}
-        </button>
-      </div>
-    </div>
-  )
-
-  // ── BOTTOM NAV (mobile/tablet only) — in-flow so taps never miss under content
-  const BottomNav = () => (
-    <nav aria-label="Κύρια πλοήγηση" style={{
-      background:'#0a0b0f', borderTop:`1px solid ${LINE}`,
-      display:'flex', justifyContent:'space-between', alignItems:'stretch',
-      padding:`4px 2px max(8px,env(safe-area-inset-bottom))`,
-      flexShrink:0, zIndex:40, position:'relative',
-      WebkitTapHighlightColor:'transparent',
-    }}>
-      {NAV.map(navItem=>{
-        const active = screen===navItem.id
-        const hot = navItem.id==='banter'&&banterUnread
-        return (
-          <button key={navItem.id} type="button" onClick={()=>setScreen(navItem.id)}
-            aria-current={active?'page':undefined}
-            style={{
-              display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center',
-              gap:2, flex:1, minWidth:0, minHeight:52, maxWidth:'20%',
-              padding:'6px 2px 4px', margin:0,
-              background: active ? 'rgba(0,255,136,.08)' : 'transparent',
-              border:'none', borderRadius:10, cursor:'pointer',
-              touchAction:'manipulation', WebkitTapHighlightColor:'transparent',
-              position:'relative',
-            }}>
-            <span style={{
-              fontSize:isTablet?22:20, lineHeight:1,
-              filter:active||hot?undefined:'grayscale(.55) opacity(.55)',
-              position:'relative',
-            }}>
-              {navIcon(navItem)}
-              {hot&&(
-                <span style={{position:'absolute',top:-2,right:-6,width:8,height:8,borderRadius:'50%',background:RED,boxShadow:`0 0 0 2px #0a0b0f`}}/>
-              )}
-            </span>
-            <span style={{
-              fontSize:isTablet?11:10, fontWeight:700, letterSpacing:'.02em', lineHeight:1.15,
-              color:active?GREEN:(hot?GOLD:MUTED),
-              whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis',
-              maxWidth:'100%',
-            }}>
-              {isMobile ? navItem.short : navItem.l}
-            </span>
-            <div style={{
-              width:active?18:0, height:2, background:GREEN, borderRadius:1,
-              transition:'width .12s ease', marginTop:1,
-            }}/>
-          </button>
-        )
-      })}
-    </nav>
-  )
 
   // ── DESKTOP SIDEBAR LAYOUT ──────────────────────────────────────────────────
   if (isDesktop) {
     return (
       <div style={{display:'flex',flexDirection:'column',height:'100vh',overflow:'hidden',background:BG,fontFamily:"'Space Grotesk',system-ui,sans-serif",color:TEXT}}>
         {showAddPlayer && user?.role==='admin' && <AddPlayerModal onClose={()=>setShowAddPlayer(false)} onAdded={load}/>}
-        <Header/>
+        <AppHeader {...headerProps}/>
         <TabBackdrop bgUrl={tabBgs[screen]} fillChildren={screen==='banter'}>
           <div style={{
             flex: screen==='banter' ? 1 : undefined,
@@ -1408,20 +1392,17 @@ export default function App({ user, onLogout }) {
     )
   }
 
-  // ── MOBILE / TABLET ─────────────────────────────────────────────────────────
+  // ── MOBILE / TABLET — nav in flex flow so scroll layers never steal tab taps
   return (
     <div style={{background:BG,height:'100svh',overflow:'hidden',display:'flex',flexDirection:'column',
       maxWidth:isTablet?768:'100%',margin:'0 auto',fontFamily:"'Space Grotesk',system-ui,sans-serif",color:TEXT}}>
       {showAddPlayer && user?.role==='admin' && <AddPlayerModal onClose={()=>setShowAddPlayer(false)} onAdded={load}/>}
-      <Header/>
-      <TabBackdrop
-        bgUrl={tabBgs[screen]}
-        fillChildren={screen==='banter'}
-      >
+      <AppHeader {...headerProps}/>
+      <TabBackdrop bgUrl={tabBgs[screen]} fillChildren={screen==='banter'}>
         {screen!=='banter' && (
           <div style={{padding:'8px 16px 0'}}>
             <LeaderSidebar predictions={predictions} results={scoringResults} compact/>
-            <div style={{background:'rgba(8,9,13,.40)',backdropFilter:'blur(8px)',borderRadius:12,padding:'10px 12px',marginTop:6,border:'1px solid rgba(255,255,255,.10)'}}>
+            <div style={{background:'rgba(8,9,13,.40)',borderRadius:12,padding:'10px 12px',marginTop:6,border:'1px solid rgba(255,255,255,.10)'}}>
               <div style={{fontSize:10,fontWeight:700,letterSpacing:'.08em',textTransform:'uppercase',color:'rgba(255,255,255,.45)',marginBottom:6}}>📈 Εξέλιξη Διαγωνισμού</div>
               <H2HGraph predictions={predictions} results={scoringResults}/>
             </div>
@@ -1429,7 +1410,15 @@ export default function App({ user, onLogout }) {
         )}
         {pages[screen]}
       </TabBackdrop>
-      <BottomNav/>
+      <AppBottomNav
+        isMobile={isMobile}
+        isTablet={isTablet}
+        screen={screen}
+        setScreen={setScreen}
+        banterUnread={banterUnread}
+        navIcon={navIcon}
+        handleLogout={handleLogout}
+      />
     </div>
   )
 }// ─── LEAGUE PAGE ─────────────────────────────────────────────────────────────
@@ -1445,17 +1434,11 @@ function LeaguePage({predictions,results,thavmaStats}){
   }
   function isCatOpen(pid, cat) { return !!openCat[`${pid}:${cat}`] }
 
-  return <div style={{padding:'16px 16px 20px'}}>
-    <div style={{display:'flex',gap:6,marginBottom:16,overflowX:'auto',WebkitOverflowScrolling:'touch',scrollbarWidth:'none',msOverflowStyle:'none',paddingBottom:2}}>
-      {[
-        {id:'standings',l:'Συγκομιδή'},
-        {id:'rivalry',l:'🌶️ Διαγκωνισμοί'},
-        {id:'analytics',l:'Αναλυτικά'},
-        {id:'campaigns',l:'Διοργανώσεις'},
-      ].map(tabItem=>(
+  return <div style={{padding:'16px 16px 24px'}}>
+    <div style={{display:'flex',gap:6,marginBottom:16,overflowX:'auto',scrollbarWidth:'none',msOverflowStyle:'none'}}>
+      {[{id:'standings',l:'Συγκομιδή'},{id:'rivalry',l:'🌶️ Διαγκωνισμοί'},{id:'analytics',l:'Αναλυτικά'},{id:'campaigns',l:'Ενεργές Διοργανώσεις'}].map(tabItem=>(
         <button key={tabItem.id} type="button" onClick={()=>setTab(tabItem.id)}
-          style={{fontSize:12,fontWeight:700,padding:'10px 14px',borderRadius:9,whiteSpace:'nowrap',
-            flexShrink:0, minHeight:40, touchAction:'manipulation',
+          style={{fontSize:11,fontWeight:700,padding:'6px 13px',borderRadius:7,whiteSpace:'nowrap',flexShrink:0,
             border:'1px solid '+(tab===tabItem.id?'rgba(255,255,255,.3)':LINE),
             background:tab===tabItem.id?'rgba(255,255,255,.12)':'transparent',
             color:tab===tabItem.id?TEXT:MUTED,cursor:'pointer'}}>
@@ -1721,7 +1704,7 @@ function MatchdayPage({fixtures=ALL_FIXTURES,predictions,results,scoringResults,
       if(bLive&&!aLive) return 1
       return new Date(a.kickoff).getTime()-new Date(b.kickoff).getTime()
     })
-  return <div style={{padding:'12px 16px 20px'}}>
+  return <div style={{padding:'12px 16px 24px'}}>
     <div style={{fontSize:10,fontWeight:700,letterSpacing:'.08em',textTransform:'uppercase',color:MUTED,marginBottom:14}}>
       Χρονολογικά · Ζωντανοί αγώνες επάνω · πόντοι live
     </div>
@@ -2259,7 +2242,7 @@ function SchedulePage({fixtures:programFixtures,slStandings}){
 
   const allTeams = [...new Set(ALL_FIXTURES.flatMap(m=>[m.home,m.away]))].sort()
 
-  return <div style={{padding:'12px 16px 20px'}}>
+  return <div style={{padding:'12px 16px 24px'}}>
 
     {/* Controls */}
     <div style={{display:'flex',gap:8,marginBottom:14,flexWrap:'wrap',alignItems:'center'}}>
