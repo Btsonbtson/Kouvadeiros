@@ -1,0 +1,91 @@
+{
+  "version": 1,
+  "updatedAt": "2026-08-26T17:07:02.790Z",
+  "predictions": {
+    "ucl-aek-2": {
+      "boikos": {
+        "h": 2,
+        "a": 1,
+        "qual": "AEK",
+        "predOT": false,
+        "otH": 0,
+        "otA": 0,
+        "predPen": false,
+        "penH": 0,
+        "penA": 0,
+        "savedAt": "t1"
+      },
+      "chousiadas": {
+        "h": 1,
+        "a": 1,
+        "qual": "AEK",
+        "predOT": false,
+        "otH": 0,
+        "otA": 0,
+        "predPen": false,
+        "penH": 0,
+        "penA": 0,
+        "savedAt": "t2"
+      },
+      "mavromichalis": {
+        "h": 2,
+        "a": 0,
+        "qual": "AEK",
+        "predOT": false,
+        "otH": 0,
+        "otA": 0,
+        "predPen": false,
+        "penH": 0,
+        "penA": 0,
+        "savedAt": "t3b"
+      }
+    }
+  },
+  "results": {},
+  "events": [
+    {
+      "type": "tip",
+      "matchId": "ucl-aek-2",
+      "playerId": "boikos",
+      "h": 2,
+      "a": 1,
+      "qual": "AEK"
+    },
+    {
+      "type": "tip",
+      "matchId": "ucl-aek-2",
+      "playerId": "boikos",
+      "h": 2,
+      "a": 1,
+      "qual": "AEK",
+      "ts": "t1"
+    },
+    {
+      "type": "tip",
+      "matchId": "ucl-aek-2",
+      "playerId": "chousiadas",
+      "h": 1,
+      "a": 1,
+      "qual": "AEK",
+      "ts": "t2"
+    },
+    {
+      "type": "tip",
+      "matchId": "ucl-aek-2",
+      "playerId": "mavromichalis",
+      "h": 2,
+      "a": 0,
+      "qual": "AEK",
+      "ts": "t3"
+    },
+    {
+      "type": "tip",
+      "matchId": "ucl-aek-2",
+      "playerId": "mavromichalis",
+      "h": 2,
+      "a": 0,
+      "qual": "AEK",
+      "ts": "t3b"
+    }
+  ]
+}
