@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-08-26T17:07:02.790Z",
+  "updatedAt": "2026-08-26T17:13:09.468Z",
   "predictions": {
     "ucl-aek-2": {
       "boikos": {
@@ -13,9 +13,21 @@
         "predPen": false,
         "penH": 0,
         "penA": 0,
-        "savedAt": "t1"
+        "savedAt": "2026-08-26T17:12:00Z"
       },
       "chousiadas": {
+        "h": 1,
+        "a": 2,
+        "qual": "AEK",
+        "predOT": false,
+        "otH": 0,
+        "otA": 0,
+        "predPen": false,
+        "penH": 0,
+        "penA": 0,
+        "savedAt": "2026-08-26T17:12:01Z"
+      },
+      "mavromichalis": {
         "h": 1,
         "a": 1,
         "qual": "AEK",
@@ -25,19 +37,21 @@
         "predPen": false,
         "penH": 0,
         "penA": 0,
-        "savedAt": "t2"
-      },
-      "mavromichalis": {
-        "h": 2,
+        "savedAt": "2026-08-26T17:12:02Z"
+      }
+    },
+    "test": {
+      "boikos": {
+        "h": 1,
         "a": 0,
-        "qual": "AEK",
+        "qual": null,
         "predOT": false,
         "otH": 0,
         "otA": 0,
         "predPen": false,
         "penH": 0,
         "penA": 0,
-        "savedAt": "t3b"
+        "savedAt": null
       }
     }
   },
@@ -86,6 +100,40 @@
       "a": 0,
       "qual": "AEK",
       "ts": "t3b"
+    },
+    {
+      "type": "tip",
+      "matchId": "test",
+      "playerId": "boikos",
+      "h": 1,
+      "a": 0
+    },
+    {
+      "type": "tip",
+      "matchId": "ucl-aek-2",
+      "playerId": "boikos",
+      "h": 2,
+      "a": 1,
+      "qual": "AEK",
+      "ts": "2026-08-26T17:12:00Z"
+    },
+    {
+      "type": "tip",
+      "matchId": "ucl-aek-2",
+      "playerId": "chousiadas",
+      "h": 1,
+      "a": 2,
+      "qual": "AEK",
+      "ts": "2026-08-26T17:12:01Z"
+    },
+    {
+      "type": "tip",
+      "matchId": "ucl-aek-2",
+      "playerId": "mavromichalis",
+      "h": 1,
+      "a": 1,
+      "qual": "AEK",
+      "ts": "2026-08-26T17:12:02Z"
     }
   ]
 }
