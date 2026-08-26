@@ -19,12 +19,15 @@ const loginSrc = fs.readFileSync(path.join(root, 'src/pages/Login.jsx'), 'utf8')
 const mainSrc = fs.readFileSync(path.join(root, 'src/main.jsx'), 'utf8')
 const workerSrc = fs.readFileSync(path.join(root, 'worker/kouvadeiros-api.js'), 'utf8')
 
-// Live v11 successful /login → CF 1101. Client must wait for loginFixed / v13+.
+// Live v11 successful /login → CF 1101. Client must wait for bridge / loginFixed / v13+.
 if (!/workerLoginSafe/.test(apiSrc)) {
   throw new Error('expected workerLoginSafe()')
 }
 if (!/loginFixed/.test(apiSrc)) {
   throw new Error('api.js must require ping.loginFixed (or version≥13) before /login')
+}
+if (!/bridge/.test(apiSrc) || !/\/api/.test(apiSrc)) {
+  throw new Error('api.js must prefer Pages /api bridge when available')
 }
 if (!/markWorkerLoginBroken/.test(apiSrc)) {
   throw new Error('api.js must cache broken /login for the session')

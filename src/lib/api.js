@@ -1,11 +1,35 @@
 import { mergeSeededPredictions, applyTipResultLocks } from './data.js'
 
-const BASE = (typeof __WORKER_URL__ !== 'undefined' && __WORKER_URL__)
+const WORKER_BASE = (typeof __WORKER_URL__ !== 'undefined' && __WORKER_URL__)
   ? __WORKER_URL__
   : 'https://kouvadeiros-api.jboikos.workers.dev'
 const SCORES_BASE = (typeof __SCORES_URL__ !== 'undefined' && __SCORES_URL__)
   ? __SCORES_URL__
   : 'https://kouvadeiros-scores.jboikos.workers.dev'
+
+/**
+ * Prefer same-origin Pages Functions (`/api`) when the app is served from Pages.
+ * That bridge shares KOUV KV and restores login + tips without Worker deploy secrets.
+ * Local Vite / non-Pages hosts still talk to workers.dev.
+ */
+function resolveApiBase() {
+  try {
+    if (typeof window !== 'undefined') {
+      const h = String(window.location?.hostname || '')
+      if (h === 'kouvadeiros.pages.dev' || h.endsWith('.kouvadeiros.pages.dev') || h.endsWith('.pages.dev')) {
+        return '/api'
+      }
+      // Custom domains often proxy the same Pages project
+      if (h && !h.includes('localhost') && !h.includes('127.0.0.1') && !h.includes('workers.dev')) {
+        // Probe happens via /ping loginFixed; still prefer /api when path exists at runtime
+        if (window.__KOUV_API_BASE__) return window.__KOUV_API_BASE__
+      }
+    }
+  } catch { /* SSR / private */ }
+  return WORKER_BASE
+}
+
+let BASE = resolveApiBase()
 
 const OFFLINE_PREDS_KEY = 'kouv_offline_preds'
 
@@ -165,27 +189,38 @@ function isWorkerLoginMarkedBroken() {
 }
 
 /**
- * Live Worker v11 crashes on *successful* /login (CF 1101, no CORS headers) —
- * browsers report a CORS/network failure and the app looks like it "crashed".
- * Repo Worker v13+ returns loginFixed:true / version≥13. Until that deploys,
- * skip /login and use offline roster immediately.
+ * Live Worker v11 crashes on *successful* /login (CF 1101, no CORS headers).
+ * Pages `/api` bridge (v15+) and Worker v13+ expose loginFixed / version≥13.
+ * Until one of those answers, skip /login and use offline roster.
  */
 async function workerLoginSafe() {
   if (isWorkerLoginMarkedBroken()) return false
-  const { signal, clear } = abortableTimeout(2500)
-  try {
-    const res = await fetch(`${BASE}/ping`, { signal })
-    clear()
-    if (!res.ok) return false
-    const d = await res.json().catch(() => ({}))
-    if (d?.ok === false) return false
-    if (d?.loginFixed === true) return true
-    if (Number(d?.version) >= 13) return true
-    return false
-  } catch {
-    clear()
-    return false
+
+  // On Pages, always try the Functions bridge first (shared KV, no WA needed).
+  const candidates = []
+  if (BASE === '/api') candidates.push('/api')
+  else {
+    candidates.push('/api')
+    candidates.push(BASE)
   }
+
+  for (const base of candidates) {
+    const { signal, clear } = abortableTimeout(2500)
+    try {
+      const res = await fetch(`${base}/ping`, { signal })
+      clear()
+      if (!res.ok) continue
+      const d = await res.json().catch(() => ({}))
+      if (d?.ok === false) continue
+      if (d?.bridge === true || d?.loginFixed === true || Number(d?.version) >= 13) {
+        BASE = base
+        return true
+      }
+    } catch {
+      clear()
+    }
+  }
+  return false
 }
 
 async function postLogin(email, password, ms = 6000) {
