@@ -1,34 +1,22 @@
 {
   "version": 1,
-  "updatedAt": "2026-08-26T17:22:52.399Z",
+  "updatedAt": "2026-08-26T19:53:17.744Z",
   "predictions": {
     "ucl-aek-2": {
       "boikos": {
         "h": 2,
         "a": 1,
-        "qual": "AEK",
+        "qual": "LVS",
         "predOT": false,
         "otH": 0,
         "otA": 0,
         "predPen": false,
         "penH": 0,
         "penA": 0,
-        "savedAt": "2026-08-26T17:12:00Z"
+        "savedAt": "2026-08-26T19:53:10.108201Z"
       },
       "chousiadas": {
-        "h": 1,
-        "a": 2,
-        "qual": "AEK",
-        "predOT": false,
-        "otH": 0,
-        "otA": 0,
-        "predPen": false,
-        "penH": 0,
-        "penA": 0,
-        "savedAt": "2026-08-26T17:12:01Z"
-      },
-      "mavromichalis": {
-        "h": 1,
+        "h": 3,
         "a": 1,
         "qual": "AEK",
         "predOT": false,
@@ -37,7 +25,19 @@
         "predPen": false,
         "penH": 0,
         "penA": 0,
-        "savedAt": "2026-08-26T17:12:02Z"
+        "savedAt": "2026-08-26T19:53:10.108201Z"
+      },
+      "mavromichalis": {
+        "h": 1,
+        "a": 1,
+        "qual": "AEK",
+        "predOT": true,
+        "otH": 2,
+        "otA": 1,
+        "predPen": false,
+        "penH": 0,
+        "penA": 0,
+        "savedAt": "2026-08-26T19:53:10.108201Z"
       }
     },
     "test": {
@@ -157,6 +157,36 @@
       "a": 1,
       "qual": "PAOK",
       "ts": "2026-08-26T17:20:00Z"
+    },
+    {
+      "type": "tip",
+      "matchId": "ucl-aek-2",
+      "playerId": "mavromichalis",
+      "h": 1,
+      "a": 1,
+      "qual": "AEK",
+      "predOT": true,
+      "otH": 2,
+      "otA": 1,
+      "ts": "2026-08-26T19:53:10.108201Z"
+    },
+    {
+      "type": "tip",
+      "matchId": "ucl-aek-2",
+      "playerId": "chousiadas",
+      "h": 3,
+      "a": 1,
+      "qual": "AEK",
+      "ts": "2026-08-26T19:53:10.108201Z"
+    },
+    {
+      "type": "tip",
+      "matchId": "ucl-aek-2",
+      "playerId": "boikos",
+      "h": 2,
+      "a": 1,
+      "qual": "LVS",
+      "ts": "2026-08-26T19:53:10.108201Z"
     }
   ]
 }
