@@ -29,11 +29,14 @@ export const DEFAULT_PHONES = {
 }
 
 export const LOCK_TARGET = 15
-export const BRIDGE_VERSION = 16
+export const BRIDGE_VERSION = 17
 
-/** Obscure ntfy topic — private 3-player ledger until Worker secrets land. */
-export const NTFY_TOPIC = 'kouvadeiros-leg2-tips-x7k9m2'
-export const NTFY_BASE = `https://ntfy.sh/${NTFY_TOPIC}`
+/** Obscure ntfy topic — private 3-player ledger until Worker secrets land.
+ *  Host: adminforge (ntfy.sh free daily quota was exhausted during bring-up). */
+export const NTFY_TOPIC = 'kouvadeiros-tips-bridge-2026'
+export const NTFY_HOST = 'https://ntfy.adminforge.de'
+export const NTFY_BASE = `${NTFY_HOST}/${NTFY_TOPIC}`
+export const LEDGER_URL = '/live-ledger.json'
 
 /** Signing secret (repo already ships roster passwords in client). */
 const TOKEN_SECRET = 'kouv-bridge-hmac-2026-leg2'
@@ -158,21 +161,52 @@ export async function publishLedgerEvent(event) {
 }
 
 export async function loadLedgerEvents() {
-  const res = await fetch(`${NTFY_BASE}/json?poll=1&since=all`, {
-    headers: { Accept: 'application/x-ndjson, application/json' },
-  })
-  if (!res.ok) return []
-  const text = await res.text()
   const events = []
-  for (const line of text.split('\n')) {
-    const trimmed = line.trim()
-    if (!trimmed) continue
-    try {
-      const wrap = JSON.parse(trimmed)
-      if (wrap.event && wrap.event !== 'message') continue
-      const msg = typeof wrap.message === 'string' ? JSON.parse(wrap.message) : wrap.message
-      if (msg && typeof msg === 'object') events.push(msg)
-    } catch { /* skip bad line */ }
+  // 1) Live ntfy stream (best for tonight / this weekend)
+  try {
+    const res = await fetch(`${NTFY_BASE}/json?poll=1&since=48h`, {
+      headers: { Accept: 'application/x-ndjson, application/json' },
+    })
+    if (res.ok) {
+      const text = await res.text()
+      for (const line of text.split('\n')) {
+        const trimmed = line.trim()
+        if (!trimmed) continue
+        try {
+          const wrap = JSON.parse(trimmed)
+          if (wrap.event && wrap.event !== 'message') continue
+          const msg = typeof wrap.message === 'string' ? JSON.parse(wrap.message) : wrap.message
+          if (msg && typeof msg === 'object') events.push(msg)
+        } catch { /* skip bad line */ }
+      }
+    }
+  } catch (e) {
+    console.log('ntfy poll skip', e?.message || e)
+  }
+
+  // 2) Durable snapshot committed by Actions → Pages (survives ntfy expiry)
+  try {
+    const origin = 'https://kouvadeiros.pages.dev'
+    const res = await fetch(`${origin}${LEDGER_URL}?t=${Date.now()}`, {
+      headers: { Accept: 'application/json' },
+    })
+    if (res.ok) {
+      const snap = await res.json()
+      if (Array.isArray(snap?.events)) events.push(...snap.events)
+      else if (snap?.predictions && typeof snap.predictions === 'object') {
+        for (const [matchId, byPlayer] of Object.entries(snap.predictions)) {
+          for (const [playerId, tip] of Object.entries(byPlayer || {})) {
+            if (!tip || typeof tip.h !== 'number') continue
+            events.push({ type: 'tip', matchId, playerId, ...tip })
+          }
+        }
+        for (const [matchId, result] of Object.entries(snap.results || {})) {
+          events.push({ type: 'result', matchId, ...result })
+        }
+      }
+    }
+  } catch (e) {
+    console.log('live-ledger fetch skip', e?.message || e)
   }
   return events
 }
