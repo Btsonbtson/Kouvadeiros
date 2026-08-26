@@ -1,22 +1,21 @@
 /**
- * Pages API bridge — shared predictions loop without Worker deploy secrets.
- * Routes: /api/ping|/login|/logout|/state|/prediction|/result|/chat|/sl-standings|/sl-fixtures
- *
- * Uses the same KOUV KV as kouvadeiros-api. Deploys with Cloudflare Pages Git
- * (no GitHub Actions CLOUDFLARE_API_TOKEN required).
+ * Pages API bridge v16 — shared predictions without Worker secrets / KV writes.
+ * Ledger: ntfy (tips/results) · Auth: HMAC tokens · Seeds: SEEDED_PREDICTIONS
  */
 import {
+  BASE_USERS,
   BRIDGE_VERSION,
   CORS,
   DEFAULT_PHONES,
   LOCK_TARGET,
+  NTFY_TOPIC,
+  buildState,
   findMatch,
-  getAllUsers,
-  getState,
   getUser,
+  issueToken,
   json,
-  makeToken,
-  setState,
+  publishLedgerEvent,
+  tryKvPutState,
 } from '../_lib/kouv.js'
 
 function pathOf(context) {
@@ -32,18 +31,6 @@ export async function onRequest(context) {
     return new Response(null, { status: 204, headers: CORS })
   }
 
-  if (!env?.KOUV) {
-    return json(
-      {
-        ok: false,
-        error: 'KOUV binding missing — bind KV namespace on Pages project (same id as Worker)',
-        bridge: true,
-        version: BRIDGE_VERSION,
-      },
-      503,
-    )
-  }
-
   const path = pathOf(context)
 
   try {
@@ -53,11 +40,14 @@ export async function onRequest(context) {
         version: BRIDGE_VERSION,
         bridge: true,
         loginFixed: true,
+        ledger: 'ntfy',
+        topic: NTFY_TOPIC,
         remind: [30, 20],
         lock: LOCK_TARGET,
         newspaper: false,
         equalRoast: false,
         gazzetta: false,
+        kvBound: !!env?.KOUV,
         ts: new Date().toISOString(),
       })
     }
@@ -66,15 +56,9 @@ export async function onRequest(context) {
       const body = await request.json().catch(() => ({}))
       const email = String(body?.email || '').trim().toLowerCase()
       const password = String(body?.password || '')
-      const users = await getAllUsers(env)
-      const user = users[email]
+      const user = BASE_USERS[email]
       if (!user || user.password !== password) return json({ error: 'Invalid credentials' }, 401)
-      const token = makeToken()
-      try {
-        await env.KOUV.put(`token:${token}`, email, { expirationTtl: 86400 * 30 })
-      } catch (e) {
-        return json({ error: 'Session store failed', detail: String(e?.message || e) }, 503)
-      }
+      const token = await issueToken(user, email)
       return json({
         token,
         name: user.name,
@@ -87,16 +71,14 @@ export async function onRequest(context) {
     }
 
     if (path === '/logout' && request.method === 'POST') {
-      const token = (request.headers.get('Authorization') || '').replace('Bearer ', '').trim()
-      if (token) await env.KOUV.delete(`token:${token}`)
       return json({ ok: true })
     }
 
     if (path === '/state' && request.method === 'GET') {
       const user = await getUser(request, env)
       if (!user) return json({ error: 'Unauthorized' }, 401)
-      const state = await getState(env)
-      return json({ ...state, bridge: true })
+      const state = await buildState(env)
+      return json({ ...state, bridge: true, ledger: 'ntfy' })
     }
 
     if (path === '/prediction' && request.method === 'PATCH') {
@@ -104,23 +86,13 @@ export async function onRequest(context) {
       if (!user) return json({ error: 'Unauthorized' }, 401)
       const body = await request.json().catch(() => ({}))
       const {
-        matchId,
-        h,
-        a,
-        qual,
-        predOT,
-        otH,
-        otA,
-        predPen,
-        penH,
-        penA,
-        playerId,
+        matchId, h, a, qual, predOT, otH, otA, predPen, penH, penA, playerId,
       } = body || {}
       if (!matchId || typeof h !== 'number' || typeof a !== 'number') {
         return json({ error: 'Need matchId, h, a' }, 400)
       }
       const targetId = user.role === 'admin' && playerId ? playerId : user.id
-      const state = await getState(env)
+      const state = await buildState(env)
       const match = findMatch(matchId, state.kickoffOverrides)
       if (match) {
         const minsUntil = (new Date(match.kickoff).getTime() - Date.now()) / 60000
@@ -129,9 +101,11 @@ export async function onRequest(context) {
           return json({ error: 'Predictions locked (15′ before kickoff)' }, 403)
         }
       }
-      if (!state.predictions) state.predictions = {}
-      if (!state.predictions[matchId]) state.predictions[matchId] = {}
-      state.predictions[matchId][targetId] = {
+
+      const tip = {
+        type: 'tip',
+        matchId,
+        playerId: targetId,
         h,
         a,
         qual: qual ?? null,
@@ -141,12 +115,17 @@ export async function onRequest(context) {
         predPen: !!predPen,
         penH: penH ?? 0,
         penA: penA ?? 0,
-        savedAt: new Date().toISOString(),
-        via: 'pages-bridge',
-        ...(user.role === 'admin' && playerId ? { setBy: user.id, via: 'admin' } : {}),
+        ts: new Date().toISOString(),
       }
-      await setState(env, state)
-      return json({ ok: true, playerId: targetId, bridge: true })
+      await publishLedgerEvent(tip)
+
+      // Best-effort KV mirror (usually blocked by free write quota until reset)
+      if (!state.predictions) state.predictions = {}
+      if (!state.predictions[matchId]) state.predictions[matchId] = {}
+      state.predictions[matchId][targetId] = { ...tip, via: 'pages-bridge', savedAt: tip.ts }
+      const kvOk = await tryKvPutState(env, state)
+
+      return json({ ok: true, playerId: targetId, bridge: true, ledger: 'ntfy', kvMirrored: kvOk })
     }
 
     if (path === '/result' && request.method === 'PATCH') {
@@ -157,27 +136,25 @@ export async function onRequest(context) {
       if (!matchId || typeof h !== 'number' || typeof a !== 'number') {
         return json({ error: 'Need matchId, h, a' }, 400)
       }
-      const state = await getState(env)
-      if (!state.results) state.results = {}
-      const prior = state.results[matchId] || {}
-      state.results[matchId] = {
+      const ev = {
+        type: 'result',
+        matchId,
         h,
         a,
-        overtime: overtime || false,
+        overtime: !!overtime,
         otH,
         otA,
-        penalties: penalties || false,
+        penalties: !!penalties,
         penH,
         penA,
-        qual: qual !== undefined ? qual : prior.qual || null,
+        qual: qual ?? null,
         setBy: user.id,
-        setAt: new Date().toISOString(),
-        source: 'manual',
+        ts: new Date().toISOString(),
       }
-      if (!state.revealed) state.revealed = {}
-      state.revealed[matchId] = true
-      await setState(env, state)
-      return json({ ok: true, bridge: true })
+      await publishLedgerEvent(ev)
+      const state = await buildState(env)
+      await tryKvPutState(env, state)
+      return json({ ok: true, bridge: true, ledger: 'ntfy' })
     }
 
     if (path === '/chat' && request.method === 'PATCH') {
@@ -186,24 +163,21 @@ export async function onRequest(context) {
       const body = await request.json().catch(() => ({}))
       const text = String(body?.text || '').trim()
       if (!text) return json({ error: 'Empty' }, 400)
-      const state = await getState(env)
-      if (!state.chat) state.chat = []
-      state.chat.push({
-        p: user.name,
-        t: text,
+      await publishLedgerEvent({
+        type: 'chat',
+        playerId: user.id,
+        name: user.name,
+        admin: user.role === 'admin',
+        text,
         ts: new Date().toISOString(),
-        a: user.role === 'admin',
       })
-      if (state.chat.length > 200) state.chat = state.chat.slice(-200)
-      await setState(env, state)
       return json({ ok: true, bridge: true })
     }
 
     if (path === '/sl-standings' && request.method === 'GET') {
       const user = await getUser(request, env)
       if (!user) return json({ error: 'Unauthorized' }, 401)
-      const raw = await env.KOUV.get('sl_standings')
-      return json(raw ? JSON.parse(raw) : { rows: [], bridge: true })
+      return json({ rows: [], bridge: true })
     }
 
     if (path === '/sl-fixtures' && request.method === 'GET') {
@@ -215,12 +189,7 @@ export async function onRequest(context) {
     if (path === '/save-phone' && request.method === 'PATCH') {
       const user = await getUser(request, env)
       if (!user) return json({ error: 'Unauthorized' }, 401)
-      const body = await request.json().catch(() => ({}))
-      const phone = String(body?.phone || '').trim()
-      const state = await getState(env)
-      state.phones = { ...(state.phones || {}), [user.id]: phone }
-      await setState(env, state)
-      return json({ ok: true, bridge: true })
+      return json({ ok: true, bridge: true, note: 'phones use defaults until Worker sync' })
     }
 
     return json({ error: 'Not found', path, bridge: true }, 404)
