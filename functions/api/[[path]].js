@@ -1,6 +1,6 @@
 /**
- * Pages API bridge v16 — shared predictions without Worker secrets / KV writes.
- * Ledger: ntfy (tips/results) · Auth: HMAC tokens · Seeds: SEEDED_PREDICTIONS
+ * Pages API bridge v18 — shared predictions without Worker secrets.
+ * Auth: HMAC tokens · Durable: live-ledger.json · Live tips: browser→ntfy
  */
 import {
   BASE_USERS,
@@ -16,7 +16,6 @@ import {
   issueToken,
   json,
   publishLedgerEvent,
-  tryKvPutState,
 } from '../_lib/kouv.js'
 
 function pathOf(context) {
@@ -119,15 +118,10 @@ export async function onRequest(context) {
         penA: penA ?? 0,
         ts: new Date().toISOString(),
       }
+      // Browser publishes to ntfy (Function→ntfy hits TLS 525). Ack here only.
       await publishLedgerEvent(tip)
 
-      // Best-effort KV mirror (usually blocked by free write quota until reset)
-      if (!state.predictions) state.predictions = {}
-      if (!state.predictions[matchId]) state.predictions[matchId] = {}
-      state.predictions[matchId][targetId] = { ...tip, via: 'pages-bridge', savedAt: tip.ts }
-      const kvOk = await tryKvPutState(env, state)
-
-      return json({ ok: true, playerId: targetId, bridge: true, ledger: 'ntfy', kvMirrored: kvOk })
+      return json({ ok: true, playerId: targetId, bridge: true, ledger: 'ntfy-client' })
     }
 
     if (path === '/result' && request.method === 'PATCH') {
@@ -154,9 +148,7 @@ export async function onRequest(context) {
         ts: new Date().toISOString(),
       }
       await publishLedgerEvent(ev)
-      const state = await buildState(env)
-      await tryKvPutState(env, state)
-      return json({ ok: true, bridge: true, ledger: 'ntfy' })
+      return json({ ok: true, bridge: true, ledger: 'ntfy-client' })
     }
 
     if (path === '/chat' && request.method === 'PATCH') {

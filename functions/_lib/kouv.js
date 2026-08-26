@@ -29,14 +29,19 @@ export const DEFAULT_PHONES = {
 }
 
 export const LOCK_TARGET = 15
-export const BRIDGE_VERSION = 17
+export const BRIDGE_VERSION = 18
 
 /** Obscure ntfy topic — private 3-player ledger until Worker secrets land.
- *  Host: adminforge (ntfy.sh free daily quota was exhausted during bring-up). */
+ *  Browser publishes/polls directly (Pages Functions get TLS 525 to some ntfy hosts). */
 export const NTFY_TOPIC = 'kouvadeiros-tips-bridge-2026'
 export const NTFY_HOST = 'https://ntfy.adminforge.de'
 export const NTFY_BASE = `${NTFY_HOST}/${NTFY_TOPIC}`
 export const LEDGER_URL = '/live-ledger.json'
+
+/** Server-side publish disabled — browsers write to ntfy (CORS *). */
+export async function publishLedgerEvent() {
+  return false
+}
 
 /** Signing secret (repo already ships roster passwords in client). */
 const TOKEN_SECRET = 'kouv-bridge-hmac-2026-leg2'
@@ -162,29 +167,7 @@ export async function publishLedgerEvent(event) {
 
 export async function loadLedgerEvents() {
   const events = []
-  // 1) Live ntfy stream (best for tonight / this weekend)
-  try {
-    const res = await fetch(`${NTFY_BASE}/json?poll=1&since=48h`, {
-      headers: { Accept: 'application/x-ndjson, application/json' },
-    })
-    if (res.ok) {
-      const text = await res.text()
-      for (const line of text.split('\n')) {
-        const trimmed = line.trim()
-        if (!trimmed) continue
-        try {
-          const wrap = JSON.parse(trimmed)
-          if (wrap.event && wrap.event !== 'message') continue
-          const msg = typeof wrap.message === 'string' ? JSON.parse(wrap.message) : wrap.message
-          if (msg && typeof msg === 'object') events.push(msg)
-        } catch { /* skip bad line */ }
-      }
-    }
-  } catch (e) {
-    console.log('ntfy poll skip', e?.message || e)
-  }
-
-  // 2) Durable snapshot committed by Actions → Pages (survives ntfy expiry)
+  // Durable snapshot only on the server (same-origin). Browsers also poll ntfy.
   try {
     const origin = 'https://kouvadeiros.pages.dev'
     const res = await fetch(`${origin}${LEDGER_URL}?t=${Date.now()}`, {

@@ -55,6 +55,111 @@ const LOCAL_PHONES = {
   mavromichalis: '+306932851343',
 }
 
+/** Browser tip ledger — Pages Functions cannot reliably reach ntfy (TLS 525). */
+const NTFY_TOPIC = 'kouvadeiros-tips-bridge-2026'
+const NTFY_HOSTS = [
+  'https://ntfy.adminforge.de',
+  'https://ntfy.envs.net',
+]
+
+let bridgeMode = false
+
+function isBridgeToken(t = token()) {
+  return String(t || '').startsWith('br.')
+}
+
+async function publishClientTip(event) {
+  let lastErr = null
+  for (const host of NTFY_HOSTS) {
+    try {
+      const res = await fetch(`${host}/${NTFY_TOPIC}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Title: event.type || 'tip' },
+        body: JSON.stringify(event),
+      })
+      if (res.ok) return true
+      lastErr = new Error(`ntfy ${res.status}`)
+    } catch (e) {
+      lastErr = e
+    }
+  }
+  if (lastErr) throw lastErr
+  return false
+}
+
+async function pollClientTips() {
+  const events = []
+  for (const host of NTFY_HOSTS) {
+    try {
+      const res = await fetch(`${host}/${NTFY_TOPIC}/json?poll=1&since=48h`, {
+        headers: { Accept: 'application/x-ndjson, application/json' },
+      })
+      if (!res.ok) continue
+      const text = await res.text()
+      for (const line of text.split('\n')) {
+        const trimmed = line.trim()
+        if (!trimmed) continue
+        try {
+          const wrap = JSON.parse(trimmed)
+          if (wrap.event && wrap.event !== 'message') continue
+          const msg = typeof wrap.message === 'string' ? JSON.parse(wrap.message) : wrap.message
+          if (msg && typeof msg === 'object') events.push(msg)
+        } catch { /* skip */ }
+      }
+      if (events.length) break
+    } catch { /* try next host */ }
+  }
+  return events
+}
+
+function mergeTipEventsIntoState(state, events) {
+  const predictions = { ...(state?.predictions || {}) }
+  const results = { ...(state?.results || {}) }
+  const revealed = { ...(state?.revealed || {}) }
+  for (const ev of events || []) {
+    const isTip =
+      ev.type === 'tip' ||
+      (!ev.type && ev.matchId && ev.playerId && typeof ev.h === 'number')
+    if (isTip && ev.matchId && ev.playerId) {
+      if (!predictions[ev.matchId]) predictions[ev.matchId] = {}
+      predictions[ev.matchId][ev.playerId] = {
+        h: ev.h,
+        a: ev.a,
+        qual: ev.qual ?? null,
+        predOT: !!ev.predOT,
+        otH: ev.otH ?? 0,
+        otA: ev.otA ?? 0,
+        predPen: !!ev.predPen,
+        penH: ev.penH ?? 0,
+        penA: ev.penA ?? 0,
+        savedAt: ev.ts || new Date().toISOString(),
+        via: 'ntfy-client',
+      }
+    } else if (ev.type === 'result' && ev.matchId) {
+      results[ev.matchId] = {
+        h: ev.h,
+        a: ev.a,
+        overtime: !!ev.overtime,
+        otH: ev.otH,
+        otA: ev.otA,
+        penalties: !!ev.penalties,
+        penH: ev.penH,
+        penA: ev.penA,
+        qual: ev.qual ?? null,
+        setAt: ev.ts || new Date().toISOString(),
+        source: 'bridge',
+      }
+      revealed[ev.matchId] = true
+    }
+  }
+  return {
+    ...state,
+    predictions: mergeSeededPredictions(predictions),
+    results: applyTipResultLocks(results).results,
+    revealed,
+  }
+}
+
 /** Canonical emails for the classic login form (shown as hints). */
 export const ROSTER_CREDENTIALS = [
   { id: 'boikos', name: 'Boikos', email: 'boikos.y@caredirect.com', password: '1453' },
@@ -214,6 +319,7 @@ async function workerLoginSafe() {
       if (d?.ok === false) continue
       if (d?.bridge === true || d?.loginFixed === true || Number(d?.version) >= 13) {
         BASE = base
+        bridgeMode = d?.bridge === true || d?.ledger === 'ntfy' || Number(d?.version) >= 15
         return true
       }
     } catch {
@@ -265,6 +371,67 @@ async function call(method, path, body) {
   }
 
   const authToken = token()
+  const onBridge = bridgeMode || isBridgeToken(authToken) || BASE === '/api'
+
+  // Bridge tip save: browser → ntfy (shared), plus local mirror
+  if (onBridge && path === '/prediction' && method === 'PATCH' && body) {
+    const user = getStoredUser()
+    const pid = user?.id
+    if (!pid) return { ok: false, offline: true }
+    const tipEvent = {
+      type: 'tip',
+      matchId: body.matchId,
+      playerId: pid,
+      h: body.h,
+      a: body.a,
+      qual: body.qual ?? null,
+      predOT: !!body.predOT,
+      otH: body.otH ?? 0,
+      otA: body.otA ?? 0,
+      predPen: !!body.predPen,
+      penH: body.penH ?? 0,
+      penA: body.penA ?? 0,
+      ts: new Date().toISOString(),
+    }
+    try {
+      await publishClientTip(tipEvent)
+    } catch (e) {
+      // Still keep local + try API ack
+      console.warn('ntfy tip publish failed', e?.message || e)
+    }
+    saveOfflinePrediction(body.matchId, pid, body)
+    try {
+      await fetch(`${BASE}/prediction`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${authToken}` },
+        body: JSON.stringify(body),
+      })
+    } catch { /* ack optional */ }
+    return { ok: true, bridge: true, ledger: 'ntfy-client' }
+  }
+
+  if (onBridge && path === '/result' && method === 'PATCH' && body) {
+    const user = getStoredUser()
+    try {
+      await publishClientTip({
+        type: 'result',
+        matchId: body.matchId,
+        h: body.h,
+        a: body.a,
+        overtime: !!body.overtime,
+        otH: body.otH,
+        otA: body.otA,
+        penalties: !!body.penalties,
+        penH: body.penH,
+        penA: body.penA,
+        qual: body.qual ?? null,
+        setBy: user?.id || 'admin',
+        ts: new Date().toISOString(),
+      })
+    } catch (e) {
+      console.warn('ntfy result publish failed', e?.message || e)
+    }
+  }
 
   let res
   try {
@@ -322,7 +489,18 @@ async function call(method, path, body) {
     } catch { /* ignore */ }
     throw new Error(`${method} ${path} → ${res.status}${detail}`)
   }
-  return res.json()
+  const data = await res.json()
+
+  // Bridge state: merge live ntfy tips so all players see each other before Actions sync
+  if (onBridge && path === '/state' && method === 'GET') {
+    try {
+      const events = await pollClientTips()
+      return mergeTipEventsIntoState(data, events)
+    } catch {
+      return data
+    }
+  }
+  return data
 }
 
 async function publicScoresGet(path) {
