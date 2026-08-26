@@ -29,7 +29,7 @@ export const DEFAULT_PHONES = {
 }
 
 export const LOCK_TARGET = 15
-export const BRIDGE_VERSION = 18
+export const BRIDGE_VERSION = 19
 
 /** Obscure ntfy topic — private 3-player ledger until Worker secrets land.
  *  Browser publishes/polls directly (Pages Functions get TLS 525 to some ntfy hosts). */
@@ -148,14 +148,29 @@ export async function tryKvPutState(env, state) {
   }
 }
 
-export async function loadLedgerEvents() {
+export async function loadLedgerEvents(env, request) {
   const events = []
   // Durable snapshot only on the server (same-origin). Browsers also poll ntfy.
   try {
-    const origin = 'https://kouvadeiros.pages.dev'
-    const res = await fetch(`${origin}${LEDGER_URL}?t=${Date.now()}`, {
-      headers: { Accept: 'application/json' },
-    })
+    // Prefer the Pages ASSETS binding — reads the deployed bundle directly,
+    // bypassing any edge cache that can serve a stale live-ledger.json.
+    let res = null
+    if (env?.ASSETS?.fetch) {
+      try {
+        const assetUrl = new URL(LEDGER_URL, request?.url || 'https://kouvadeiros.pages.dev/')
+        res = await env.ASSETS.fetch(assetUrl.toString(), { cf: { cacheTtl: 0 } })
+      } catch (e) {
+        console.log('ASSETS.fetch skip', e?.message || e)
+        res = null
+      }
+    }
+    if (!res || !res.ok) {
+      const origin = 'https://kouvadeiros.pages.dev'
+      res = await fetch(`${origin}${LEDGER_URL}?t=${Date.now()}`, {
+        headers: { Accept: 'application/json', 'Cache-Control': 'no-cache' },
+        cf: { cacheTtl: 0, cacheEverything: false },
+      })
+    }
     if (res.ok) {
       const snap = await res.json()
       if (Array.isArray(snap?.events)) events.push(...snap.events)
@@ -257,9 +272,9 @@ export function applyLedgerEvents(baseState, events) {
   return state
 }
 
-export async function buildState(env) {
+export async function buildState(env, request) {
   const kv = await readKvState(env)
-  const events = await loadLedgerEvents()
+  const events = await loadLedgerEvents(env, request)
   return applyLedgerEvents(kv || {
     predictions: {},
     results: {},
