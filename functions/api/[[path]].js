@@ -78,7 +78,7 @@ export async function onRequest(context) {
     if (path === '/state' && request.method === 'GET') {
       const user = await getUser(request, env)
       if (!user) return json({ error: 'Unauthorized' }, 401)
-      const state = await buildState(env)
+      const state = await buildState(env, request)
       return json({ ...state, bridge: true, ledger: 'ntfy' })
     }
 
@@ -93,7 +93,7 @@ export async function onRequest(context) {
         return json({ error: 'Need matchId, h, a' }, 400)
       }
       const targetId = user.role === 'admin' && playerId ? playerId : user.id
-      const state = await buildState(env)
+      const state = await buildState(env, request)
       const match = findMatch(matchId, state.kickoffOverrides)
       if (match) {
         const minsUntil = (new Date(match.kickoff).getTime() - Date.now()) / 60000
