@@ -1,5 +1,6 @@
 name: Deploy Worker
 
+# Manual or push-to-main (worker paths / this file) deploys kouvadeiros-api.
 on:
   push:
     branches: [main]
