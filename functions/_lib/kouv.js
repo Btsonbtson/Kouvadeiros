@@ -148,23 +148,6 @@ export async function tryKvPutState(env, state) {
   }
 }
 
-export async function publishLedgerEvent(event) {
-  const res = await fetch(NTFY_BASE, {
-    method: 'POST',
-    headers: {
-      Title: event.type || 'tip',
-      'Content-Type': 'application/json',
-      Tags: 'soccer',
-    },
-    body: JSON.stringify(event),
-  })
-  if (!res.ok) {
-    const t = await res.text().catch(() => '')
-    throw new Error(`ntfy ${res.status}: ${t.slice(0, 120)}`)
-  }
-  return true
-}
-
 export async function loadLedgerEvents() {
   const events = []
   // Durable snapshot only on the server (same-origin). Browsers also poll ntfy.
