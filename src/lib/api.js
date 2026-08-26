@@ -7,9 +7,11 @@ const SCORES_BASE = (typeof __SCORES_URL__ !== 'undefined' && __SCORES_URL__)
   ? __SCORES_URL__
   : 'https://kouvadeiros-scores.jboikos.workers.dev'
 
+const OFFLINE_PREDS_KEY = 'kouv_offline_preds'
+
 /**
  * Original CareDirect roster — same passwords as worker BASE_USERS.
- * Pages authenticates locally while Worker v11 hangs on successful /login (CF 1101).
+ * Pages falls back to local auth only when Worker login is unreachable.
  */
 const LOCAL_USERS = {
   'boikos.y@caredirect.com': { password: '1453', name: 'Boikos', id: 'boikos', role: 'admin' },
@@ -41,16 +43,63 @@ export function isOfflineToken(t = token()) {
   return String(t || '').startsWith('local:')
 }
 
+function readOfflinePredictions() {
+  try {
+    const raw = localStorage.getItem(OFFLINE_PREDS_KEY)
+    if (!raw) return {}
+    const parsed = JSON.parse(raw)
+    return parsed && typeof parsed === 'object' ? parsed : {}
+  } catch {
+    return {}
+  }
+}
+
+function writeOfflinePredictions(predictions) {
+  try {
+    localStorage.setItem(OFFLINE_PREDS_KEY, JSON.stringify(predictions || {}))
+  } catch { /* quota / private mode */ }
+}
+
+/** Merge a tip into the offline localStorage ledger (survives reload + state sync). */
+export function saveOfflinePrediction(matchId, playerId, tip) {
+  if (!matchId || !playerId || !tip) return readOfflinePredictions()
+  const all = readOfflinePredictions()
+  const row = { ...(all[matchId] || {}) }
+  row[playerId] = {
+    h: tip.h,
+    a: tip.a,
+    qual: tip.qual ?? null,
+    predOT: !!tip.predOT,
+    otH: tip.otH ?? 0,
+    otA: tip.otA ?? 0,
+    predPen: !!tip.predPen,
+    penH: tip.penH ?? 0,
+    penA: tip.penA ?? 0,
+    savedAt: new Date().toISOString(),
+  }
+  all[matchId] = row
+  writeOfflinePredictions(all)
+  return all
+}
+
 function offlineState() {
   const { results } = applyTipResultLocks({})
-  const predictions = mergeSeededPredictions({})
+  // Seeds + any tips the player saved while offline (Worker unreachable).
+  const predictions = mergeSeededPredictions(readOfflinePredictions())
   const revealed = Object.fromEntries(Object.keys(results).map((id) => [id, true]))
   // Sunday tips also visible while live
   for (const id of ['sl-1-4', 'sl-1-6', 'sl-1-7']) revealed[id] = true
+  // UEFA Leg 1 tips were public after their own 15′ lock — keep revealed
+  for (const id of Object.keys(predictions)) {
+    if (/-1$/.test(id) || id.endsWith('-3') || id.endsWith('-5')) {
+      // conservative: reveal finished UEFA first legs that have tips
+      if (results[id] || predictions[id]) revealed[id] = true
+    }
+  }
   return {
     predictions,
     results,
-    chat: [{ p: 'Boikos', t: 'Offline mode — full tip ledger from Pages seeds (Worker login down).', ts: '—', a: true }],
+    chat: [{ p: 'Boikos', t: 'Offline mode — tips saved on this device until Worker sync is back.', ts: '—', a: true }],
     phones: { ...LOCAL_PHONES },
     welcomed: {},
     revealed,
@@ -105,18 +154,44 @@ function abortableTimeout(ms) {
   return { signal: ctrl.signal, clear: () => clearTimeout(t) }
 }
 
-/** Worker v11 hangs on successful /login (CF 1101). v13+ is safe. */
-async function workerLoginBroken() {
+/**
+ * Worker is usable when /ping answers OK.
+ * Do NOT require version ≥ 13 — live Worker still reports v11 while /login works.
+ * (Deploy of v13 is blocked until CLOUDFLARE_API_TOKEN is set in Actions.)
+ */
+async function workerReachable() {
   const { signal, clear } = abortableTimeout(2500)
   try {
     const res = await fetch(`${BASE}/ping`, { signal })
     clear()
-    if (!res.ok) return true
-    const d = await res.json()
-    return !(Number(d?.version) >= 13)
+    if (!res.ok) return false
+    const d = await res.json().catch(() => ({}))
+    return d?.ok !== false
   } catch {
     clear()
-    return true
+    return false
+  }
+}
+
+async function postLogin(email, password, ms = 6000) {
+  const { signal, clear } = abortableTimeout(ms)
+  try {
+    const res = await fetch(`${BASE}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+      signal,
+    })
+    clear()
+    if (!res.ok) {
+      const err = new Error(`POST /login → ${res.status}`)
+      err.status = res.status
+      throw err
+    }
+    return await res.json()
+  } catch (e) {
+    clear()
+    throw e
   }
 }
 
@@ -124,6 +199,12 @@ async function call(method, path, body) {
   if (isOfflineToken()) {
     if (path === '/state' && method === 'GET') return offlineState()
     if (path === '/logout' && method === 'POST') return { ok: true }
+    if (path === '/prediction' && method === 'PATCH' && body) {
+      const user = getStoredUser()
+      if (!user?.id) return { ok: false, offline: true }
+      saveOfflinePrediction(body.matchId, user.id, body)
+      return { ok: true, offline: true, persisted: true }
+    }
     if (method === 'GET') return {}
     return { ok: true, offline: true }
   }
@@ -148,6 +229,10 @@ async function call(method, path, body) {
     if (prev?.id && LOCAL_PHONES[prev.id]) {
       ensureOfflineSession(prev)
       if (path === '/state' && method === 'GET') return offlineState()
+      if (path === '/prediction' && method === 'PATCH' && body) {
+        saveOfflinePrediction(body.matchId, prev.id, body)
+        return { ok: true, offline: true, persisted: true }
+      }
       if (method === 'GET') return {}
       return { ok: true, offline: true }
     }
@@ -156,7 +241,14 @@ async function call(method, path, body) {
     try { window.dispatchEvent(new Event('kouv:session-lost')) } catch {}
     throw new Error('Session expired')
   }
-  if (!res.ok) throw new Error(`${method} ${path} → ${res.status}`)
+  if (!res.ok) {
+    let detail = ''
+    try {
+      const j = await res.json()
+      detail = j?.error ? `: ${j.error}` : ''
+    } catch { /* ignore */ }
+    throw new Error(`${method} ${path} → ${res.status}${detail}`)
+  }
   return res.json()
 }
 
@@ -171,63 +263,95 @@ async function publicScoresGet(path) {
 }
 
 /**
- * Classic login: original emails + passwords.
- * Always accept local roster first (instant, never hangs).
- * Only try Worker when ping reports version ≥ 13.
+ * Classic login: prefer live Worker session so tips sync for everyone.
+ * Fall back to offline roster only when Worker is down / login hangs.
  */
 async function loginWithFallback(email, password) {
   const emailNorm = String(email || '').trim().toLowerCase()
   const passNorm = String(password || '').trim()
-
-  // Original credentials always work offline — never wait on broken Worker /login
   const local = resolveLocalUser(emailNorm, passNorm)
-  if (local) {
-    if (await workerLoginBroken()) return local
-    // Worker healthy: try real session, fall back to local
-    const { signal, clear } = abortableTimeout(6000)
-    try {
-      const res = await fetch(`${BASE}/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: local.email, password: passNorm }),
-        signal,
-      })
-      clear()
-      if (res.ok) return res.json()
-    } catch {
-      clear()
-    }
-    return local
-  }
 
-  // Unknown email — try Worker once if healthy, else 401
-  if (!(await workerLoginBroken())) {
-    const { signal, clear } = abortableTimeout(6000)
+  const emailForWorker = local?.email || emailNorm
+
+  if (await workerReachable()) {
     try {
-      const res = await fetch(`${BASE}/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: emailNorm, password: passNorm }),
-        signal,
-      })
-      clear()
-      if (res.ok) return res.json()
-      if (res.status === 401 || res.status === 403) throw new Error(`POST /login → ${res.status}`)
+      const remote = await postLogin(emailForWorker, passNorm, 6000)
+      if (remote?.token) return remote
     } catch (e) {
-      clear()
       const msg = String(e?.message || e)
-      if (msg.includes('→ 401') || msg.includes('→ 403')) throw e
+      const status = e?.status || (msg.includes('→ 401') ? 401 : msg.includes('→ 403') ? 403 : 0)
+      // Auth rejected and no local roster match → hard fail
+      if ((status === 401 || status === 403) && !local) throw new Error(`POST /login → ${status}`)
+      // Hang / network / Worker user gap → offline for known roster
+      if (local) return local
+      if (status === 401 || status === 403) throw new Error(`POST /login → ${status}`)
     }
   }
 
+  if (local) return local
   throw new Error('POST /login → 401')
 }
 
-/** One-tap login using original roster passwords. */
+/**
+ * One-tap / double-click login: try Worker first (same as form),
+ * then offline so players are never locked out.
+ */
+export async function quickLogin(playerId) {
+  const row = ROSTER_CREDENTIALS.find((q) => q.id === playerId)
+  if (!row) return null
+  return loginWithFallback(row.email, row.password)
+}
+
+/** Sync helper kept for older call sites — prefer quickLogin. */
 export function quickLocalLogin(playerId) {
   const row = ROSTER_CREDENTIALS.find((q) => q.id === playerId)
   if (!row) return null
   return resolveLocalUser(row.email, row.password)
+}
+
+/**
+ * If the browser still holds a local: token but Worker is healthy,
+ * silently upgrade to a real session so saves hit KV.
+ * Also pushes any locally-persisted offline tips up to the Worker.
+ */
+export async function tryUpgradeOfflineSession() {
+  if (!isOfflineToken()) return null
+  const prev = getStoredUser()
+  if (!prev?.id) return null
+  const row = ROSTER_CREDENTIALS.find((r) => r.id === prev.id)
+  if (!row) return null
+  if (!(await workerReachable())) return null
+  try {
+    const remote = await postLogin(row.email, row.password, 6000)
+    if (!remote?.token) return null
+    storeToken(remote.token)
+    storeUser({ ...remote, phone: remote.phone || prev.phone || LOCAL_PHONES[prev.id] })
+
+    // Push device-local tips so they don't vanish after upgrade
+    const localTips = readOfflinePredictions()
+    for (const [matchId, byPlayer] of Object.entries(localTips || {})) {
+      const tip = byPlayer?.[prev.id]
+      if (!tip || typeof tip.h !== 'number' || typeof tip.a !== 'number') continue
+      try {
+        await call('PATCH', '/prediction', {
+          matchId,
+          h: tip.h,
+          a: tip.a,
+          qual: tip.qual ?? null,
+          predOT: !!tip.predOT,
+          otH: tip.otH ?? 0,
+          otA: tip.otA ?? 0,
+          predPen: !!tip.predPen,
+          penH: tip.penH ?? 0,
+          penA: tip.penA ?? 0,
+        })
+      } catch { /* locked / network — keep local copy */ }
+    }
+
+    return remote
+  } catch {
+    return null
+  }
 }
 
 export const api = {
