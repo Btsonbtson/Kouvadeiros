@@ -239,6 +239,15 @@ async function call(method, path, body) {
       body: body ? JSON.stringify(body) : undefined,
     })
   } catch {
+    // CORS-masked Worker 1101 / offline network — demote and persist tips locally
+    if (path === '/prediction' && method === 'PATCH' && body) {
+      const prev = getStoredUser()
+      if (prev?.id) {
+        ensureOfflineSession(prev)
+        saveOfflinePrediction(body.matchId, prev.id, body)
+        return { ok: true, offline: true, persisted: true }
+      }
+    }
     throw new Error(`${method} ${path} → network`)
   }
 
@@ -262,6 +271,15 @@ async function call(method, path, body) {
     throw new Error('Session expired')
   }
   if (!res.ok) {
+    // Worker 5xx on tip save → offline persist so players are never locked out
+    if (path === '/prediction' && method === 'PATCH' && body && res.status >= 500) {
+      const prev = getStoredUser()
+      if (prev?.id) {
+        ensureOfflineSession(prev)
+        saveOfflinePrediction(body.matchId, prev.id, body)
+        return { ok: true, offline: true, persisted: true }
+      }
+    }
     let detail = ''
     try {
       const j = await res.json()
