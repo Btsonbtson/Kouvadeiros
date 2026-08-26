@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-08-26T17:13:09.468Z",
+  "updatedAt": "2026-08-26T17:22:52.399Z",
   "predictions": {
     "ucl-aek-2": {
       "boikos": {
@@ -52,6 +52,20 @@
         "penH": 0,
         "penA": 0,
         "savedAt": null
+      }
+    },
+    "uecl-paok-2": {
+      "boikos": {
+        "h": 1,
+        "a": 1,
+        "qual": "PAOK",
+        "predOT": false,
+        "otH": 0,
+        "otA": 0,
+        "predPen": false,
+        "penH": 0,
+        "penA": 0,
+        "savedAt": "2026-08-26T17:20:00Z"
       }
     }
   },
@@ -134,6 +148,15 @@
       "a": 1,
       "qual": "AEK",
       "ts": "2026-08-26T17:12:02Z"
+    },
+    {
+      "type": "tip",
+      "matchId": "uecl-paok-2",
+      "playerId": "boikos",
+      "h": 1,
+      "a": 1,
+      "qual": "PAOK",
+      "ts": "2026-08-26T17:20:00Z"
     }
   ]
 }
