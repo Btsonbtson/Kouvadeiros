@@ -154,19 +154,34 @@ function abortableTimeout(ms) {
   return { signal: ctrl.signal, clear: () => clearTimeout(t) }
 }
 
+const LOGIN_BROKEN_KEY = 'kouv_login_broken'
+
+function markWorkerLoginBroken() {
+  try { sessionStorage.setItem(LOGIN_BROKEN_KEY, '1') } catch { /* private mode */ }
+}
+
+function isWorkerLoginMarkedBroken() {
+  try { return sessionStorage.getItem(LOGIN_BROKEN_KEY) === '1' } catch { return false }
+}
+
 /**
- * Worker is usable when /ping answers OK.
- * Do NOT require version ≥ 13 — live Worker still reports v11 while /login works.
- * (Deploy of v13 is blocked until CLOUDFLARE_API_TOKEN is set in Actions.)
+ * Live Worker v11 crashes on *successful* /login (CF 1101, no CORS headers) —
+ * browsers report a CORS/network failure and the app looks like it "crashed".
+ * Repo Worker v13+ returns loginFixed:true / version≥13. Until that deploys,
+ * skip /login and use offline roster immediately.
  */
-async function workerReachable() {
+async function workerLoginSafe() {
+  if (isWorkerLoginMarkedBroken()) return false
   const { signal, clear } = abortableTimeout(2500)
   try {
     const res = await fetch(`${BASE}/ping`, { signal })
     clear()
     if (!res.ok) return false
     const d = await res.json().catch(() => ({}))
-    return d?.ok !== false
+    if (d?.ok === false) return false
+    if (d?.loginFixed === true) return true
+    if (Number(d?.version) >= 13) return true
+    return false
   } catch {
     clear()
     return false
@@ -184,6 +199,8 @@ async function postLogin(email, password, ms = 6000) {
     })
     clear()
     if (!res.ok) {
+      // 5xx / CF 1101 HTML → mark broken so we stop hammering /login this session
+      if (res.status >= 500) markWorkerLoginBroken()
       const err = new Error(`POST /login → ${res.status}`)
       err.status = res.status
       throw err
@@ -191,6 +208,9 @@ async function postLogin(email, password, ms = 6000) {
     return await res.json()
   } catch (e) {
     clear()
+    // CORS-masked 1101 surfaces as TypeError / Failed to fetch
+    const msg = String(e?.message || e)
+    if (!e?.status && /fetch|network|abort|cors/i.test(msg)) markWorkerLoginBroken()
     throw e
   }
 }
@@ -263,8 +283,8 @@ async function publicScoresGet(path) {
 }
 
 /**
- * Classic login: prefer live Worker session so tips sync for everyone.
- * Fall back to offline roster only when Worker is down / login hangs.
+ * Classic login: use live Worker only when /login is known-safe (v13+).
+ * Otherwise offline roster immediately — never hit CF 1101 on every entry.
  */
 async function loginWithFallback(email, password) {
   const emailNorm = String(email || '').trim().toLowerCase()
@@ -273,7 +293,7 @@ async function loginWithFallback(email, password) {
 
   const emailForWorker = local?.email || emailNorm
 
-  if (await workerReachable()) {
+  if (await workerLoginSafe()) {
     try {
       const remote = await postLogin(emailForWorker, passNorm, 6000)
       if (remote?.token) return remote
@@ -320,7 +340,7 @@ export async function tryUpgradeOfflineSession() {
   if (!prev?.id) return null
   const row = ROSTER_CREDENTIALS.find((r) => r.id === prev.id)
   if (!row) return null
-  if (!(await workerReachable())) return null
+  if (!(await workerLoginSafe())) return null
   try {
     const remote = await postLogin(row.email, row.password, 6000)
     if (!remote?.token) return null

@@ -1,4 +1,4 @@
-// KOUVADEIROS v7 — build 2026-08-26 (live Worker login + Leg1 qual UI)
+// KOUVADEIROS v7 — build 2026-08-26 (skip CF 1101 login + Leg1 qual UI)
 import { useState, useEffect, useRef, useCallback, useMemo, memo, startTransition } from 'react'
 import { api, clearAuth, storeUser } from './lib/api'
 import {

@@ -145,7 +145,7 @@ function Root() {
   return React.createElement(App, { user: u, onLogout: handleLogout })
 }
 
-console.log('KOUVADEIROS v7 2026-08-26 projections-fix')
+console.log('KOUVADEIROS v7 2026-08-26 login-1101-fix')
 
 const rootEl = document.getElementById('root')
 window.__KOUV_REACT_MOUNTED__ = false
