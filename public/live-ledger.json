@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-08-26T19:53:17.744Z",
+  "updatedAt": "2026-08-26T20:55:05.942Z",
   "predictions": {
     "ucl-aek-2": {
       "boikos": {
@@ -69,7 +69,17 @@
       }
     }
   },
-  "results": {},
+  "results": {
+    "ucl-aek-2": {
+      "h": 4,
+      "a": 0,
+      "overtime": false,
+      "penalties": false,
+      "qual": "AEK",
+      "setAt": "2026-08-26T20:54:58.792024Z",
+      "source": "bridge"
+    }
+  },
   "events": [
     {
       "type": "tip",
@@ -187,6 +197,15 @@
       "a": 1,
       "qual": "LVS",
       "ts": "2026-08-26T19:53:10.108201Z"
+    },
+    {
+      "type": "result",
+      "matchId": "ucl-aek-2",
+      "h": 4,
+      "a": 0,
+      "qual": "AEK",
+      "setBy": "boikos",
+      "ts": "2026-08-26T20:54:58.792024Z"
     }
   ]
 }
