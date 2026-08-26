@@ -1,4 +1,4 @@
-// KOUVADEIROS Worker v8
+// KOUVADEIROS Worker v14
 // Reminders: 30' + 20' before kickoff · Lock/reveal: 15' before
 // ΘΑΥΜΑ/ΩΣΑΝΑ late goal detection · Ο Κουβάς end-of-day tabloid
 
