@@ -1,4 +1,4 @@
-// KOUVADEIROS v7 — build 2026-08-26 (skip CF 1101 login + Leg1 qual UI)
+// KOUVADEIROS v7 — build 2026-08-26 (predictions entry + tip horizon)
 import { useState, useEffect, useRef, useCallback, useMemo, memo, startTransition } from 'react'
 import { api, clearAuth, storeUser } from './lib/api'
 import {
@@ -1046,7 +1046,10 @@ function useBreakpoint() {
     return window.innerWidth >= 1024 ? 'desktop' : window.innerWidth >= 768 ? 'tablet' : 'mobile'
   })
   useEffect(() => {
-    const fn = () => setBp(window.innerWidth >= 1024 ? 'desktop' : window.innerWidth >= 768 ? 'tablet' : 'mobile')
+    const fn = () => {
+      const next = window.innerWidth >= 1024 ? 'desktop' : window.innerWidth >= 768 ? 'tablet' : 'mobile'
+      setBp((prev) => (prev === next ? prev : next))
+    }
     window.addEventListener('resize', fn)
     return () => window.removeEventListener('resize', fn)
   }, [])
@@ -1374,13 +1377,17 @@ export default function App({ user, onLogout }) {
     </div>
   )
 
-  const pages={
-    matchday:<MatchdayPage fixtures={fixtures} predictions={predictions} results={state.results} scoringResults={scoringResults} onRefresh={load} currentUser={user} revealed={state.revealed} onSave={savePrediction} liveScores={liveScores} pipelineHints={pipelineHints} slStandings={state.slStandings}/>,
-    league:  <LeaguePage   predictions={predictions} results={scoringResults} thavmaStats={state.thavmaStats}/>,
-    schedule: <SchedulePage fixtures={fixtures} slStandings={state.slStandings}/>,
-    history: <HistoryPage  predictions={predictions} results={scoringResults}/>,
-    banter:  <BanterPage   chat={state.chat} onSend={sendChat} onRead={markChatRead}/>,
-  }
+  const pages = screen === 'matchday' ? (
+    <MatchdayPage fixtures={fixtures} predictions={predictions} results={state.results} scoringResults={scoringResults} onRefresh={load} currentUser={user} revealed={state.revealed} onSave={savePrediction} liveScores={liveScores} pipelineHints={pipelineHints} slStandings={state.slStandings}/>
+  ) : screen === 'league' ? (
+    <LeaguePage predictions={predictions} results={scoringResults} thavmaStats={state.thavmaStats}/>
+  ) : screen === 'schedule' ? (
+    <SchedulePage fixtures={fixtures} slStandings={state.slStandings}/>
+  ) : screen === 'history' ? (
+    <HistoryPage predictions={predictions} results={scoringResults}/>
+  ) : (
+    <BanterPage chat={state.chat} onSend={sendChat} onRead={markChatRead}/>
+  )
 
   const headerProps = {
     isDesktop, isTablet, screen, setScreen, banterUnread, navIcon,
@@ -1414,7 +1421,7 @@ export default function App({ user, onLogout }) {
               <LeaderSidebar predictions={predictions} results={scoringResults}/>
             </div>
             <div style={{minWidth:0, display: screen==='banter' ? 'flex' : undefined, flexDirection:'column', minHeight: screen==='banter' ? 0 : undefined, flex: screen==='banter' ? 1 : undefined}}>
-              {pages[screen]}
+              {pages}
             </div>
           </div>
         </TabBackdrop>
@@ -1438,7 +1445,7 @@ export default function App({ user, onLogout }) {
             </div>
           </div>
         )}
-        {pages[screen]}
+        {pages}
       </TabBackdrop>
       <AppBottomNav
         isMobile={isMobile}
@@ -1706,6 +1713,10 @@ function LeaguePage({predictions,results,thavmaStats}){
 }
 
 // ─── MATCHDAY PAGE ────────────────────────────────────────────────────────────
+/** Only tip-relevant fixtures — full-season dump (~180 cards) freezes score entry. */
+const PRED_HORIZON_MS = 14 * 24 * 3600 * 1000
+const PRED_KEEP_AFTER_KO_MS = 4 * 3600 * 1000
+
 function MatchdayPage({fixtures=ALL_FIXTURES,predictions,results,scoringResults,onRefresh,currentUser,revealed,onSave,liveScores,pipelineHints,slStandings}){
   const now=Date.now()
   const ONE_HOUR=3600000
@@ -1724,6 +1735,10 @@ function MatchdayPage({fixtures=ALL_FIXTURES,predictions,results,scoringResults,
       if(m.postponed && !official) return true
       // Official or live/pipeline FT → Ιστορικό after 1h post-kickoff
       if((official || scored) && now > ko + ONE_HOUR) return false
+      // Hide far-future season dump (MD4+ etc.) — tips board stays usable
+      if (Number.isFinite(ko) && ko > now + PRED_HORIZON_MS) return false
+      // Hide stale fixtures with no live activity
+      if (Number.isFinite(ko) && ko < now - PRED_KEEP_AFTER_KO_MS && !liveScores?.[m.id] && !scored) return false
       return true
     })
     .sort((a,b)=>{
@@ -1736,7 +1751,7 @@ function MatchdayPage({fixtures=ALL_FIXTURES,predictions,results,scoringResults,
     })
   return <div style={{padding:'12px 16px 24px'}}>
     <div style={{fontSize:10,fontWeight:700,letterSpacing:'.08em',textTransform:'uppercase',color:MUTED,marginBottom:14}}>
-      Χρονολογικά · Ζωντανοί αγώνες επάνω · πόντοι live
+      Χρονολογικά · Ζωντανοί αγώνες επάνω · πόντοι live · {sorted.length} αγώνες
     </div>
     {sorted.map(m=>(
       <MatchPredictCard key={m.id} match={m}
@@ -1772,6 +1787,52 @@ function FormStrip({form}){
       }}>{r}</div>
     ))}
   </div>
+}
+
+// ─── SCORE STEPPER (stable — must NOT be declared inside MatchPredictCard) ───
+function ScoreRow({ lbl, hv, setHv, av, setAv, sm, locked, accent, onEdit }) {
+  const tC = accent || GOLD
+  const adj = (v, set, d) => {
+    if (locked) return
+    set(Math.max(0, Math.min(9, v + d)))
+    onEdit?.()
+  }
+  const nb = {
+    width: sm ? 38 : 50, height: sm ? 38 : 50, background: SURF2,
+    border: `1px solid ${locked ? LINE : tC + '55'}`, borderRadius: 10,
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    fontSize: sm ? 18 : 24, fontWeight: 800,
+    color: locked ? MUTED : TEXT, fontVariantNumeric: 'tabular-nums',
+  }
+  const ab = {
+    width: sm ? 26 : 34, height: sm ? 26 : 34, borderRadius: 8,
+    border: `1px solid ${LINE}`, background: 'rgba(255,255,255,.06)', color: TEXT,
+    cursor: locked ? 'not-allowed' : 'pointer',
+    fontSize: sm ? 14 : 17, display: 'flex', alignItems: 'center', justifyContent: 'center',
+  }
+  return (
+    <div style={{ marginBottom: sm ? 6 : 0 }}>
+      {lbl && (
+        <div style={{
+          fontSize: 10, fontWeight: 700, color: tC, letterSpacing: '.05em',
+          marginBottom: 5, textTransform: 'uppercase', textAlign: 'center',
+        }}>{lbl}</div>
+      )}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: sm ? 4 : 7, justifyContent: 'center' }}>
+          <button type="button" aria-label="home minus" style={ab} disabled={locked} onClick={() => adj(hv, setHv, -1)}>–</button>
+          <div style={nb}>{hv}</div>
+          <button type="button" aria-label="home plus" style={ab} disabled={locked} onClick={() => adj(hv, setHv, +1)}>+</button>
+        </div>
+        <span style={{ fontSize: sm ? 16 : 20, color: DIM, textAlign: 'center' }}>–</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: sm ? 4 : 7, justifyContent: 'center' }}>
+          <button type="button" aria-label="away minus" style={ab} disabled={locked} onClick={() => adj(av, setAv, -1)}>–</button>
+          <div style={nb}>{av}</div>
+          <button type="button" aria-label="away plus" style={ab} disabled={locked} onClick={() => adj(av, setAv, +1)}>+</button>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 // ─── UNIFIED MATCH+PREDICT CARD ───────────────────────────────────────────────
@@ -1854,31 +1915,7 @@ function MatchPredictCard({match,result,scoringActual,predictions,allPredictions
   })():null
 
   // Score input helpers
-  const adj=(v,set,d)=>{if(!locked){set(Math.max(0,Math.min(9,v+d)));setSaved(false)}}
-  const nb={width:50,height:50,background:SURF2,border:`1px solid ${locked?LINE:tC+'55'}`,borderRadius:10,
-    display:'flex',alignItems:'center',justifyContent:'center',fontSize:24,fontWeight:800,
-    color:locked?MUTED:TEXT,fontVariantNumeric:'tabular-nums'}
-  const ab={width:34,height:34,borderRadius:8,border:`1px solid ${LINE}`,
-    background:'rgba(255,255,255,.06)',color:TEXT,cursor:locked?'not-allowed':'pointer',
-    fontSize:17,display:'flex',alignItems:'center',justifyContent:'center'}
-
-  const ScoreRow=({lbl,hv,setHv,av,setAv,sm})=>(
-    <div style={{marginBottom:sm?6:0}}>
-      {lbl&&<div style={{fontSize:10,fontWeight:700,color:tC,letterSpacing:'.05em',marginBottom:5,textTransform:'uppercase',textAlign:'center'}}>{lbl}</div>}
-      <div style={{display:'grid',gridTemplateColumns:'1fr auto 1fr',alignItems:'center',gap:8}}>
-        {[['h',hv,setHv],['a',av,setAv]].map(([side,v,set],i)=>(
-          <>
-            {i===1&&<span style={{fontSize:sm?16:20,color:DIM,textAlign:'center'}}>–</span>}
-            <div style={{display:'flex',alignItems:'center',gap:sm?4:7,justifyContent:'center'}}>
-              <button style={sm?{...ab,width:26,height:26,fontSize:14}:ab} onClick={()=>adj(v,set,-1)}>–</button>
-              <div style={sm?{...nb,width:38,height:38,fontSize:18}:nb}>{v}</div>
-              <button style={sm?{...ab,width:26,height:26,fontSize:14}:ab} onClick={()=>adj(v,set,+1)}>+</button>
-            </div>
-          </>
-        ))}
-      </div>
-    </div>
-  )
+  const markDirty = () => setSaved(false)
 
   async function save(){
     if(locked)return;setSaving(true);setError('')
@@ -1980,7 +2017,7 @@ function MatchPredictCard({match,result,scoringActual,predictions,allPredictions
           <div style={{marginTop:12,borderTop:`1px solid ${LINE}`,paddingTop:12}}>
 
             {/* Score input */}
-            <ScoreRow hv={h} setHv={setH} av={a} setAv={setA}/>
+            <ScoreRow hv={h} setHv={setH} av={a} setAv={setA} locked={locked} accent={tC} onEdit={markDirty}/>
 
             {/* UEFA πρόκριση — Leg 1 only */}
             {showQualUI&&!locked&&(
@@ -2040,10 +2077,10 @@ function MatchPredictCard({match,result,scoringActual,predictions,allPredictions
 
             {/* OT / pen score rows — full tip: 90′ + παράταση (+ πέναλτι) when tipped */}
             {showExtraTimeUI&&predOT&&!locked&&<div style={{marginTop:8}}>
-              <ScoreRow lbl="ΠΑΡΑΤΑΣΗ (120′)" hv={otH} setHv={setOtH} av={otA} setAv={setOtA} sm/>
+              <ScoreRow lbl="ΠΑΡΑΤΑΣΗ (120′)" hv={otH} setHv={setOtH} av={otA} setAv={setOtA} sm locked={locked} accent={tC} onEdit={markDirty}/>
             </div>}
             {showExtraTimeUI&&predOT&&predPen&&!locked&&<div style={{marginTop:8}}>
-              <ScoreRow lbl="Μπενάλντιζ" hv={penH} setHv={setPenH} av={penA} setAv={setPenA} sm/>
+              <ScoreRow lbl="Μπενάλντιζ" hv={penH} setHv={setPenH} av={penA} setAv={setPenA} sm locked={locked} accent={tC} onEdit={markDirty}/>
             </div>}
 
             {/* Error */}
