@@ -1,5 +1,5 @@
 /**
- * Smoke: live Worker login preferred; offline tips persist; Leg1 quals seeded.
+ * Smoke: skip broken Worker /login (v11 CF 1101); offline tips persist; Leg1 quals.
  * Run: node scripts/smoke-projections-login.mjs
  */
 import fs from 'node:fs'
@@ -17,13 +17,17 @@ const apiSrc = fs.readFileSync(path.join(root, 'src/lib/api.js'), 'utf8')
 const appSrc = fs.readFileSync(path.join(root, 'src/App.jsx'), 'utf8')
 const loginSrc = fs.readFileSync(path.join(root, 'src/pages/Login.jsx'), 'utf8')
 const mainSrc = fs.readFileSync(path.join(root, 'src/main.jsx'), 'utf8')
+const workerSrc = fs.readFileSync(path.join(root, 'worker/kouvadeiros-api.js'), 'utf8')
 
-// Must NOT gate Worker on version >= 13 (live ping still reports 11)
-if (/version\)\s*>=\s*13/.test(apiSrc) || /Number\(d\?\.version\)\s*>=\s*13/.test(apiSrc)) {
-  throw new Error('api.js must not reject Worker solely because version < 13')
+// Live v11 successful /login → CF 1101. Client must wait for loginFixed / v13+.
+if (!/workerLoginSafe/.test(apiSrc)) {
+  throw new Error('expected workerLoginSafe()')
 }
-if (!/workerReachable/.test(apiSrc)) {
-  throw new Error('expected workerReachable()')
+if (!/loginFixed/.test(apiSrc)) {
+  throw new Error('api.js must require ping.loginFixed (or version≥13) before /login')
+}
+if (!/markWorkerLoginBroken/.test(apiSrc)) {
+  throw new Error('api.js must cache broken /login for the session')
 }
 if (!/saveOfflinePrediction/.test(apiSrc) || !/kouv_offline_preds/.test(apiSrc)) {
   throw new Error('offline prediction persistence missing')
@@ -32,7 +36,15 @@ if (!/tryUpgradeOfflineSession/.test(apiSrc) || !/tryUpgradeOfflineSession/.test
   throw new Error('offline→Worker session upgrade missing')
 }
 if (!/quickLogin/.test(apiSrc) || !/quickLogin/.test(loginSrc)) {
-  throw new Error('Login must use async quickLogin (Worker first)')
+  throw new Error('Login must use async quickLogin')
+}
+
+// Worker login must never throw (CF 1101)
+if (!/login fatal/.test(workerSrc)) {
+  throw new Error('Worker /login must catch fatals and return JSON')
+}
+if (!/version:\s*14/.test(workerSrc) || !/loginFixed:\s*true/.test(workerSrc)) {
+  throw new Error('Worker ping must advertise version 14 + loginFixed')
 }
 
 // History must show Leg 1 πρόκριση tips
@@ -58,4 +70,4 @@ const aek = ALL_FIXTURES.find((m) => m.id === 'ucl-aek-2')
 const q = resolveQualTip(merged, ALL_FIXTURES, aek, 'chousiadas')
 if (q !== 'AEK') throw new Error(`expected Chousiadas AEK qual on Leg2 card, got ${q}`)
 
-console.log('OK — Worker login preferred, offline tips persist, Leg1 quals visible')
+console.log('OK — skip broken Worker login, offline tips persist, Leg1 quals visible')

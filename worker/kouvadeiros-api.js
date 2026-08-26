@@ -1099,37 +1099,60 @@ export default {
       path = url.pathname
 
     if (path === '/login' && request.method === 'POST') {
-      const { email, password } = await request.json()
-      const users = await getAllUsers(env)
-      const user = users[email?.toLowerCase()]
-      if (!user || user.password !== password) return json({ error: 'Invalid credentials' }, 401)
-      const token = makeToken()
-      await env.KOUV.put(`token:${token}`, email.toLowerCase(), { expirationTtl: 86400 * 30 })
-      // Phone from defaults — never block login on KV/Twilio (that was CF 1101).
-      const phone = DEFAULT_PHONES[user.id] || null
-      const welcomeTask = (async () => {
+      // Never throw out of this handler — uncaught errors become CF 1101 HTML
+      // without CORS, which breaks browser login (looks like an app crash).
+      try {
+        const body = await request.json().catch(() => ({}))
+        const email = String(body?.email || '').trim().toLowerCase()
+        const password = String(body?.password || '')
+        const users = await getAllUsers(env)
+        const user = users[email]
+        if (!user || user.password !== password) return json({ error: 'Invalid credentials' }, 401)
+        const token = makeToken()
         try {
-          const state = await getState(env)
-          const welcomed = state.welcomed || {}
-          if (phone && !welcomed[user.id]) {
-            const msg =
-              `🎉 *Καλωσόρισες στο KOUVADEIROS 2026/27!*\n\nΓεια σου ${user.name}! 🌶️\n\n` +
-              `📱 Κάνε προβλέψεις:\n• Μέσα από την εφαρμογή\n• Μέσω WhatsApp: \`PRED [match-id] [σκορ]\`\n\n` +
-              `🔔 Υπενθυμίσεις: *30′* και *20′* πριν κάθε αγώνα (κλείδωμα στις 15′)\n` +
-              `🔒 Κλείδωμα + αποκάλυψη: *15 λεπτά* πριν τη σέντρα\n` +
-              `⚡ Αν βγει ΘΑΥΜΑ ή ΩΣΑΝΑ... θα το μάθεις αμέσως!\n\n` +
-              `Καλή επιτυχία! Και το burger παίζει 🍔\n\n_kouvadeiros.pages.dev_`
-            await sendWA(env, phone, msg)
-            const fresh = await getState(env)
-            fresh.welcomed = { ...(fresh.welcomed || {}), [user.id]: new Date().toISOString() }
-            await setState(env, fresh)
-          }
+          await env.KOUV.put(`token:${token}`, email, { expirationTtl: 86400 * 30 })
         } catch (e) {
-          console.log('login welcome skip', e?.message || e)
+          console.log('login token put failed', e?.message || e)
+          return json({ error: 'Session store failed' }, 503)
         }
-      })()
-      if (ctx?.waitUntil) ctx.waitUntil(welcomeTask)
-      return json({ token, name: user.name, id: user.id, email, role: user.role || 'player', phone })
+        // Phone from defaults — never block login on KV/Twilio (that was CF 1101).
+        const phone = DEFAULT_PHONES[user.id] || null
+        const payload = {
+          token,
+          name: user.name,
+          id: user.id,
+          email,
+          role: user.role || 'player',
+          phone,
+        }
+        if (ctx?.waitUntil) {
+          ctx.waitUntil((async () => {
+            try {
+              const state = await getState(env)
+              const welcomed = state.welcomed || {}
+              if (phone && !welcomed[user.id]) {
+                const msg =
+                  `🎉 *Καλωσόρισες στο KOUVADEIROS 2026/27!*\n\nΓεια σου ${user.name}! 🌶️\n\n` +
+                  `📱 Κάνε προβλέψεις:\n• Μέσα από την εφαρμογή\n• Μέσω WhatsApp: \`PRED [match-id] [σκορ]\`\n\n` +
+                  `🔔 Υπενθυμίσεις: *30′* και *20′* πριν κάθε αγώνα (κλείδωμα στις 15′)\n` +
+                  `🔒 Κλείδωμα + αποκάλυψη: *15 λεπτά* πριν τη σέντρα\n` +
+                  `⚡ Αν βγει ΘΑΥΜΑ ή ΩΣΑΝΑ... θα το μάθεις αμέσως!\n\n` +
+                  `Καλή επιτυχία! Και το burger παίζει 🍔\n\n_kouvadeiros.pages.dev_`
+                await sendWA(env, phone, msg)
+                const fresh = await getState(env)
+                fresh.welcomed = { ...(fresh.welcomed || {}), [user.id]: new Date().toISOString() }
+                await setState(env, fresh)
+              }
+            } catch (e) {
+              console.log('login welcome skip', e?.message || e)
+            }
+          })())
+        }
+        return json(payload)
+      } catch (e) {
+        console.log('login fatal', e?.message || e)
+        return json({ error: 'Login failed', detail: String(e?.message || e) }, 500)
+      }
     }
 
     if (path === '/logout' && request.method === 'POST') {
@@ -1627,7 +1650,7 @@ export default {
     if (path === '/ping')
       return json({
         ok: true,
-        version: 13,
+        version: 14,
         remind: REMIND_TARGETS,
         lock: LOCK_TARGET,
         newspaper: true,

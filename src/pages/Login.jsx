@@ -29,7 +29,8 @@ export default function Login({ onLogin }) {
   async function enterAs(playerId) {
     setLoading(true); setError('')
     try {
-      // Prefer Worker session so projections sync; offline only if Worker is down
+      // Prefer offline instantly while live Worker /login still CF-1101s (v11).
+      // When ping reports loginFixed / v13+, quickLogin uses a real Worker session.
       const user = await quickLogin(playerId)
       if (!user) throw new Error('unknown')
       finishLogin(user)
