@@ -683,19 +683,25 @@ export const SEEDED_PREDICTIONS = {
     mavromichalis: { h: 0, a: 1 },
     chousiadas: { h: 0, a: 1 },
   },
+  // UCL PO Leg 1 · LVS–AEK (from live KV tips)
+  'ucl-aek-1': {
+    boikos: { h: 1, a: 3, qual: 'LVS' },
+    mavromichalis: { h: 1, a: 1, qual: 'AEK' },
+    chousiadas: { h: 0, a: 2, qual: 'AEK' },
+  },
   'uel-ofi-1': {
-    boikos: { h: 2, a: 0, qual: 'OFI' },
-    mavromichalis: { h: 2, a: 0, qual: 'OFI' },
+    boikos: { h: 2, a: 1, qual: 'OFI' },
+    mavromichalis: { h: 1, a: 1, qual: 'CSS' },
     chousiadas: { h: 2, a: 0, qual: 'CSS' },
   },
   'uecl-pao-5': {
-    boikos: { h: 1, a: 0, qual: 'PAO' },
-    mavromichalis: { h: 1, a: 0, qual: 'PAO' },
+    boikos: { h: 2, a: 0, qual: 'PAO' },
+    mavromichalis: { h: 3, a: 0, qual: 'PAO' },
     chousiadas: { h: 1, a: 1, qual: 'PAO' },
   },
   'uecl-paok-1': {
     boikos: { h: 1, a: 1, qual: 'PAOK' },
-    mavromichalis: { h: 2, a: 0, qual: 'PAOK' },
+    mavromichalis: { h: 3, a: 0, qual: 'PAOK' },
     chousiadas: { h: 1, a: 1, qual: 'BRN' },
   },
   // Super League MD1 Saturday

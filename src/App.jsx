@@ -1,4 +1,4 @@
-// KOUVADEIROS v7 — build 2026-08-25 (history locks + responsive shell)
+// KOUVADEIROS v7 — build 2026-08-26 (live Worker login + Leg1 qual UI)
 import { useState, useEffect, useRef, useCallback, useMemo, memo, startTransition } from 'react'
 import { api, clearAuth, storeUser } from './lib/api'
 import {
@@ -709,20 +709,49 @@ function HistoryPage({predictions,results}){
     {!played.length&&<div style={{textAlign:'center',padding:40,color:MUTED,fontSize:13}}>Δεν υπάρχουν αποτελέσματα ακόμα</div>}
     {played.map(m=>{
       const actual=results[m.id]
+      const isLeg1=m.leg===1
+      const isLeg2=m.leg===2
+      const showQualCol=isUEFATie(m.id)&&(isLeg1||isLeg2)
       return <div key={m.id} style={{background:SURF,border:`1px solid ${LINE}`,borderRadius:12,padding:'14px 16px',marginBottom:10}}>
-        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:3}}><TPill id={m.t}/><span style={{fontSize:10,fontWeight:600,color:MUTED}}>{grDate(m.kickoff)}</span></div>
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:3}}>
+          <div style={{display:'flex',alignItems:'center',gap:7}}>
+            <TPill id={m.t}/>
+            {m.round&&<span style={{fontSize:10,fontWeight:600,color:MUTED}}>{m.round}</span>}
+          </div>
+          <span style={{fontSize:10,fontWeight:600,color:MUTED}}>{grDate(m.kickoff)}</span>
+        </div>
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',margin:'10px 0 12px'}}>
           <div style={{display:'flex',alignItems:'center',gap:8}}><TeamLogo k={m.home} size={26}/><span style={{fontSize:12,fontWeight:700}}>{TEAMS[m.home]?.name}</span></div>
           <span style={{fontSize:20,fontWeight:900,fontVariantNumeric:'tabular-nums'}}>{actual.h} – {actual.a}</span>
           <div style={{display:'flex',alignItems:'center',gap:8}}><span style={{fontSize:12,fontWeight:700}}>{TEAMS[m.away]?.name}</span><TeamLogo k={m.away} size={26}/></div>
         </div>
+        {actual.qual&&(
+          <div style={{fontSize:11,fontWeight:700,color:BLUE,textAlign:'center',marginBottom:10}}>
+            Πρόκριση: → {TEAMS[actual.qual]?.abbr||actual.qual}
+          </div>
+        )}
+        {showQualCol&&!actual.qual&&isLeg1&&(
+          <div style={{fontSize:10,fontWeight:700,color:MUTED,textAlign:'center',marginBottom:8,letterSpacing:'.04em'}}>
+            ΠΡΟΒΛΕΨΕΙΣ ΠΡΟΚΡΙΣΗΣ (Leg 1)
+          </div>
+        )}
         <div style={{display:'flex',gap:5}}>
-          {PLAYERS.map(p=>{const pred=predictions?.[m.id]?.[p],sc=pred?scorePlayerMatch(m,pred,actual,predictions,ALL_FIXTURES,p):null,pc=PC[p];return <div key={p} style={{flex:1,background:sc?.exact?`${GREEN}12`:sc?.correct?`${GOLD}08`:'rgba(255,255,255,.04)',borderRadius:9,padding:'8px',textAlign:'center',border:`1px solid ${sc?.exact?GREEN+'35':sc?.correct?GOLD+'20':LINE}`}}>
+          {PLAYERS.map(p=>{
+            const pred=predictions?.[m.id]?.[p]
+            const sc=pred?scorePlayerMatch(m,pred,actual,predictions,ALL_FIXTURES,p):null
+            const pc=PC[p]
+            const shownQual=isLeg1
+              ? pred?.qual
+              : resolveQualTip(predictions||{},ALL_FIXTURES,m,p)
+            return <div key={p} style={{flex:1,background:sc?.exact?`${GREEN}12`:sc?.correct?`${GOLD}08`:'rgba(255,255,255,.04)',borderRadius:9,padding:'8px',textAlign:'center',border:`1px solid ${sc?.exact?GREEN+'35':sc?.correct?GOLD+'20':LINE}`}}>
             <div style={{fontSize:10,fontWeight:800,color:pc.p,marginBottom:3,letterSpacing:'.04em'}}>{PLAYER_NAMES[p].substring(0,4).toUpperCase()}</div>
             <div style={{fontSize:13,fontWeight:800,color:TEXT,fontVariantNumeric:'tabular-nums'}}>{pred?`${pred.h}–${pred.a}`:'–'}</div>
             {pred?.predOT&&typeof pred.otH==='number'&&<div style={{fontSize:9,color:GOLD,marginTop:1}}>ET {pred.otH}–{pred.otA}</div>}
             {pred?.predPen&&typeof pred.penH==='number'&&<div style={{fontSize:9,color:RED,marginTop:1}}>ΠΕΝ {pred.penH}–{pred.penA}</div>}
-            {sc&&<div style={{fontSize:11,fontWeight:700,color:sc.points===2?GREEN:sc.points===1?GOLD:DIM,marginTop:2}}>{sc.points===2?'🎯':sc.points===1?'✓':'✗'}{sc.points}p</div>}
+            {showQualCol&&shownQual&&(
+              <div style={{fontSize:10,fontWeight:800,color:BLUE,marginTop:3}}>→ {TEAMS[shownQual]?.abbr||shownQual}</div>
+            )}
+            {sc&&<div style={{fontSize:11,fontWeight:700,color:sc.dq?RED:sc.points===2?GREEN:sc.points===1?GOLD:DIM,marginTop:2}}>{sc.dq?'DQ −1p':`${sc.points===2?'🎯':sc.points===1?'✓':sc.qualCorrect?'🔑':'✗'}${sc.points}p`}{sc.qualPts?` ·${sc.qualPts}🔑`:''}</div>}
           </div>})}
         </div>
       </div>
@@ -1970,10 +1999,24 @@ function MatchPredictCard({match,result,scoringActual,predictions,allPredictions
               </div>
             )}
 
-            {/* Locked Leg 2: show Leg 1 πρόκριση tip (read-only) */}
-            {showExtraTimeUI&&myLeg1Qual&&(
-              <div style={{marginTop:10,fontSize:11,color:MUTED,background:'rgba(77,159,255,.06)',border:`1px solid rgba(77,159,255,.2)`,borderRadius:8,padding:'8px 10px'}}>
-                Πρόκριση από Leg 1: <strong style={{color:BLUE}}>→ {myLeg1Qual}</strong> <span style={{opacity:.7}}>(κλειδωμένη · βαθμολογείται στο τέλος της σειράς)</span>
+            {/* Leg 2: everyone's Leg 1 πρόκριση tip (already public after Leg 1 lock) */}
+            {showExtraTimeUI&&(
+              <div style={{marginTop:10,background:'rgba(77,159,255,.06)',border:`1px solid rgba(77,159,255,.22)`,borderRadius:8,padding:'8px 10px'}}>
+                <div style={{fontSize:9,fontWeight:800,color:BLUE,letterSpacing:'.06em',textTransform:'uppercase',marginBottom:6}}>
+                  Πρόκριση από Leg 1
+                </div>
+                <div style={{display:'flex',gap:5}}>
+                  {PLAYERS.map(pid=>{
+                    const q=resolveQualTip(allPredictions||{},ALL_FIXTURES,match,pid)
+                    const pc=PC[pid]
+                    return (
+                      <div key={pid} style={{flex:1,textAlign:'center'}}>
+                        <div style={{fontSize:9,fontWeight:700,color:pc.p,marginBottom:2}}>{PLAYER_NAMES[pid].substring(0,4).toUpperCase()}</div>
+                        <div style={{fontSize:12,fontWeight:800,color:q?BLUE:MUTED}}>{q?`→ ${TEAMS[q]?.abbr||q}`:'—'}</div>
+                      </div>
+                    )
+                  })}
+                </div>
               </div>
             )}
 
@@ -2029,8 +2072,8 @@ function MatchPredictCard({match,result,scoringActual,predictions,allPredictions
             <span style={{fontSize:14,fontWeight:900,color:PC[currentUser.id]?.p||TEXT,fontVariantNumeric:'tabular-nums'}}>{myPred.h}–{myPred.a}</span>
             {myPred.predOT&&typeof myPred.otH==='number'&&<span style={{fontSize:10,color:GOLD}}>ET {myPred.otH}–{myPred.otA}</span>}
             {myPred.predPen&&typeof myPred.penH==='number'&&<span style={{fontSize:10,color:RED}}>ΠΕΝ {myPred.penH}–{myPred.penA}</span>}
-            {myPred.qual&&showQualUI&&<span style={{fontSize:10,color:MUTED}}>→ {myPred.qual}</span>}
-            {isLeg2&&myLeg1Qual&&<span style={{fontSize:10,color:BLUE}}>→ {myLeg1Qual}</span>}
+            {myPred.qual&&showQualUI&&<span style={{fontSize:10,color:BLUE,fontWeight:800}}>→ {TEAMS[myPred.qual]?.abbr||myPred.qual}</span>}
+            {isLeg2&&myLeg1Qual&&<span style={{fontSize:10,color:BLUE,fontWeight:800}}>→ {TEAMS[myLeg1Qual]?.abbr||myLeg1Qual}</span>}
           </div>
         )}
 
@@ -2063,7 +2106,7 @@ function MatchPredictCard({match,result,scoringActual,predictions,allPredictions
                     <div style={{fontSize:13,fontWeight:800,color:TEXT,fontVariantNumeric:'tabular-nums'}}>{pred?`${pred.h}–${pred.a}`:(isDq?'DQ':'–')}</div>
                     {pred?.predOT&&typeof pred.otH==='number'&&<div style={{fontSize:9,color:GOLD,marginTop:1}}>ET {pred.otH}–{pred.otA}</div>}
                     {pred?.predPen&&typeof pred.penH==='number'&&<div style={{fontSize:9,color:RED,marginTop:1}}>ΠΕΝ {pred.penH}–{pred.penA}</div>}
-                    {shownQual&&<div style={{fontSize:9,color:MUTED,marginTop:1}}>→{shownQual}</div>}
+                    {shownQual&&<div style={{fontSize:9,fontWeight:800,color:BLUE,marginTop:1}}>→{TEAMS[shownQual]?.abbr||shownQual}</div>}
                     {isDq&&<div style={{fontSize:9,fontWeight:700,color:RED,marginTop:2}}>ΑΠΟΚΛΕΙΣΜΟΣ</div>}
                     {sc&&<div style={{fontSize:10,fontWeight:700,color:sc.dq?RED:sc.points>=2?GREEN:sc.points===1?GOLD:DIM,marginTop:2}}>{sc.dq?'DQ −1p':`${sc.exact?'🎯':sc.correct?'✓':sc.qualCorrect?'🔑':'✗'}${sc.points}p`}{!sc.dq&&isProvisional?'~':''}{sc.qualPts?` ·${sc.qualPts}🔑`:''}</div>}
                   </div>

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { api, storeToken, storeUser, ROSTER_CREDENTIALS, quickLocalLogin } from '../lib/api'
+import { api, storeToken, storeUser, ROSTER_CREDENTIALS, quickLogin } from '../lib/api'
 
 const BG='#08090d', SURF='#111318', LINE='rgba(255,255,255,.1)'
 const GREEN='#00ff88', RED='#ff2244', MUTED='rgba(255,255,255,.4)', GOLD='#ffdd00'
@@ -29,7 +29,8 @@ export default function Login({ onLogin }) {
   async function enterAs(playerId) {
     setLoading(true); setError('')
     try {
-      const user = quickLocalLogin(playerId)
+      // Prefer Worker session so projections sync; offline only if Worker is down
+      const user = await quickLogin(playerId)
       if (!user) throw new Error('unknown')
       finishLogin(user)
     } catch {

@@ -2,7 +2,7 @@ import React, { useState, useEffect, Component } from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'
 import Login from './pages/Login'
-import { getStoredUser, storeUser, hasSession, clearAuth, ensureOfflineSession, isOfflineToken } from './lib/api'
+import { getStoredUser, storeUser, hasSession, clearAuth, ensureOfflineSession, isOfflineToken, tryUpgradeOfflineSession } from './lib/api'
 
 /** React-safe fatal UI — never wipe #root with innerHTML (that causes removeChild cascades). */
 function FatalScreen({ title, message }) {
@@ -122,6 +122,17 @@ function Root() {
     return () => window.removeEventListener('kouv:session-lost', onLost)
   }, [])
 
+  // Stale local: sessions → upgrade to live Worker token when ping/login work
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      if (!isOfflineToken()) return
+      const upgraded = await tryUpgradeOfflineSession()
+      if (!cancelled && upgraded?.token) setU(getStoredUser())
+    })().catch(() => {})
+    return () => { cancelled = true }
+  }, [])
+
   function handleLogin(u2) {
     storeUser(u2)
     setU(u2)
@@ -134,7 +145,7 @@ function Root() {
   return React.createElement(App, { user: u, onLogout: handleLogout })
 }
 
-console.log('KOUVADEIROS v7 2026-08-25 removechild-fix')
+console.log('KOUVADEIROS v7 2026-08-26 projections-fix')
 
 const rootEl = document.getElementById('root')
 window.__KOUV_REACT_MOUNTED__ = false
