@@ -1,5 +1,12 @@
-# Cloudflare Pages (Vite). Workers use: wrangler deploy -c worker/wrangler-api.toml
+# Cloudflare Pages (Vite) + Functions API bridge on KOUV KV.
+# Workers still use: wrangler deploy -c worker/wrangler-api.toml
 # Scores worker: wrangler deploy -c worker/wrangler-scores.jsonc
 name = "kouvadeiros"
 compatibility_date = "2026-07-24"
 pages_build_output_dir = "./dist"
+
+# Same KV as kouvadeiros-api — shared tips / results / reveal until Worker v14 deploys.
+[[kv_namespaces]]
+binding = "KOUV"
+id = "5988821db92146b08969e4b27ec8854e"
+preview_id = "5988821db92146b08969e4b27ec8854e"

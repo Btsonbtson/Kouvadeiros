@@ -14,6 +14,7 @@
     "test:chousiadas-tips": "node scripts/smoke-chousiadas-sl-md1-tips.mjs",
     "test:client-live": "node scripts/smoke-client-live-scores.mjs",
     "test:projections-login": "node scripts/smoke-projections-login.mjs",
+    "test:pages-bridge": "node scripts/smoke-pages-bridge.mjs",
     "test:hooks": "node scripts/smoke-hooks-order.mjs",
     "test:matchday": "node scripts/smoke-matchday-horizon.mjs",
     "deploy:pages": "npm run build && node scripts/verify-pages-dist.mjs && wrangler pages deploy dist --project-name=kouvadeiros --commit-dirty=true"
