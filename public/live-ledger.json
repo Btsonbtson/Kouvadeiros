@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-08-27T19:02:26.168Z",
+  "updatedAt": "2026-08-27T19:46:12.877Z",
   "predictions": {
     "ucl-aek-2": {
       "boikos": {
@@ -187,6 +187,17 @@
       "qual": "BRN",
       "setAt": "2026-08-27T19:02:18.486586Z",
       "source": "bridge"
+    },
+    "uecl-pao-6": {
+      "h": 1,
+      "a": 1,
+      "overtime": true,
+      "otH": 1,
+      "otA": 2,
+      "penalties": false,
+      "qual": "PAO",
+      "setAt": "2026-08-27T19:46:05.879328Z",
+      "source": "bridge"
     }
   },
   "events": [
@@ -296,6 +307,18 @@
       "qual": "BRN",
       "setBy": "boikos",
       "ts": "2026-08-27T19:02:18.486586Z"
+    },
+    {
+      "type": "result",
+      "matchId": "uecl-pao-6",
+      "h": 1,
+      "a": 1,
+      "overtime": true,
+      "otH": 1,
+      "otA": 2,
+      "qual": "PAO",
+      "setBy": "boikos",
+      "ts": "2026-08-27T19:46:05.879328Z"
     }
   ]
 }
