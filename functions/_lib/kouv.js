@@ -29,7 +29,7 @@ export const DEFAULT_PHONES = {
 }
 
 export const LOCK_TARGET = 15
-export const BRIDGE_VERSION = 19
+export const BRIDGE_VERSION = 20
 
 /** Obscure ntfy topic — private 3-player ledger until Worker secrets land.
  *  Browser publishes/polls directly (Pages Functions get TLS 525 to some ntfy hosts). */
@@ -173,8 +173,13 @@ export async function loadLedgerEvents(env, request) {
     }
     if (res.ok) {
       const snap = await res.json()
-      if (Array.isArray(snap?.events)) events.push(...snap.events)
-      else if (snap?.predictions && typeof snap.predictions === 'object') {
+      // `predictions`/`results` are the durable, cumulatively-merged truth
+      // (scripts/merge-ntfy-ledger.mjs keeps them even after ntfy's retention
+      // window drops old messages). `events` is only a short debug trail of
+      // the most recent ntfy poll and must NEVER be used as the primary
+      // source — using it caused finished matches (e.g. last night's result)
+      // to silently vanish once ntfy expired those raw messages.
+      if (snap?.predictions && typeof snap.predictions === 'object') {
         for (const [matchId, byPlayer] of Object.entries(snap.predictions)) {
           for (const [playerId, tip] of Object.entries(byPlayer || {})) {
             if (!tip || typeof tip.h !== 'number') continue
@@ -184,6 +189,8 @@ export async function loadLedgerEvents(env, request) {
         for (const [matchId, result] of Object.entries(snap.results || {})) {
           events.push({ type: 'result', matchId, ...result })
         }
+      } else if (Array.isArray(snap?.events)) {
+        events.push(...snap.events)
       }
     }
   } catch (e) {
