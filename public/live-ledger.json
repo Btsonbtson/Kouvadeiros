@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-08-27T16:57:27.100Z",
+  "updatedAt": "2026-08-27T17:01:41.500Z",
   "predictions": {
     "ucl-aek-2": {
       "boikos": {
@@ -66,6 +66,18 @@
         "penH": 4,
         "penA": 5,
         "savedAt": "2026-08-27T16:57:19.341848Z"
+      },
+      "chousiadas": {
+        "h": 1,
+        "a": 1,
+        "qual": "BRN",
+        "predOT": true,
+        "otH": 2,
+        "otA": 1,
+        "predPen": false,
+        "penH": 0,
+        "penA": 0,
+        "savedAt": "2026-08-27T17:01:32.780500Z"
       }
     },
     "uel-ofi-2": {
@@ -79,7 +91,7 @@
         "predPen": false,
         "penH": 0,
         "penA": 0,
-        "savedAt": "2026-08-27T15:04:10.661Z"
+        "savedAt": "2026-08-27T17:01:32.780500Z"
       },
       "boikos": {
         "h": 2,
@@ -106,6 +118,18 @@
         "penH": 0,
         "penA": 0,
         "savedAt": "2026-08-27T16:57:19.341848Z"
+      },
+      "chousiadas": {
+        "h": 1,
+        "a": 2,
+        "qual": null,
+        "predOT": false,
+        "otH": 0,
+        "otA": 0,
+        "predPen": false,
+        "penH": 0,
+        "penA": 0,
+        "savedAt": "2026-08-27T17:01:32.780500Z"
       }
     }
   },
@@ -166,6 +190,34 @@
       "h": 1,
       "a": 2,
       "ts": "2026-08-27T16:57:19.341848Z"
+    },
+    {
+      "type": "tip",
+      "matchId": "uel-ofi-2",
+      "playerId": "chousiadas",
+      "h": 3,
+      "a": 1,
+      "ts": "2026-08-27T17:01:32.780500Z"
+    },
+    {
+      "type": "tip",
+      "matchId": "uecl-paok-2",
+      "playerId": "chousiadas",
+      "h": 1,
+      "a": 1,
+      "predOT": true,
+      "otH": 2,
+      "otA": 1,
+      "qual": "BRN",
+      "ts": "2026-08-27T17:01:32.780500Z"
+    },
+    {
+      "type": "tip",
+      "matchId": "uecl-pao-6",
+      "playerId": "chousiadas",
+      "h": 1,
+      "a": 2,
+      "ts": "2026-08-27T17:01:32.780500Z"
     }
   ]
 }
