@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-08-27T17:01:41.500Z",
+  "updatedAt": "2026-08-27T17:06:59.989Z",
   "predictions": {
     "ucl-aek-2": {
       "boikos": {
@@ -78,6 +78,18 @@
         "penH": 0,
         "penA": 0,
         "savedAt": "2026-08-27T17:01:32.780500Z"
+      },
+      "mavromichalis": {
+        "h": 0,
+        "a": 1,
+        "qual": null,
+        "predOT": false,
+        "otH": 0,
+        "otA": 0,
+        "predPen": false,
+        "penH": 0,
+        "penA": 0,
+        "savedAt": "2026-08-27T17:06:51.214719Z"
       }
     },
     "uel-ofi-2": {
@@ -104,6 +116,18 @@
         "penH": 0,
         "penA": 0,
         "savedAt": "2026-08-27T16:57:19.341848Z"
+      },
+      "mavromichalis": {
+        "h": 0,
+        "a": 1,
+        "qual": null,
+        "predOT": false,
+        "otH": 0,
+        "otA": 0,
+        "predPen": false,
+        "penH": 0,
+        "penA": 0,
+        "savedAt": "2026-08-27T17:06:51.214719Z"
       }
     },
     "uecl-pao-6": {
@@ -130,6 +154,18 @@
         "penH": 0,
         "penA": 0,
         "savedAt": "2026-08-27T17:01:32.780500Z"
+      },
+      "mavromichalis": {
+        "h": 1,
+        "a": 2,
+        "qual": null,
+        "predOT": false,
+        "otH": 0,
+        "otA": 0,
+        "predPen": false,
+        "penH": 0,
+        "penA": 0,
+        "savedAt": "2026-08-27T17:06:51.214719Z"
       }
     }
   },
@@ -218,6 +254,30 @@
       "h": 1,
       "a": 2,
       "ts": "2026-08-27T17:01:32.780500Z"
+    },
+    {
+      "type": "tip",
+      "matchId": "uel-ofi-2",
+      "playerId": "mavromichalis",
+      "h": 0,
+      "a": 1,
+      "ts": "2026-08-27T17:06:51.214719Z"
+    },
+    {
+      "type": "tip",
+      "matchId": "uecl-paok-2",
+      "playerId": "mavromichalis",
+      "h": 0,
+      "a": 1,
+      "ts": "2026-08-27T17:06:51.214719Z"
+    },
+    {
+      "type": "tip",
+      "matchId": "uecl-pao-6",
+      "playerId": "mavromichalis",
+      "h": 1,
+      "a": 2,
+      "ts": "2026-08-27T17:06:51.214719Z"
     }
   ]
 }
