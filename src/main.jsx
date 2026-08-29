@@ -2,7 +2,7 @@ import React, { useState, useEffect, Component } from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'
 import Login from './pages/Login'
-import { getStoredUser, storeUser, hasSession, clearAuth, ensureOfflineSession, isOfflineToken, tryUpgradeOfflineSession } from './lib/api'
+import { getStoredUser, storeUser, hasSession, clearAuth, ensureOfflineSession, isOfflineToken, isBridgeToken, tryUpgradeOfflineSession } from './lib/api'
 
 /** React-safe fatal UI — never wipe #root with innerHTML (that causes removeChild cascades). */
 function FatalScreen({ title, message }) {
@@ -122,11 +122,12 @@ function Root() {
     return () => window.removeEventListener('kouv:session-lost', onLost)
   }, [])
 
-  // Stale local: sessions → upgrade to live Worker token when ping/login work
+  // Stale local: (offline) or br. (Pages bridge) sessions → upgrade to the
+  // real Worker the moment it's healthy again, migrating this device's tips.
   useEffect(() => {
     let cancelled = false
     ;(async () => {
-      if (!isOfflineToken()) return
+      if (!isOfflineToken() && !isBridgeToken()) return
       const upgraded = await tryUpgradeOfflineSession()
       if (!cancelled && upgraded?.token) setU(getStoredUser())
     })().catch(() => {})

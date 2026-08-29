@@ -6,30 +6,26 @@ const WORKER_BASE = (typeof __WORKER_URL__ !== 'undefined' && __WORKER_URL__)
 const SCORES_BASE = (typeof __SCORES_URL__ !== 'undefined' && __SCORES_URL__)
   ? __SCORES_URL__
   : 'https://kouvadeiros-scores.jboikos.workers.dev'
+/** Same-origin Pages Functions bridge — fallback ONLY, see workerLoginSafe(). */
+const BRIDGE_BASE = '/api'
 
-/**
- * Prefer same-origin Pages Functions (`/api`) when the app is served from Pages.
- * That bridge shares KOUV KV and restores login + tips without Worker deploy secrets.
- * Local Vite / non-Pages hosts still talk to workers.dev.
- */
-function resolveApiBase() {
+/** True when a `/api` bridge could plausibly exist at this origin (Pages deploy or explicit override). */
+function bridgeAvailableHost() {
   try {
-    if (typeof window !== 'undefined') {
-      const h = String(window.location?.hostname || '')
-      if (h === 'kouvadeiros.pages.dev' || h.endsWith('.kouvadeiros.pages.dev') || h.endsWith('.pages.dev')) {
-        return '/api'
-      }
-      // Custom domains often proxy the same Pages project
-      if (h && !h.includes('localhost') && !h.includes('127.0.0.1') && !h.includes('workers.dev')) {
-        // Probe happens via /ping loginFixed; still prefer /api when path exists at runtime
-        if (window.__KOUV_API_BASE__) return window.__KOUV_API_BASE__
-      }
-    }
-  } catch { /* SSR / private */ }
-  return WORKER_BASE
+    if (typeof window === 'undefined') return false
+    if (window.__KOUV_API_BASE__) return true
+    const h = String(window.location?.hostname || '')
+    return h.endsWith('.pages.dev')
+  } catch {
+    return false
+  }
 }
 
-let BASE = resolveApiBase()
+// Real Worker is the primary backend; resolved dynamically by workerLoginSafe()
+// on every login/upgrade attempt (worker healthy → BASE=WORKER_BASE, bridgeMode=false;
+// worker down → BASE=BRIDGE_BASE, bridgeMode=true). Defaults to Worker so a stale
+// module (before any probe has run) never silently assumes the bridge.
+let BASE = WORKER_BASE
 
 const OFFLINE_PREDS_KEY = 'kouv_offline_preds'
 
@@ -64,7 +60,7 @@ const NTFY_HOSTS = [
 
 let bridgeMode = false
 
-function isBridgeToken(t = token()) {
+export function isBridgeToken(t = token()) {
   return String(t || '').startsWith('br.')
 }
 
@@ -316,39 +312,56 @@ function isWorkerLoginMarkedBroken() {
   try { return sessionStorage.getItem(LOGIN_BROKEN_KEY) === '1' } catch { return false }
 }
 
+async function probeHost(base) {
+  const { signal, clear } = abortableTimeout(2500)
+  try {
+    const res = await fetch(`${base}/ping`, { signal })
+    clear()
+    if (!res.ok) return null
+    const d = await res.json().catch(() => null)
+    if (!d || d.ok === false) return null
+    return d
+  } catch {
+    clear()
+    return null
+  }
+}
+
 /**
- * Live Worker v11 crashes on *successful* /login (CF 1101, no CORS headers).
- * Pages `/api` bridge (v15+) and Worker v13+ expose loginFixed / version≥13.
- * Until one of those answers, skip /login and use offline roster.
+ * Resolve which backend is safe to log in against right now.
+ *
+ * The real Worker (`kouvadeiros-api`) is PRIMARY whenever it's healthy —
+ * full KV, WhatsApp, admin routes, cron. The Pages Functions bridge
+ * (`/api`, ntfy-backed tip ledger) is a FALLBACK, only used while the
+ * Worker is unreachable or its /login is known-broken this session
+ * (the v11 CF-1101 bug: successful /login used to hang without CORS
+ * headers, so a proven failure this session skips straight to bridge
+ * without retrying the same doomed POST).
+ *
+ * /ping is always re-probed fresh (cheap GET) so the app recovers
+ * automatically the moment the Worker is redeployed — only the actual
+ * /login POST is gated by the broken flag.
  */
 async function workerLoginSafe() {
-  if (isWorkerLoginMarkedBroken()) return false
+  const worker = await probeHost(WORKER_BASE)
+  const workerHealthy = !!worker && worker.bridge !== true &&
+    (worker.loginFixed === true || Number(worker.version) >= 13)
 
-  // On Pages, always try the Functions bridge first (shared KV, no WA needed).
-  const candidates = []
-  if (BASE === '/api') candidates.push('/api')
-  else {
-    candidates.push('/api')
-    candidates.push(BASE)
+  if (workerHealthy && !isWorkerLoginMarkedBroken()) {
+    BASE = WORKER_BASE
+    bridgeMode = false
+    return true
   }
 
-  for (const base of candidates) {
-    const { signal, clear } = abortableTimeout(2500)
-    try {
-      const res = await fetch(`${base}/ping`, { signal })
-      clear()
-      if (!res.ok) continue
-      const d = await res.json().catch(() => ({}))
-      if (d?.ok === false) continue
-      if (d?.bridge === true || d?.loginFixed === true || Number(d?.version) >= 13) {
-        BASE = base
-        bridgeMode = d?.bridge === true || d?.ledger === 'ntfy' || Number(d?.version) >= 15
-        return true
-      }
-    } catch {
-      clear()
+  if (bridgeAvailableHost()) {
+    const bridge = await probeHost(BRIDGE_BASE)
+    if (bridge && (bridge.bridge === true || bridge.loginFixed === true)) {
+      BASE = BRIDGE_BASE
+      bridgeMode = true
+      return true
     }
   }
+
   return false
 }
 
@@ -394,7 +407,16 @@ async function call(method, path, body) {
   }
 
   const authToken = token()
-  const onBridge = bridgeMode || isBridgeToken(authToken) || BASE === '/api'
+  // A stored `br.` token proves this session last authenticated against the
+  // bridge; self-heal BASE/bridgeMode from it on a fresh page load (before
+  // any login/upgrade probe has run) so requests don't get misrouted to the
+  // Worker with a token it doesn't understand. tryUpgradeOfflineSession()
+  // is what actually migrates a session back to the Worker once it's healthy.
+  if (isBridgeToken(authToken) && BASE !== BRIDGE_BASE && bridgeAvailableHost()) {
+    BASE = BRIDGE_BASE
+    bridgeMode = true
+  }
+  const onBridge = bridgeMode
 
   // Bridge tip save: browser → ntfy (shared), plus local mirror
   if (onBridge && path === '/prediction' && method === 'PATCH' && body) {
@@ -584,17 +606,21 @@ export function quickLocalLogin(playerId) {
 }
 
 /**
- * If the browser still holds a local: token but Worker is healthy,
- * silently upgrade to a real session so saves hit KV.
- * Also pushes any locally-persisted offline tips up to the Worker.
+ * If the browser still holds a local: (offline) or br. (Pages bridge) token
+ * but the real Worker is now healthy, silently upgrade to a real Worker
+ * session so saves hit KV again — this is how the app migrates BACK to
+ * Worker-primary once secrets are added, without asking players to
+ * re-login manually. Also pushes locally-persisted tips (saveOfflinePrediction
+ * mirrors every offline AND bridge save into localStorage) up to the Worker.
  */
 export async function tryUpgradeOfflineSession() {
-  if (!isOfflineToken()) return null
+  const usingFallback = isOfflineToken() || isBridgeToken()
+  if (!usingFallback) return null
   const prev = getStoredUser()
   if (!prev?.id) return null
   const row = ROSTER_CREDENTIALS.find((r) => r.id === prev.id)
   if (!row) return null
-  if (!(await workerLoginSafe())) return null
+  if (!(await workerLoginSafe()) || BASE !== WORKER_BASE) return null
   try {
     const remote = await postLogin(row.email, row.password, 6000)
     if (!remote?.token) return null

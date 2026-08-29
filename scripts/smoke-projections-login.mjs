@@ -19,18 +19,34 @@ const loginSrc = fs.readFileSync(path.join(root, 'src/pages/Login.jsx'), 'utf8')
 const mainSrc = fs.readFileSync(path.join(root, 'src/main.jsx'), 'utf8')
 const workerSrc = fs.readFileSync(path.join(root, 'worker/kouvadeiros-api.js'), 'utf8')
 
-// Live v11 successful /login → CF 1101. Client must wait for bridge / loginFixed / v13+.
+// Live v11 successful /login → CF 1101. Client must wait for loginFixed / v13+.
 if (!/workerLoginSafe/.test(apiSrc)) {
   throw new Error('expected workerLoginSafe()')
 }
 if (!/loginFixed/.test(apiSrc)) {
   throw new Error('api.js must require ping.loginFixed (or version≥13) before /login')
 }
-if (!/bridge/.test(apiSrc) || !/\/api/.test(apiSrc)) {
-  throw new Error('api.js must prefer Pages /api bridge when available')
+if (!/bridge/.test(apiSrc) || !/BRIDGE_BASE/.test(apiSrc)) {
+  throw new Error('api.js must know about the Pages /api bridge as a fallback')
+}
+// Worker is PRIMARY: workerLoginSafe must probe/prefer WORKER_BASE before ever
+// considering the bridge (regression guard for the "bridge always wins" bug).
+{
+  const fnStart = apiSrc.indexOf('async function workerLoginSafe')
+  if (fnStart < 0) throw new Error('workerLoginSafe function not found')
+  const fnBody = apiSrc.slice(fnStart, apiSrc.indexOf('\n}', fnStart))
+  const workerIdx = fnBody.indexOf('WORKER_BASE')
+  const bridgeIdx = fnBody.indexOf('BRIDGE_BASE')
+  if (workerIdx < 0) throw new Error('workerLoginSafe must probe WORKER_BASE')
+  if (bridgeIdx >= 0 && workerIdx > bridgeIdx) {
+    throw new Error('workerLoginSafe must probe/prefer WORKER_BASE before BRIDGE_BASE')
+  }
 }
 if (!/markWorkerLoginBroken/.test(apiSrc)) {
   throw new Error('api.js must cache broken /login for the session')
+}
+if (!/isBridgeToken/.test(mainSrc)) {
+  throw new Error('main.jsx must also upgrade br. (bridge) sessions back to the Worker')
 }
 if (!/saveOfflinePrediction/.test(apiSrc) || !/kouv_offline_preds/.test(apiSrc)) {
   throw new Error('offline prediction persistence missing')
