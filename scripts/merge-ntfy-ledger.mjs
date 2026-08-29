@@ -31,9 +31,13 @@ for (const line of text.split('\n')) {
   } catch { /* skip */ }
 }
 
+// Diagnostic/test residue that must never be baked into the production ledger.
+const SKIP_MATCH_IDS = new Set(['test', 'diag-test'])
+
 const predictions = {}
 const results = {}
 for (const ev of events) {
+  if (SKIP_MATCH_IDS.has(ev.matchId)) continue
   const isTip =
     ev.type === 'tip' ||
     (!ev.type && ev.matchId && ev.playerId && typeof ev.h === 'number')
