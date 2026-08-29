@@ -16,10 +16,17 @@ export const CORS = {
   'Access-Control-Allow-Headers': 'Content-Type,Authorization',
 }
 
+// Kept in sync with src/lib/api.js LOCAL_USERS — same aliases must resolve
+// on both backends so a device doesn't get 401'd only on the bridge.
 export const BASE_USERS = {
   'boikos.y@caredirect.com': { password: '1453', name: 'Boikos', id: 'boikos', role: 'admin' },
   'mavromichalis.y@caredirect.com': { password: '1821', name: 'Mavromichalis', id: 'mavromichalis', role: 'player' },
   'chousiadas.th@caredirect.com': { password: '1940', name: 'Chousiadas', id: 'chousiadas', role: 'player' },
+  'chousiadas@caredirect.com': { password: '1940', name: 'Chousiadas', id: 'chousiadas', role: 'player' },
+  'chousiadas.t@caredirect.com': { password: '1940', name: 'Chousiadas', id: 'chousiadas', role: 'player' },
+  boikos: { password: '1453', name: 'Boikos', id: 'boikos', role: 'admin' },
+  mavromichalis: { password: '1821', name: 'Mavromichalis', id: 'mavromichalis', role: 'player' },
+  chousiadas: { password: '1940', name: 'Chousiadas', id: 'chousiadas', role: 'player' },
 }
 
 export const DEFAULT_PHONES = {

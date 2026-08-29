@@ -36,6 +36,7 @@ export default function Login({ onLogin }) {
       finishLogin(user)
     } catch {
       setError('Αποτυχία εισόδου')
+    } finally {
       setLoading(false)
     }
   }

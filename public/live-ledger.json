@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-08-27T19:53:07.465Z",
+  "updatedAt": "2026-08-29T06:54:29.427Z",
   "predictions": {
     "ucl-aek-2": {
       "boikos": {
@@ -38,20 +38,6 @@
         "penH": 0,
         "penA": 0,
         "savedAt": "2026-08-26T19:53:10.108201Z"
-      }
-    },
-    "test": {
-      "boikos": {
-        "h": 1,
-        "a": 0,
-        "qual": null,
-        "predOT": false,
-        "otH": 0,
-        "otA": 0,
-        "predPen": false,
-        "penH": 0,
-        "penA": 0,
-        "savedAt": null
       }
     },
     "uecl-paok-2": {
@@ -212,10 +198,10 @@
   "events": [
     {
       "type": "tip",
-      "matchId": "uel-ofi-2",
-      "playerId": "chousiadas",
-      "h": 3,
-      "a": 1,
+      "matchId": "sl-2-3",
+      "playerId": "boikos",
+      "h": 5,
+      "a": 5,
       "qual": null,
       "predOT": false,
       "otH": 0,
@@ -223,120 +209,7 @@
       "predPen": false,
       "penH": 0,
       "penA": 0,
-      "ts": "2026-08-27T15:04:10.661Z"
-    },
-    {
-      "type": "tip",
-      "matchId": "uel-ofi-2",
-      "playerId": "boikos",
-      "h": 2,
-      "a": 0,
-      "ts": "2026-08-27T16:57:19.341848Z"
-    },
-    {
-      "type": "tip",
-      "matchId": "uecl-paok-2",
-      "playerId": "boikos",
-      "h": 1,
-      "a": 1,
-      "predOT": true,
-      "otH": 1,
-      "otA": 1,
-      "predPen": true,
-      "penH": 4,
-      "penA": 5,
-      "qual": "PAOK",
-      "ts": "2026-08-27T16:57:19.341848Z"
-    },
-    {
-      "type": "tip",
-      "matchId": "uecl-pao-6",
-      "playerId": "boikos",
-      "h": 1,
-      "a": 2,
-      "ts": "2026-08-27T16:57:19.341848Z"
-    },
-    {
-      "type": "tip",
-      "matchId": "uel-ofi-2",
-      "playerId": "chousiadas",
-      "h": 3,
-      "a": 1,
-      "ts": "2026-08-27T17:01:32.780500Z"
-    },
-    {
-      "type": "tip",
-      "matchId": "uecl-paok-2",
-      "playerId": "chousiadas",
-      "h": 1,
-      "a": 1,
-      "predOT": true,
-      "otH": 2,
-      "otA": 1,
-      "qual": "BRN",
-      "ts": "2026-08-27T17:01:32.780500Z"
-    },
-    {
-      "type": "tip",
-      "matchId": "uecl-pao-6",
-      "playerId": "chousiadas",
-      "h": 1,
-      "a": 2,
-      "ts": "2026-08-27T17:01:32.780500Z"
-    },
-    {
-      "type": "tip",
-      "matchId": "uel-ofi-2",
-      "playerId": "mavromichalis",
-      "h": 0,
-      "a": 1,
-      "ts": "2026-08-27T17:06:51.214719Z"
-    },
-    {
-      "type": "tip",
-      "matchId": "uecl-paok-2",
-      "playerId": "mavromichalis",
-      "h": 0,
-      "a": 1,
-      "ts": "2026-08-27T17:06:51.214719Z"
-    },
-    {
-      "type": "tip",
-      "matchId": "uecl-pao-6",
-      "playerId": "mavromichalis",
-      "h": 1,
-      "a": 2,
-      "ts": "2026-08-27T17:06:51.214719Z"
-    },
-    {
-      "type": "result",
-      "matchId": "uecl-paok-2",
-      "h": 3,
-      "a": 2,
-      "qual": "BRN",
-      "setBy": "boikos",
-      "ts": "2026-08-27T19:02:18.486586Z"
-    },
-    {
-      "type": "result",
-      "matchId": "uecl-pao-6",
-      "h": 1,
-      "a": 1,
-      "overtime": true,
-      "otH": 1,
-      "otA": 2,
-      "qual": "PAO",
-      "setBy": "boikos",
-      "ts": "2026-08-27T19:46:05.879328Z"
-    },
-    {
-      "type": "result",
-      "matchId": "uel-ofi-2",
-      "h": 0,
-      "a": 2,
-      "qual": "OFI",
-      "setBy": "boikos",
-      "ts": "2026-08-27T19:53:00.672740Z"
+      "ts": "2026-08-29T06:14:04.045Z"
     }
   ]
 }
