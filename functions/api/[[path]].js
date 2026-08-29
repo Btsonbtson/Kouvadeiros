@@ -171,13 +171,17 @@ export async function onRequest(context) {
     if (path === '/sl-standings' && request.method === 'GET') {
       const user = await getUser(request, env)
       if (!user) return json({ error: 'Unauthorized' }, 401)
-      return json({ rows: [], bridge: true })
+      // Worker proxies ESPN standings as { teams: [...] } — match that shape
+      // (empty here) so the client's `d?.teams?.length` check degrades
+      // gracefully instead of silently expecting the wrong key forever.
+      return json({ teams: [], bridge: true })
     }
 
     if (path === '/sl-fixtures' && request.method === 'GET') {
       const user = await getUser(request, env)
       if (!user) return json({ error: 'Unauthorized' }, 401)
-      return json({ fixtures: [], bridge: true })
+      // Worker proxies ESPN schedule as { events: [...] } — match that shape.
+      return json({ events: [], bridge: true })
     }
 
     if (path === '/save-phone' && request.method === 'PATCH') {
