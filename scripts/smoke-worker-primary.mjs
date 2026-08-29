@@ -24,7 +24,7 @@ function makeStorage() {
   }
 }
 
-async function loadApiModule({ workerPing, bridgePing }) {
+async function loadApiModule({ workerPing, bridgePing, workerLoginFails = false }) {
   // esbuild is already a transitive dep via vite; use it to strip ESM->CJS-ish for vm.
   const esbuild = await import('esbuild')
   const srcPath = path.join(root, 'src/lib/api.js')
@@ -51,6 +51,7 @@ async function loadApiModule({ workerPing, bridgePing }) {
       return { ok: true, json: async () => bridgePing }
     }
     if (String(url).startsWith('https://worker.test/login')) {
+      if (workerLoginFails) return { ok: false, status: 503, json: async () => ({ error: 'Session store failed' }) }
       return { ok: true, json: async () => ({ token: 'wkr-real-token-abc', id: 'boikos', name: 'Boikos', role: 'admin', email: 'boikos.y@caredirect.com' }) }
     }
     if (String(url).startsWith('/api/login')) {
@@ -112,6 +113,21 @@ async function loadApiModule({ workerPing, bridgePing }) {
   assert.ok(user?.offline === true, 'expected offline fallback when both backends are down')
   const loginCalls = calls.filter((c) => c.url.endsWith('/login'))
   assert.equal(loginCalls.length, 0, 'must not attempt any remote /login when both probes fail')
+}
+
+// ── Scenario 4: Worker /ping healthy but /login itself 503s (KV quota) ─────
+// → must fall back to the bridge, NOT jump straight to fully-offline.
+{
+  const { mod, calls } = await loadApiModule({
+    workerPing: { ok: true, version: 14, loginFixed: true },
+    bridgePing: { ok: true, bridge: true, loginFixed: true, version: 20 },
+    workerLoginFails: true,
+  })
+  const user = await mod.quickLogin('boikos')
+  assert.equal(user?.token, 'br.fake.sig', 'expected bridge token when Worker /login 503s despite healthy /ping')
+  const loginCalls = calls.filter((c) => c.url.endsWith('/login'))
+  assert.ok(loginCalls.some((c) => c.url.startsWith('https://worker.test')), 'must have attempted Worker /login first')
+  assert.ok(loginCalls.some((c) => c.url.startsWith('/api')), 'must fall back to bridge /login after Worker /login fails')
 }
 
 console.log('OK — Worker is primary, Pages bridge is fallback-only, offline is last resort')
