@@ -28,6 +28,14 @@ export const TEAMS = {
   CSS: {name:'CSKA Sofia',abbr:'CSS',color:'#c41e1e'},
   BRN: {name:'Brann',abbr:'BRN',color:'#c4122e'},
   HRK: {name:'Hradec Králové',abbr:'HRK',color:'#000000'},
+  LASK:{name:'LASK',abbr:'LASK',color:'#000000'},
+  SHK: {name:'Σαχτάρ Ντόνετσκ',abbr:'SHK',color:'#f47216'},
+  MCI: {name:'Μάντσεστερ Σίτι',abbr:'MCI',color:'#6cabdd'},
+  RMA: {name:'Ρεάλ Μαδρίτης',abbr:'RMA',color:'#febe10'},
+  COM: {name:'Κόμο',abbr:'COM',color:'#004a99'},
+  GAL: {name:'Γαλατασαράι',abbr:'GAL',color:'#a6192e'},
+  ROM: {name:'Ρόμα',abbr:'ROM',color:'#8e1f2f'},
+  BVB: {name:'Μπορούσια Ντόρτμουντ',abbr:'BVB',color:'#fde100'},
   TBD: {name:'TBD',abbr:'TBD',color:'#444444'},
 }
 
@@ -318,6 +326,16 @@ export const UEFA_FIXTURES = [
   // ΠΑΟ–Hradec Králové UECL PO: Πέμ 20/8 21:30 ΟΑΚΑ · Πέμ 27/8 20:00 Hradec
   {id:'uecl-pao-5', t:'UECL', greek:'PAO', home:'PAO', away:'HRK', kickoff:'2026-08-20T18:30:00Z', round:'PO · Leg 1', leg:1, tie:'uecl-pao-po', venue:'ΟΑΚΑ, Αθήνα'},
   {id:'uecl-pao-6', t:'UECL', greek:'PAO', home:'HRK', away:'PAO', kickoff:'2026-08-27T17:00:00Z', round:'PO · Leg 2', leg:2, tie:'uecl-pao-po', venue:'Hradec Králové'},
+  // ΑΕΚ UCL League Phase 2026/27 (official draw) — single round-robin, no legs.
+  // Kickoffs: Greek local → UTC (EEST/UTC+3 through 24/10, EET/UTC+2 from 25/10 DST switch).
+  {id:'ucl-aek-lp1', t:'UCL', greek:'AEK', home:'AEK', away:'LASK', kickoff:'2026-09-08T16:45:00Z', round:'League Phase · 1η αγ.'},
+  {id:'ucl-aek-lp2', t:'UCL', greek:'AEK', home:'SHK',  away:'AEK', kickoff:'2026-10-14T19:00:00Z', round:'League Phase · 2η αγ.'},
+  {id:'ucl-aek-lp3', t:'UCL', greek:'AEK', home:'MCI',  away:'AEK', kickoff:'2026-10-20T19:00:00Z', round:'League Phase · 3η αγ.'},
+  {id:'ucl-aek-lp4', t:'UCL', greek:'AEK', home:'AEK', away:'RMA',  kickoff:'2026-11-04T17:45:00Z', round:'League Phase · 4η αγ.'},
+  {id:'ucl-aek-lp5', t:'UCL', greek:'AEK', home:'COM',  away:'AEK', kickoff:'2026-11-24T20:00:00Z', round:'League Phase · 5η αγ.'},
+  {id:'ucl-aek-lp6', t:'UCL', greek:'AEK', home:'AEK', away:'GAL',  kickoff:'2026-12-08T20:00:00Z', round:'League Phase · 6η αγ.'},
+  {id:'ucl-aek-lp7', t:'UCL', greek:'AEK', home:'AEK', away:'ROM',  kickoff:'2027-01-19T20:00:00Z', round:'League Phase · 7η αγ.'},
+  {id:'ucl-aek-lp8', t:'UCL', greek:'AEK', home:'BVB',  away:'AEK', kickoff:'2027-01-27T20:00:00Z', round:'League Phase · 8η αγ.'},
 ]
 
 export const ALL_FIXTURES = [...SUPER_LEAGUE, ...UEFA_FIXTURES]
