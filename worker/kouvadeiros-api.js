@@ -24,6 +24,9 @@ import {
   athensHm,
   applyTipResultLocks,
   mergeSeededPredictions,
+  LEAGUE_PHASE_TEAMS,
+  BRACKET_OPTIONS,
+  bracketLockMatch,
 } from '../src/lib/data.js'
 import {
   pollGazzettaForMatches,
@@ -344,6 +347,8 @@ async function getState(env) {
   if (!state.kickoffOverrides) state.kickoffOverrides = {}
   if (!state.results) state.results = {}
   if (!state.predictions) state.predictions = {}
+  if (!state.brackets) state.brackets = {}
+  if (!state.bracketResults) state.bracketResults = {}
   const beforePhones = JSON.stringify(state.phones || {})
   const beforePreds = JSON.stringify(state.predictions || {})
   state.phones = { ...DEFAULT_PHONES, ...(state.phones || {}) }
@@ -1225,6 +1230,45 @@ export default {
         setAt: new Date().toISOString(),
         source: 'manual',
       }
+      await setState(env, state)
+      return json({ ok: true })
+    }
+
+    if (path === '/bracket' && request.method === 'PATCH') {
+      const user = await getUser(request, env)
+      if (!user) return json({ error: 'Unauthorized' }, 401)
+      const { team, pick, playerId } = await request.json()
+      if (!LEAGUE_PHASE_TEAMS.includes(team)) return json({ error: 'Unknown team' }, 400)
+      if (!BRACKET_OPTIONS.includes(pick)) return json({ error: 'Invalid bracket' }, 400)
+      const targetId = user.role === 'admin' && playerId ? playerId : user.id
+      const state = await getState(env)
+      const lockMatch = bracketLockMatch(team, ALL_FIXTURES)
+      const overriddenLock = lockMatch
+        ? applyKickoffOverrides([lockMatch], state.kickoffOverrides)[0]
+        : null
+      const adminForce = user.role === 'admin' && !!playerId
+      if (overriddenLock && !overriddenLock.timeTbd && !overriddenLock.postponed && !adminForce) {
+        const minsUntil = (new Date(overriddenLock.kickoff).getTime() - Date.now()) / 60000
+        if (minsUntil <= LOCK_TARGET) {
+          return json({ error: 'Bracket predictions locked (15′ before first League Phase match)' }, 403)
+        }
+      }
+      if (!state.brackets) state.brackets = {}
+      if (!state.brackets[team]) state.brackets[team] = {}
+      state.brackets[team][targetId] = pick
+      await setState(env, state)
+      return json({ ok: true, playerId: targetId })
+    }
+
+    if (path === '/bracket-result' && request.method === 'PATCH') {
+      const user = await getUser(request, env)
+      if (!user || user.role !== 'admin') return json({ error: 'Unauthorized' }, 401)
+      const { team, actual } = await request.json()
+      if (!LEAGUE_PHASE_TEAMS.includes(team)) return json({ error: 'Unknown team' }, 400)
+      if (!BRACKET_OPTIONS.includes(actual)) return json({ error: 'Invalid bracket' }, 400)
+      const state = await getState(env)
+      if (!state.bracketResults) state.bracketResults = {}
+      state.bracketResults[team] = actual
       await setState(env, state)
       return json({ ok: true })
     }

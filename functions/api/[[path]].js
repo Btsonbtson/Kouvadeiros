@@ -17,6 +17,7 @@ import {
   json,
   publishLedgerEvent,
 } from '../_lib/kouv.js'
+import { LEAGUE_PHASE_TEAMS, BRACKET_OPTIONS, bracketLockMatch, applyKickoffOverrides } from '../../src/lib/data.js'
 
 function pathOf(context) {
   const parts = context.params?.path
@@ -148,6 +149,41 @@ export async function onRequest(context) {
         ts: new Date().toISOString(),
       }
       await publishLedgerEvent(ev)
+      return json({ ok: true, bridge: true, ledger: 'ntfy-client' })
+    }
+
+    if (path === '/bracket' && request.method === 'PATCH') {
+      const user = await getUser(request, env)
+      if (!user) return json({ error: 'Unauthorized' }, 401)
+      const body = await request.json().catch(() => ({}))
+      const { team, pick, playerId } = body || {}
+      if (!LEAGUE_PHASE_TEAMS.includes(team)) return json({ error: 'Unknown team' }, 400)
+      if (!BRACKET_OPTIONS.includes(pick)) return json({ error: 'Invalid bracket' }, 400)
+      const targetId = user.role === 'admin' && playerId ? playerId : user.id
+      const state = await buildState(env, request)
+      const lockMatch = bracketLockMatch(team)
+      const overriddenLock = lockMatch
+        ? applyKickoffOverrides([lockMatch], state.kickoffOverrides)[0]
+        : null
+      const adminForce = user.role === 'admin' && !!playerId
+      if (overriddenLock && !overriddenLock.timeTbd && !overriddenLock.postponed && !adminForce) {
+        const minsUntil = (new Date(overriddenLock.kickoff).getTime() - Date.now()) / 60000
+        if (minsUntil <= LOCK_TARGET) {
+          return json({ error: 'Bracket predictions locked (15′ before first League Phase match)' }, 403)
+        }
+      }
+      await publishLedgerEvent({ type: 'bracket', team, playerId: targetId, pick, ts: new Date().toISOString() })
+      return json({ ok: true, playerId: targetId, bridge: true, ledger: 'ntfy-client' })
+    }
+
+    if (path === '/bracket-result' && request.method === 'PATCH') {
+      const user = await getUser(request, env)
+      if (!user || user.role !== 'admin') return json({ error: 'Unauthorized' }, 401)
+      const body = await request.json().catch(() => ({}))
+      const { team, actual } = body || {}
+      if (!LEAGUE_PHASE_TEAMS.includes(team)) return json({ error: 'Unknown team' }, 400)
+      if (!BRACKET_OPTIONS.includes(actual)) return json({ error: 'Invalid bracket' }, 400)
+      await publishLedgerEvent({ type: 'bracket-result', team, actual, ts: new Date().toISOString() })
       return json({ ok: true, bridge: true, ledger: 'ntfy-client' })
     }
 

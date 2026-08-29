@@ -12,7 +12,13 @@ const src = fs.readFileSync(path.join(root, 'src/App.jsx'), 'utf8')
 
 const appStart = src.indexOf('export default function App')
 if (appStart < 0) throw new Error('App not found')
-const slice = src.slice(appStart, appStart + 12000)
+// Bound the search at the next top-level component boundary (marked by a
+// "─── SOME PAGE ───" banner comment right after App's closing brace) rather
+// than a fixed byte budget, so this doesn't silently under- or over-shoot as
+// App() grows or other components change size.
+const nextBanner = src.slice(appStart).search(/\}\s*\/\/\s*─{3,}/)
+const appEnd = nextBanner > 0 ? appStart + nextBanner : appStart + 20000
+const slice = src.slice(appStart, appEnd)
 
 const loadingReturn = slice.search(/if\s*\(\s*loading\s*\)\s*return/)
 const guideReturn = slice.search(/if\s*\(\s*showGuide\s*\)\s*return/)

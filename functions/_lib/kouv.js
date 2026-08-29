@@ -8,6 +8,7 @@ import {
   applyKickoffOverrides,
   applyTipResultLocks,
   mergeSeededPredictions,
+  BRACKET_OPTIONS,
 } from '../../src/lib/data.js'
 
 export const CORS = {
@@ -36,7 +37,7 @@ export const DEFAULT_PHONES = {
 }
 
 export const LOCK_TARGET = 15
-export const BRIDGE_VERSION = 20
+export const BRIDGE_VERSION = 21
 
 /** Obscure ntfy topic — private 3-player ledger until Worker secrets land.
  *  Browser publishes/polls directly (Pages Functions get TLS 525 to some ntfy hosts). */
@@ -196,6 +197,15 @@ export async function loadLedgerEvents(env, request) {
         for (const [matchId, result] of Object.entries(snap.results || {})) {
           events.push({ type: 'result', matchId, ...result })
         }
+        for (const [team, byPlayer] of Object.entries(snap.brackets || {})) {
+          for (const [playerId, pick] of Object.entries(byPlayer || {})) {
+            if (!pick) continue
+            events.push({ type: 'bracket', team, playerId, pick })
+          }
+        }
+        for (const [team, actual] of Object.entries(snap.bracketResults || {})) {
+          events.push({ type: 'bracket-result', team, actual })
+        }
       } else if (Array.isArray(snap?.events)) {
         events.push(...snap.events)
       }
@@ -216,6 +226,8 @@ export function applyLedgerEvents(baseState, events) {
     revealed: { ...(baseState?.revealed || {}) },
     thavmaStats: { ...(baseState?.thavmaStats || {}) },
     kickoffOverrides: { ...(baseState?.kickoffOverrides || {}) },
+    brackets: { ...(baseState?.brackets || {}) },
+    bracketResults: { ...(baseState?.bracketResults || {}) },
   }
 
   // Chronological apply — last write wins per player/match
@@ -261,6 +273,11 @@ export function applyLedgerEvents(baseState, events) {
         ts: ev.ts || new Date().toISOString(),
         a: !!ev.admin,
       })
+    } else if (ev.type === 'bracket' && ev.team && ev.playerId && BRACKET_OPTIONS.includes(ev.pick)) {
+      if (!state.brackets[ev.team]) state.brackets[ev.team] = {}
+      state.brackets[ev.team][ev.playerId] = ev.pick
+    } else if (ev.type === 'bracket-result' && ev.team && BRACKET_OPTIONS.includes(ev.actual)) {
+      state.bracketResults[ev.team] = ev.actual
     }
   }
 
@@ -298,6 +315,8 @@ export async function buildState(env, request) {
     revealed: {},
     thavmaStats: {},
     kickoffOverrides: {},
+    brackets: {},
+    bracketResults: {},
   }, events)
 }
 
