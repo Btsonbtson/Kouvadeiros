@@ -109,6 +109,24 @@ const SEEDED_RES={
 
 function isUEFATie(id){return UEFA_FIXTURES.some(f=>f.id===id)}
 
+/**
+ * Keep a stable object reference across renders while its JSON content is
+ * unchanged. api.getState() returns a fresh kickoffOverrides object on every
+ * poll even when nothing changed; without this, a downstream useMemo keyed
+ * on that value busts every poll, which can re-fire effects immediately
+ * (no throttling) instead of on their intended schedule.
+ */
+function useStableByJson(value) {
+  const jsonRef = useRef(null)
+  const valueRef = useRef(value)
+  const json = JSON.stringify(value ?? null)
+  if (json !== jsonRef.current) {
+    jsonRef.current = json
+    valueRef.current = value
+  }
+  return valueRef.current
+}
+
 // ─── FETCH BTN ────────────────────────────────────────────────────────────────
 function FetchBtn({matchId,onFetched}){
   const [st,setSt]=useState('idle')
@@ -1073,9 +1091,12 @@ export default function App({ user, onLogout }) {
   const resultsRef = useRef(state.results)
   resultsRef.current = state.results
 
+  // Stable identity: avoids busting the fixtures memo (and re-firing the live-poll effect) every state poll.
+  const stableKickoffOverrides = useStableByJson(state.kickoffOverrides)
+
   const fixtures = useMemo(
-    () => applyKickoffOverrides(ALL_FIXTURES, state.kickoffOverrides),
-    [state.kickoffOverrides],
+    () => applyKickoffOverrides(ALL_FIXTURES, stableKickoffOverrides),
+    [stableKickoffOverrides],
   )
   const chatReadKey = `kouv_chat_read_${user?.id || 'anon'}`
   const [chatReadIdx, setChatReadIdx] = useState(() => {

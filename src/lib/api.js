@@ -87,7 +87,16 @@ async function publishClientTip(event) {
   return false
 }
 
-async function pollClientTips() {
+// Throttle: ntfy has a per-IP rate limit. Even a well-behaved 8s live-poll
+// loop from several devices can exhaust it; a stuck/looping caller must
+// never be able to hammer it. Never actually poll more than once per window,
+// and reuse the in-flight promise so concurrent callers share one request.
+const POLL_MIN_INTERVAL_MS = 12000
+let lastPollAt = 0
+let lastPollEvents = []
+let inFlightPoll = null
+
+async function pollClientTipsNow() {
   const events = []
   for (const host of NTFY_HOSTS) {
     try {
@@ -110,6 +119,20 @@ async function pollClientTips() {
     } catch { /* try next host */ }
   }
   return events
+}
+
+async function pollClientTips() {
+  const now = Date.now()
+  if (now - lastPollAt < POLL_MIN_INTERVAL_MS) return lastPollEvents
+  if (inFlightPoll) return inFlightPoll
+  inFlightPoll = pollClientTipsNow()
+    .then((events) => {
+      lastPollAt = Date.now()
+      lastPollEvents = events
+      return events
+    })
+    .finally(() => { inFlightPoll = null })
+  return inFlightPoll
 }
 
 function mergeTipEventsIntoState(state, events) {
