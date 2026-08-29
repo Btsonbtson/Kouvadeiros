@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-08-29T17:52:18.340Z",
+  "updatedAt": "2026-08-29T20:14:48.693Z",
   "predictions": {
     "ucl-aek-2": {
       "boikos": {
@@ -30,14 +30,14 @@
       "mavromichalis": {
         "h": 1,
         "a": 1,
-        "qual": "AEK",
-        "predOT": true,
-        "otH": 2,
-        "otA": 1,
+        "qual": null,
+        "predOT": false,
+        "otH": 0,
+        "otA": 0,
         "predPen": false,
         "penH": 0,
         "penA": 0,
-        "savedAt": "2026-08-26T19:53:10.108201Z"
+        "savedAt": "2026-08-29T19:32:08.641Z"
       }
     },
     "uecl-paok-2": {
@@ -166,6 +166,18 @@
         "penH": 0,
         "penA": 0,
         "savedAt": "2026-08-29T08:28:51.110Z"
+      },
+      "mavromichalis": {
+        "h": 0,
+        "a": 1,
+        "qual": null,
+        "predOT": false,
+        "otH": 0,
+        "otA": 0,
+        "predPen": false,
+        "penH": 0,
+        "penA": 0,
+        "savedAt": "2026-08-29T19:32:09.544Z"
       }
     },
     "sl-2-4": {
@@ -195,7 +207,7 @@
       },
       "mavromichalis": {
         "h": 1,
-        "a": 2,
+        "a": 1,
         "qual": null,
         "predOT": false,
         "otH": 0,
@@ -203,7 +215,7 @@
         "predPen": false,
         "penH": 0,
         "penA": 0,
-        "savedAt": "2026-08-29T16:44:26.412913Z"
+        "savedAt": "2026-08-29T19:32:09.257Z"
       }
     },
     "sl-2-7": {
@@ -230,6 +242,18 @@
         "penH": 0,
         "penA": 0,
         "savedAt": "2026-08-29T09:21:16.512Z"
+      },
+      "mavromichalis": {
+        "h": 1,
+        "a": 1,
+        "qual": null,
+        "predOT": false,
+        "otH": 0,
+        "otA": 0,
+        "predPen": false,
+        "penH": 0,
+        "penA": 0,
+        "savedAt": "2026-08-29T19:32:09.356Z"
       }
     },
     "ucl-aek-lp1": {
@@ -258,6 +282,144 @@
         "penH": 0,
         "penA": 0,
         "savedAt": "2026-08-29T16:58:38.928Z"
+      },
+      "mavromichalis": {
+        "h": 1,
+        "a": 2,
+        "qual": null,
+        "predOT": false,
+        "otH": 0,
+        "otA": 0,
+        "predPen": false,
+        "penH": 0,
+        "penA": 0,
+        "savedAt": "2026-08-29T19:32:09.109Z"
+      }
+    },
+    "sl-2-2": {
+      "mavromichalis": {
+        "h": 1,
+        "a": 1,
+        "qual": null,
+        "predOT": false,
+        "otH": 0,
+        "otA": 0,
+        "predPen": false,
+        "penH": 0,
+        "penA": 0,
+        "savedAt": "2026-08-29T19:32:09.446Z"
+      }
+    },
+    "sl-2-5": {
+      "mavromichalis": {
+        "h": 0,
+        "a": 3,
+        "qual": null,
+        "predOT": false,
+        "otH": 0,
+        "otA": 0,
+        "predPen": false,
+        "penH": 0,
+        "penA": 0,
+        "savedAt": "2026-08-29T19:32:09.650Z"
+      }
+    },
+    "sl-2-6": {
+      "mavromichalis": {
+        "h": 0,
+        "a": 3,
+        "qual": null,
+        "predOT": false,
+        "otH": 0,
+        "otA": 0,
+        "predPen": false,
+        "penH": 0,
+        "penA": 0,
+        "savedAt": "2026-08-29T19:32:09.730Z"
+      }
+    },
+    "sl-3-1": {
+      "mavromichalis": {
+        "h": 2,
+        "a": 1,
+        "qual": null,
+        "predOT": false,
+        "otH": 0,
+        "otA": 0,
+        "predPen": false,
+        "penH": 0,
+        "penA": 0,
+        "savedAt": "2026-08-29T19:32:09.849Z"
+      }
+    },
+    "sl-3-2": {
+      "mavromichalis": {
+        "h": 1,
+        "a": 0,
+        "qual": null,
+        "predOT": false,
+        "otH": 0,
+        "otA": 0,
+        "predPen": false,
+        "penH": 0,
+        "penA": 0,
+        "savedAt": "2026-08-29T19:32:09.956Z"
+      }
+    },
+    "sl-3-3": {
+      "mavromichalis": {
+        "h": 1,
+        "a": 2,
+        "qual": null,
+        "predOT": false,
+        "otH": 0,
+        "otA": 0,
+        "predPen": false,
+        "penH": 0,
+        "penA": 0,
+        "savedAt": "2026-08-29T19:32:10.032Z"
+      }
+    },
+    "sl-3-4": {
+      "mavromichalis": {
+        "h": 1,
+        "a": 0,
+        "qual": null,
+        "predOT": false,
+        "otH": 0,
+        "otA": 0,
+        "predPen": false,
+        "penH": 0,
+        "penA": 0,
+        "savedAt": "2026-08-29T19:32:10.136Z"
+      }
+    },
+    "sl-3-5": {
+      "mavromichalis": {
+        "h": 2,
+        "a": 0,
+        "qual": null,
+        "predOT": false,
+        "otH": 0,
+        "otA": 0,
+        "predPen": false,
+        "penH": 0,
+        "penA": 0,
+        "savedAt": "2026-08-29T19:32:10.216Z"
+      }
+    },
+    "sl-3-6": {
+      "mavromichalis": {
+        "h": 0,
+        "a": 1,
+        "qual": null,
+        "predOT": false,
+        "otH": 0,
+        "otA": 0,
+        "predPen": false,
+        "penH": 0,
+        "penA": 0,
+        "savedAt": "2026-08-29T19:32:10.295Z"
       }
     }
   },
@@ -308,21 +470,6 @@
   },
   "bracketResults": {},
   "events": [
-    {
-      "type": "tip",
-      "matchId": "sl-2-3",
-      "playerId": "boikos",
-      "h": 5,
-      "a": 5,
-      "qual": null,
-      "predOT": false,
-      "otH": 0,
-      "otA": 0,
-      "predPen": false,
-      "penH": 0,
-      "penA": 0,
-      "ts": "2026-08-29T06:14:04.045Z"
-    },
     {
       "type": "tip",
       "matchId": "sl-2-4",
@@ -472,6 +619,216 @@
       "penH": 0,
       "penA": 0,
       "ts": "2026-08-29T16:58:38.928Z"
+    },
+    {
+      "type": "tip",
+      "matchId": "ucl-aek-2",
+      "playerId": "mavromichalis",
+      "h": 1,
+      "a": 1,
+      "qual": null,
+      "predOT": false,
+      "otH": 0,
+      "otA": 0,
+      "predPen": false,
+      "penH": 0,
+      "penA": 0,
+      "ts": "2026-08-29T19:32:08.641Z"
+    },
+    {
+      "type": "tip",
+      "matchId": "sl-2-1",
+      "playerId": "mavromichalis",
+      "h": 1,
+      "a": 2,
+      "qual": null,
+      "predOT": false,
+      "otH": 0,
+      "otA": 0,
+      "predPen": false,
+      "penH": 0,
+      "penA": 0,
+      "ts": "2026-08-29T19:32:09.109Z"
+    },
+    {
+      "type": "tip",
+      "matchId": "sl-2-4",
+      "playerId": "mavromichalis",
+      "h": 1,
+      "a": 1,
+      "qual": null,
+      "predOT": false,
+      "otH": 0,
+      "otA": 0,
+      "predPen": false,
+      "penH": 0,
+      "penA": 0,
+      "ts": "2026-08-29T19:32:09.257Z"
+    },
+    {
+      "type": "tip",
+      "matchId": "sl-2-7",
+      "playerId": "mavromichalis",
+      "h": 1,
+      "a": 1,
+      "qual": null,
+      "predOT": false,
+      "otH": 0,
+      "otA": 0,
+      "predPen": false,
+      "penH": 0,
+      "penA": 0,
+      "ts": "2026-08-29T19:32:09.356Z"
+    },
+    {
+      "type": "tip",
+      "matchId": "sl-2-2",
+      "playerId": "mavromichalis",
+      "h": 1,
+      "a": 1,
+      "qual": null,
+      "predOT": false,
+      "otH": 0,
+      "otA": 0,
+      "predPen": false,
+      "penH": 0,
+      "penA": 0,
+      "ts": "2026-08-29T19:32:09.446Z"
+    },
+    {
+      "type": "tip",
+      "matchId": "sl-2-3",
+      "playerId": "mavromichalis",
+      "h": 0,
+      "a": 1,
+      "qual": null,
+      "predOT": false,
+      "otH": 0,
+      "otA": 0,
+      "predPen": false,
+      "penH": 0,
+      "penA": 0,
+      "ts": "2026-08-29T19:32:09.544Z"
+    },
+    {
+      "type": "tip",
+      "matchId": "sl-2-5",
+      "playerId": "mavromichalis",
+      "h": 0,
+      "a": 3,
+      "qual": null,
+      "predOT": false,
+      "otH": 0,
+      "otA": 0,
+      "predPen": false,
+      "penH": 0,
+      "penA": 0,
+      "ts": "2026-08-29T19:32:09.650Z"
+    },
+    {
+      "type": "tip",
+      "matchId": "sl-2-6",
+      "playerId": "mavromichalis",
+      "h": 0,
+      "a": 3,
+      "qual": null,
+      "predOT": false,
+      "otH": 0,
+      "otA": 0,
+      "predPen": false,
+      "penH": 0,
+      "penA": 0,
+      "ts": "2026-08-29T19:32:09.730Z"
+    },
+    {
+      "type": "tip",
+      "matchId": "sl-3-1",
+      "playerId": "mavromichalis",
+      "h": 2,
+      "a": 1,
+      "qual": null,
+      "predOT": false,
+      "otH": 0,
+      "otA": 0,
+      "predPen": false,
+      "penH": 0,
+      "penA": 0,
+      "ts": "2026-08-29T19:32:09.849Z"
+    },
+    {
+      "type": "tip",
+      "matchId": "sl-3-2",
+      "playerId": "mavromichalis",
+      "h": 1,
+      "a": 0,
+      "qual": null,
+      "predOT": false,
+      "otH": 0,
+      "otA": 0,
+      "predPen": false,
+      "penH": 0,
+      "penA": 0,
+      "ts": "2026-08-29T19:32:09.956Z"
+    },
+    {
+      "type": "tip",
+      "matchId": "sl-3-3",
+      "playerId": "mavromichalis",
+      "h": 1,
+      "a": 2,
+      "qual": null,
+      "predOT": false,
+      "otH": 0,
+      "otA": 0,
+      "predPen": false,
+      "penH": 0,
+      "penA": 0,
+      "ts": "2026-08-29T19:32:10.032Z"
+    },
+    {
+      "type": "tip",
+      "matchId": "sl-3-4",
+      "playerId": "mavromichalis",
+      "h": 1,
+      "a": 0,
+      "qual": null,
+      "predOT": false,
+      "otH": 0,
+      "otA": 0,
+      "predPen": false,
+      "penH": 0,
+      "penA": 0,
+      "ts": "2026-08-29T19:32:10.136Z"
+    },
+    {
+      "type": "tip",
+      "matchId": "sl-3-5",
+      "playerId": "mavromichalis",
+      "h": 2,
+      "a": 0,
+      "qual": null,
+      "predOT": false,
+      "otH": 0,
+      "otA": 0,
+      "predPen": false,
+      "penH": 0,
+      "penA": 0,
+      "ts": "2026-08-29T19:32:10.216Z"
+    },
+    {
+      "type": "tip",
+      "matchId": "sl-3-6",
+      "playerId": "mavromichalis",
+      "h": 0,
+      "a": 1,
+      "qual": null,
+      "predOT": false,
+      "otH": 0,
+      "otA": 0,
+      "predPen": false,
+      "penH": 0,
+      "penA": 0,
+      "ts": "2026-08-29T19:32:10.295Z"
     }
   ]
 }
