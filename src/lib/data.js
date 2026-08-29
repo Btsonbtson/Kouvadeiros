@@ -36,6 +36,25 @@ export const TEAMS = {
   GAL: {name:'Γαλατασαράι',abbr:'GAL',color:'#a6192e'},
   ROM: {name:'Ρόμα',abbr:'ROM',color:'#8e1f2f'},
   BVB: {name:'Μπορούσια Ντόρτμουντ',abbr:'BVB',color:'#fde100'},
+  // UEL/UECL League Phase opponents (Olympiacos, OFI, Panathinaikos)
+  MIL: {name:'Μίλαν',abbr:'MIL',color:'#fb090b'},
+  MAR: {name:'Μαρσέιγ',abbr:'MAR',color:'#2fa7de'},
+  SPP: {name:'Σπάρτα Πράγας',abbr:'SPP',color:'#a6192e'},
+  REN: {name:'Ρεν',abbr:'REN',color:'#e30613'},
+  JAG: {name:'Γιαγκιελόνια',abbr:'JAG',color:'#c8102e'},
+  CEL: {name:'Τσέλιε',abbr:'CEL',color:'#f7941d'},
+  HOF: {name:'Χόφενχαϊμ',abbr:'HOF',color:'#1c63b7'},
+  TOR: {name:'Τορεένσε',abbr:'TOR',color:'#004a99'},
+  B04: {name:'Μπάγερ Λεβερκούζεν',abbr:'B04',color:'#e32219'},
+  BEN: {name:'Μπενφίκα',abbr:'BEN',color:'#e0141c'},
+  LEC: {name:'Λεχ Πόζναν',abbr:'LEC',color:'#00529f'},
+  STU: {name:'Στουρμ Γκρατς',abbr:'STU',color:'#000000'},
+  HBS: {name:'Χαποέλ Μπεέρ Σέβα',abbr:'HBS',color:'#e30613'},
+  BHA: {name:'Μπράιτον',abbr:'BHA',color:'#0057b8'},
+  FRE: {name:'Φράιμπουργκ',abbr:'FRE',color:'#e2001a'},
+  BBL: {name:'Μπόρατς',abbr:'BBL',color:'#004a99'},
+  KAI: {name:'Καϊράτ',abbr:'KAI',color:'#ffd700'},
+  FCN: {name:'Νορντσέλαντ',abbr:'FCN',color:'#e2001a'},
   TBD: {name:'TBD',abbr:'TBD',color:'#444444'},
 }
 
@@ -336,6 +355,31 @@ export const UEFA_FIXTURES = [
   {id:'ucl-aek-lp6', t:'UCL', greek:'AEK', home:'AEK', away:'GAL',  kickoff:'2026-12-08T20:00:00Z', round:'League Phase · 6η αγ.'},
   {id:'ucl-aek-lp7', t:'UCL', greek:'AEK', home:'AEK', away:'ROM',  kickoff:'2027-01-19T20:00:00Z', round:'League Phase · 7η αγ.'},
   {id:'ucl-aek-lp8', t:'UCL', greek:'AEK', home:'BVB',  away:'AEK', kickoff:'2027-01-27T20:00:00Z', round:'League Phase · 8η αγ.'},
+  // Ολυμπιακός UEL League Phase 2026/27 — dates only, exact kickoffs TBA.
+  {id:'uel-oly-lp1', t:'UEL', greek:'OLY', home:'OLY', away:'MIL', kickoff:'2026-09-16T19:00:00Z', round:'League Phase · 1η αγ.', timeTbd:true},
+  {id:'uel-oly-lp2', t:'UEL', greek:'OLY', home:'MAR', away:'OLY', kickoff:'2026-10-15T19:00:00Z', round:'League Phase · 2η αγ.', timeTbd:true},
+  {id:'uel-oly-lp3', t:'UEL', greek:'OLY', home:'OLY', away:'SPP', kickoff:'2026-10-22T19:00:00Z', round:'League Phase · 3η αγ.', timeTbd:true},
+  {id:'uel-oly-lp4', t:'UEL', greek:'OLY', home:'REN', away:'OLY', kickoff:'2026-11-05T19:00:00Z', round:'League Phase · 4η αγ.', timeTbd:true},
+  {id:'uel-oly-lp5', t:'UEL', greek:'OLY', home:'OLY', away:'JAG', kickoff:'2026-11-26T19:00:00Z', round:'League Phase · 5η αγ.', timeTbd:true},
+  {id:'uel-oly-lp6', t:'UEL', greek:'OLY', home:'CEL', away:'OLY', kickoff:'2026-12-10T19:00:00Z', round:'League Phase · 6η αγ.', timeTbd:true},
+  {id:'uel-oly-lp7', t:'UEL', greek:'OLY', home:'OLY', away:'HOF', kickoff:'2027-01-21T19:00:00Z', round:'League Phase · 7η αγ.', timeTbd:true},
+  {id:'uel-oly-lp8', t:'UEL', greek:'OLY', home:'TOR', away:'OLY', kickoff:'2027-01-28T19:00:00Z', round:'League Phase · 8η αγ.', timeTbd:true},
+  // ΟΦΗ UEL League Phase 2026/27 — dates only, exact kickoffs TBA.
+  {id:'uel-ofi-lp1', t:'UEL', greek:'OFI', home:'OFI', away:'B04', kickoff:'2026-09-16T19:00:00Z', round:'League Phase · 1η αγ.', timeTbd:true},
+  {id:'uel-ofi-lp2', t:'UEL', greek:'OFI', home:'BEN', away:'OFI', kickoff:'2026-10-15T19:00:00Z', round:'League Phase · 2η αγ.', timeTbd:true},
+  {id:'uel-ofi-lp3', t:'UEL', greek:'OFI', home:'OFI', away:'AND', kickoff:'2026-10-22T19:00:00Z', round:'League Phase · 3η αγ.', timeTbd:true},
+  {id:'uel-ofi-lp4', t:'UEL', greek:'OFI', home:'REN', away:'OFI', kickoff:'2026-11-05T19:00:00Z', round:'League Phase · 4η αγ.', timeTbd:true},
+  {id:'uel-ofi-lp5', t:'UEL', greek:'OFI', home:'OFI', away:'LEC', kickoff:'2026-11-26T19:00:00Z', round:'League Phase · 5η αγ.', timeTbd:true},
+  {id:'uel-ofi-lp6', t:'UEL', greek:'OFI', home:'STU', away:'OFI', kickoff:'2026-12-10T19:00:00Z', round:'League Phase · 6η αγ.', timeTbd:true},
+  {id:'uel-ofi-lp7', t:'UEL', greek:'OFI', home:'OFI', away:'HOF', kickoff:'2027-01-21T19:00:00Z', round:'League Phase · 7η αγ.', timeTbd:true},
+  {id:'uel-ofi-lp8', t:'UEL', greek:'OFI', home:'HBS', away:'OFI', kickoff:'2027-01-28T19:00:00Z', round:'League Phase · 8η αγ.', timeTbd:true},
+  // Παναθηναϊκός UECL League Phase 2026/27 (6 matchdays) — dates only, exact kickoffs TBA.
+  {id:'uecl-pao-lp1', t:'UECL', greek:'PAO', home:'PAO', away:'BHA', kickoff:'2026-10-15T19:00:00Z', round:'League Phase · 1η αγ.', timeTbd:true},
+  {id:'uecl-pao-lp2', t:'UECL', greek:'PAO', home:'FRE', away:'PAO', kickoff:'2026-10-22T19:00:00Z', round:'League Phase · 2η αγ.', timeTbd:true},
+  {id:'uecl-pao-lp3', t:'UECL', greek:'PAO', home:'PAO', away:'BBL', kickoff:'2026-11-05T19:00:00Z', round:'League Phase · 3η αγ.', timeTbd:true},
+  {id:'uecl-pao-lp4', t:'UECL', greek:'PAO', home:'KAI', away:'PAO', kickoff:'2026-11-26T19:00:00Z', round:'League Phase · 4η αγ.', timeTbd:true},
+  {id:'uecl-pao-lp5', t:'UECL', greek:'PAO', home:'PAO', away:'CSS', kickoff:'2026-12-10T19:00:00Z', round:'League Phase · 5η αγ.', timeTbd:true},
+  {id:'uecl-pao-lp6', t:'UECL', greek:'PAO', home:'FCN', away:'PAO', kickoff:'2026-12-17T19:00:00Z', round:'League Phase · 6η αγ.', timeTbd:true},
 ]
 
 export const ALL_FIXTURES = [...SUPER_LEAGUE, ...UEFA_FIXTURES]
