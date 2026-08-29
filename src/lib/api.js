@@ -52,11 +52,15 @@ const LOCAL_PHONES = {
   mavromichalis: '+306932851343',
 }
 
-/** Browser tip ledger — Pages Functions cannot reliably reach ntfy (TLS 525). */
+/** Browser tip ledger — Pages Functions cannot reliably reach ntfy (TLS 525).
+ *  Three hosts for resilience: a single blocked/down host (ad-blocker, ISP
+ *  DNS block, outage) must not silently swallow a player's tip — see the
+ *  2026-08-29 incident where one player's saves never left their device. */
 const NTFY_TOPIC = 'kouvadeiros-tips-bridge-2026'
 const NTFY_HOSTS = [
   'https://ntfy.adminforge.de',
   'https://ntfy.envs.net',
+  'https://ntfy.sh',
 ]
 
 let bridgeMode = false
@@ -82,6 +86,58 @@ async function publishClientTip(event) {
   }
   if (lastErr) throw lastErr
   return false
+}
+
+// Any tip/bracket/result/chat that fails to publish (all 3 ntfy hosts blocked
+// or down for this browser) is queued here and retried automatically on
+// every subsequent bridge call — self-heals a flaky network without the
+// player ever knowing something went wrong, and without losing their pick.
+const PENDING_SYNC_KEY = 'kouv_pending_sync'
+const MAX_PENDING_SYNC = 50
+
+function readPendingSync() {
+  try {
+    const raw = localStorage.getItem(PENDING_SYNC_KEY)
+    const parsed = raw ? JSON.parse(raw) : []
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    return []
+  }
+}
+
+function writePendingSync(list) {
+  try {
+    localStorage.setItem(PENDING_SYNC_KEY, JSON.stringify((list || []).slice(-MAX_PENDING_SYNC)))
+  } catch { /* quota / private mode */ }
+}
+
+function queuePendingSync(event) {
+  const list = readPendingSync()
+  list.push({ event, queuedAt: new Date().toISOString() })
+  writePendingSync(list)
+}
+
+let flushingPendingSync = false
+
+/** Retry everything queued by queuePendingSync(). Safe to call often — no-op when empty. */
+async function flushPendingSync() {
+  if (flushingPendingSync) return
+  const list = readPendingSync()
+  if (!list.length) return
+  flushingPendingSync = true
+  try {
+    const remaining = []
+    for (const item of list) {
+      try {
+        await publishClientTip(item.event)
+      } catch {
+        remaining.push(item)
+      }
+    }
+    writePendingSync(remaining)
+  } finally {
+    flushingPendingSync = false
+  }
 }
 
 // Throttle: ntfy has a per-IP rate limit. Even a well-behaved 8s live-poll
@@ -497,6 +553,9 @@ async function call(method, path, body) {
     bridgeMode = true
   }
   const onBridge = bridgeMode
+  // Opportunistic, fire-and-forget: retry anything that failed to reach the
+  // shared ledger earlier (blocked host, transient outage). No-op when empty.
+  if (onBridge) flushPendingSync().catch(() => {})
 
   // Bridge tip save: browser → ntfy (shared), plus local mirror
   if (onBridge && path === '/prediction' && method === 'PATCH' && body) {
@@ -521,8 +580,11 @@ async function call(method, path, body) {
     try {
       await publishClientTip(tipEvent)
     } catch (e) {
-      // Still keep local + try API ack
-      console.warn('ntfy tip publish failed', e?.message || e)
+      // All 3 ntfy hosts failed — never lose the tip silently. Queue it for
+      // automatic retry (flushPendingSync above) on this device's next
+      // bridge call, in addition to the local mirror below.
+      console.warn('ntfy tip publish failed, queued for retry', e?.message || e)
+      queuePendingSync(tipEvent)
     }
     saveOfflinePrediction(body.matchId, pid, body)
     try {
@@ -540,74 +602,71 @@ async function call(method, path, body) {
     const user = getStoredUser()
     const pid = (user?.role === 'admin' && body.playerId) ? body.playerId : user?.id
     if (!pid) return { ok: false, offline: true }
+    const bracketEvent = { type: 'bracket', team: body.team, playerId: pid, pick: body.pick, ts: new Date().toISOString() }
     try {
-      await publishClientTip({
-        type: 'bracket',
-        team: body.team,
-        playerId: pid,
-        pick: body.pick,
-        ts: new Date().toISOString(),
-      })
+      await publishClientTip(bracketEvent)
     } catch (e) {
-      console.warn('ntfy bracket publish failed', e?.message || e)
+      console.warn('ntfy bracket publish failed, queued for retry', e?.message || e)
+      queuePendingSync(bracketEvent)
     }
     saveOfflineBracket(body.team, pid, body.pick)
     return { ok: true, playerId: pid, bridge: true, ledger: 'ntfy-client' }
   }
 
   if (onBridge && path === '/bracket-result' && method === 'PATCH' && body?.team && body?.actual) {
+    const resultEvent = { type: 'bracket-result', team: body.team, actual: body.actual, ts: new Date().toISOString() }
     try {
-      await publishClientTip({
-        type: 'bracket-result',
-        team: body.team,
-        actual: body.actual,
-        ts: new Date().toISOString(),
-      })
+      await publishClientTip(resultEvent)
       return { ok: true, bridge: true, ledger: 'ntfy-client' }
     } catch (e) {
-      console.warn('ntfy bracket-result publish failed', e?.message || e)
-      return { ok: false, bridge: true }
+      console.warn('ntfy bracket-result publish failed, queued for retry', e?.message || e)
+      queuePendingSync(resultEvent)
+      return { ok: true, bridge: true, pending: true }
     }
   }
 
   if (onBridge && path === '/chat' && method === 'PATCH' && body?.text) {
     const user = getStoredUser()
+    const chatEvent = {
+      type: 'chat',
+      playerId: user?.id,
+      name: user?.name,
+      admin: user?.role === 'admin',
+      text: String(body.text),
+      ts: new Date().toISOString(),
+    }
     try {
-      await publishClientTip({
-        type: 'chat',
-        playerId: user?.id,
-        name: user?.name,
-        admin: user?.role === 'admin',
-        text: String(body.text),
-        ts: new Date().toISOString(),
-      })
+      await publishClientTip(chatEvent)
       return { ok: true, bridge: true }
     } catch (e) {
-      console.warn('ntfy chat publish failed', e?.message || e)
-      return { ok: false, bridge: true }
+      console.warn('ntfy chat publish failed, queued for retry', e?.message || e)
+      queuePendingSync(chatEvent)
+      return { ok: true, bridge: true, pending: true }
     }
   }
 
   if (onBridge && path === '/result' && method === 'PATCH' && body) {
     const user = getStoredUser()
+    const resultEvent = {
+      type: 'result',
+      matchId: body.matchId,
+      h: body.h,
+      a: body.a,
+      overtime: !!body.overtime,
+      otH: body.otH,
+      otA: body.otA,
+      penalties: !!body.penalties,
+      penH: body.penH,
+      penA: body.penA,
+      qual: body.qual ?? null,
+      setBy: user?.id || 'admin',
+      ts: new Date().toISOString(),
+    }
     try {
-      await publishClientTip({
-        type: 'result',
-        matchId: body.matchId,
-        h: body.h,
-        a: body.a,
-        overtime: !!body.overtime,
-        otH: body.otH,
-        otA: body.otA,
-        penalties: !!body.penalties,
-        penH: body.penH,
-        penA: body.penA,
-        qual: body.qual ?? null,
-        setBy: user?.id || 'admin',
-        ts: new Date().toISOString(),
-      })
+      await publishClientTip(resultEvent)
     } catch (e) {
-      console.warn('ntfy result publish failed', e?.message || e)
+      console.warn('ntfy result publish failed, queued for retry', e?.message || e)
+      queuePendingSync(resultEvent)
     }
   }
 

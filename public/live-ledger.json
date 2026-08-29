@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-08-29T14:36:26.264Z",
+  "updatedAt": "2026-08-29T16:44:35.352Z",
   "predictions": {
     "ucl-aek-2": {
       "boikos": {
@@ -192,6 +192,18 @@
         "penH": 0,
         "penA": 0,
         "savedAt": "2026-08-29T09:22:15.854Z"
+      },
+      "mavromichalis": {
+        "h": 1,
+        "a": 2,
+        "qual": null,
+        "predOT": false,
+        "otH": 0,
+        "otA": 0,
+        "predPen": false,
+        "penH": 0,
+        "penA": 0,
+        "savedAt": "2026-08-29T16:44:26.412913Z"
       }
     },
     "sl-2-7": {
@@ -431,6 +443,14 @@
       "penH": 0,
       "penA": 0,
       "ts": "2026-08-29T14:11:35.987Z"
+    },
+    {
+      "type": "tip",
+      "matchId": "sl-2-4",
+      "playerId": "mavromichalis",
+      "h": 1,
+      "a": 2,
+      "ts": "2026-08-29T16:44:26.412913Z"
     }
   ]
 }
