@@ -1,6 +1,7 @@
 // KOUVADEIROS Worker v14
 // Reminders: 30' + 20' before kickoff · Lock/reveal: 15' before
 // ΘΑΥΜΑ/ΩΣΑΝΑ late goal detection · Ο Κουβάς end-of-day tabloid
+// Deploy nudge 2026-08-29: Cloudflare secrets added — go primary again.
 
 import {
   buildEdition,
