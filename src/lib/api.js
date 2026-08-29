@@ -135,6 +135,7 @@ function mergeTipEventsIntoState(state, events) {
   const predictions = { ...(state?.predictions || {}) }
   const results = { ...(state?.results || {}) }
   const revealed = { ...(state?.revealed || {}) }
+  const chatEvents = []
   for (const ev of events || []) {
     const isTip =
       ev.type === 'tip' ||
@@ -169,13 +170,19 @@ function mergeTipEventsIntoState(state, events) {
         source: 'bridge',
       }
       revealed[ev.matchId] = true
+    } else if (ev.type === 'chat' && ev.text) {
+      chatEvents.push({ p: ev.name || ev.playerId || '?', t: ev.text, ts: ev.ts || new Date().toISOString(), a: !!ev.admin })
     }
   }
+  // ntfy retains the full 48h window every poll — rebuild chat from scratch
+  // each time (sorted) rather than appending, or messages would duplicate.
+  chatEvents.sort((a, b) => new Date(a.ts) - new Date(b.ts))
   return {
     ...state,
     predictions: mergeSeededPredictions(predictions),
     results: applyTipResultLocks(results).results,
     revealed,
+    chat: chatEvents.length ? chatEvents.slice(-200) : (state?.chat || []),
   }
 }
 
@@ -453,6 +460,24 @@ async function call(method, path, body) {
       })
     } catch { /* ack optional */ }
     return { ok: true, bridge: true, ledger: 'ntfy-client' }
+  }
+
+  if (onBridge && path === '/chat' && method === 'PATCH' && body?.text) {
+    const user = getStoredUser()
+    try {
+      await publishClientTip({
+        type: 'chat',
+        playerId: user?.id,
+        name: user?.name,
+        admin: user?.role === 'admin',
+        text: String(body.text),
+        ts: new Date().toISOString(),
+      })
+      return { ok: true, bridge: true }
+    } catch (e) {
+      console.warn('ntfy chat publish failed', e?.message || e)
+      return { ok: false, bridge: true }
+    }
   }
 
   if (onBridge && path === '/result' && method === 'PATCH' && body) {
