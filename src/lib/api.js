@@ -372,10 +372,35 @@ async function workerLoginSafe() {
   return false
 }
 
+/**
+ * Explicit fallback: Worker /ping was healthy but /login itself failed
+ * (KV write-quota exhausted, transient 5xx, network). Try the Pages bridge
+ * before giving up to fully-offline — keeps tips shared instead of stuck
+ * on one device. Restores BASE/bridgeMode to the Worker on failure so the
+ * next call() still tries Worker-primary first.
+ */
+async function tryBridgeLogin(email, password) {
+  if (!bridgeAvailableHost()) return null
+  const bridge = await probeHost(BRIDGE_BASE)
+  if (!bridge || !(bridge.bridge === true || bridge.loginFixed === true)) return null
+  const prevBase = BASE
+  BASE = BRIDGE_BASE
+  try {
+    const remote = await postLogin(email, password, 6000)
+    if (remote?.token) {
+      bridgeMode = true
+      return remote
+    }
+  } catch { /* fall through */ }
+  BASE = prevBase
+  return null
+}
+
 async function postLogin(email, password, ms = 6000) {
+  const targetBase = BASE
   const { signal, clear } = abortableTimeout(ms)
   try {
-    const res = await fetch(`${BASE}/login`, {
+    const res = await fetch(`${targetBase}/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
@@ -383,8 +408,10 @@ async function postLogin(email, password, ms = 6000) {
     })
     clear()
     if (!res.ok) {
-      // 5xx / CF 1101 HTML → mark broken so we stop hammering /login this session
-      if (res.status >= 500) markWorkerLoginBroken()
+      // 5xx / CF 1101 HTML → mark the WORKER broken so we stop hammering its
+      // /login this session. Only meaningful for the Worker — the bridge's
+      // HMAC login never hangs the way the old v11 /login did.
+      if (res.status >= 500 && targetBase === WORKER_BASE) markWorkerLoginBroken()
       const err = new Error(`POST /login → ${res.status}`)
       err.status = res.status
       throw err
@@ -394,7 +421,7 @@ async function postLogin(email, password, ms = 6000) {
     clear()
     // CORS-masked 1101 surfaces as TypeError / Failed to fetch
     const msg = String(e?.message || e)
-    if (!e?.status && /fetch|network|abort|cors/i.test(msg)) markWorkerLoginBroken()
+    if (!e?.status && targetBase === WORKER_BASE && /fetch|network|abort|cors/i.test(msg)) markWorkerLoginBroken()
     throw e
   }
 }
@@ -603,6 +630,13 @@ async function loginWithFallback(email, password) {
       const status = e?.status || (msg.includes('→ 401') ? 401 : msg.includes('→ 403') ? 403 : 0)
       // Auth rejected and no local roster match → hard fail
       if ((status === 401 || status === 403) && !local) throw new Error(`POST /login → ${status}`)
+      // Worker /ping was healthy but /login itself failed (5xx — e.g. KV
+      // write-quota exhausted, or network) → try the shared bridge before
+      // falling all the way to fully-offline (which loses cross-device sync).
+      if (status === 0 || status >= 500) {
+        const bridgeUser = await tryBridgeLogin(emailForWorker, passNorm)
+        if (bridgeUser?.token) return bridgeUser
+      }
       // Hang / network / Worker user gap → offline for known roster
       if (local) return local
       if (status === 401 || status === 403) throw new Error(`POST /login → ${status}`)
