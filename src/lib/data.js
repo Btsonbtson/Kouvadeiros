@@ -414,6 +414,14 @@ export const MATCH_ODDS = {
   'sl-1-5':      { h: 1.25, d: 5.05, a: 14.75 },  // PAO–KIF
   'sl-1-6':      { h: 2.63, d: 3.05, a: 2.75 },   // PNE–AST
   'sl-1-7':      { h: 1.29, d: 4.90, a: 11.50 },  // PAOK–LEV
+  // Super League · Αγωνιστική 2 (bookmaker consensus 29/8/2026)
+  'sl-2-4':      { h: 2.01, d: 3.50, a: 3.85 },   // VOL–IRA · Σαβ 29/8
+  'sl-2-7':      { h: 2.11, d: 3.27, a: 3.44 },   // PNE–KAL · Σαβ 29/8
+  'sl-2-2':      { h: 1.60, d: 3.95, a: 5.25 },   // ARI–OFI · Κυρ 30/8
+  'sl-2-3':      { h: 4.35, d: 4.00, a: 1.58 },   // ATR–PAOK · Κυρ 30/8
+  'sl-2-1':      { h: 5.00, d: 4.50, a: 1.34 },   // AST–OLY · Κυρ 30/8
+  'sl-2-5':      { h: 4.95, d: 4.60, a: 1.36 },   // KIF–AEK · Κυρ 30/8
+  'sl-2-6':      { h: 6.30, d: 3.90, a: 1.53 },   // LEV–PAO · Δευ 31/8
 }
 
 export function getMatchOdds(matchId) {
