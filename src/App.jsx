@@ -779,7 +779,11 @@ function HistoryPage({predictions,results}){
 
 function BanterPage({chat,onSend,onRead}){
   const [txt,setTxt]=useState('');const ref=useRef()
-  useEffect(()=>{ref.current?.scrollIntoView({behavior:'smooth'});onRead?.()},[chat])
+  // Depend on length + last message id, not the array reference — `chat` is a
+  // fresh array on every state poll even when no new message arrived.
+  const lastMsg = chat?.[chat.length-1]
+  const chatKey = `${chat?.length||0}:${lastMsg?.ts||''}`
+  useEffect(()=>{ref.current?.scrollIntoView({behavior:'smooth'});onRead?.()},[chatKey])
   function send(){if(!txt.trim())return;onSend(txt);setTxt('')}
   return <div style={{display:'flex',flexDirection:'column',flex:1,minHeight:0,height:'100%'}}>
     <div style={{padding:'10px 16px',borderBottom:`1px solid ${LINE}`,background:'rgba(10,11,15,.45)',backdropFilter:'blur(10px)',flexShrink:0}}>
