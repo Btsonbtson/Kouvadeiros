@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-08-29T06:54:29.427Z",
+  "updatedAt": "2026-08-29T09:24:22.745Z",
   "predictions": {
     "ucl-aek-2": {
       "boikos": {
@@ -153,6 +153,72 @@
         "penA": 0,
         "savedAt": "2026-08-27T17:06:51.214719Z"
       }
+    },
+    "sl-2-3": {
+      "boikos": {
+        "h": 0,
+        "a": 0,
+        "qual": null,
+        "predOT": false,
+        "otH": 0,
+        "otA": 0,
+        "predPen": false,
+        "penH": 0,
+        "penA": 0,
+        "savedAt": "2026-08-29T08:28:51.110Z"
+      }
+    },
+    "sl-2-4": {
+      "boikos": {
+        "h": 3,
+        "a": 1,
+        "qual": null,
+        "predOT": false,
+        "otH": 0,
+        "otA": 0,
+        "predPen": false,
+        "penH": 0,
+        "penA": 0,
+        "savedAt": "2026-08-29T08:26:02.115Z"
+      },
+      "chousiadas": {
+        "h": 3,
+        "a": 1,
+        "qual": null,
+        "predOT": false,
+        "otH": 0,
+        "otA": 0,
+        "predPen": false,
+        "penH": 0,
+        "penA": 0,
+        "savedAt": "2026-08-29T09:22:15.854Z"
+      }
+    },
+    "sl-2-7": {
+      "boikos": {
+        "h": 2,
+        "a": 1,
+        "qual": null,
+        "predOT": false,
+        "otH": 0,
+        "otA": 0,
+        "predPen": false,
+        "penH": 0,
+        "penA": 0,
+        "savedAt": "2026-08-29T08:26:42.425Z"
+      },
+      "chousiadas": {
+        "h": 2,
+        "a": 1,
+        "qual": null,
+        "predOT": false,
+        "otH": 0,
+        "otA": 0,
+        "predPen": false,
+        "penH": 0,
+        "penA": 0,
+        "savedAt": "2026-08-29T09:21:16.512Z"
+      }
     }
   },
   "results": {
@@ -198,6 +264,14 @@
   "events": [
     {
       "type": "tip",
+      "matchId": "diag-test",
+      "playerId": "diag",
+      "h": 9,
+      "a": 9,
+      "ts": "diag"
+    },
+    {
+      "type": "tip",
       "matchId": "sl-2-3",
       "playerId": "boikos",
       "h": 5,
@@ -210,6 +284,111 @@
       "penH": 0,
       "penA": 0,
       "ts": "2026-08-29T06:14:04.045Z"
+    },
+    {
+      "type": "tip",
+      "matchId": "sl-2-4",
+      "playerId": "boikos",
+      "h": 3,
+      "a": 1,
+      "qual": null,
+      "predOT": false,
+      "otH": 0,
+      "otA": 0,
+      "predPen": false,
+      "penH": 0,
+      "penA": 0,
+      "ts": "2026-08-29T08:26:02.115Z"
+    },
+    {
+      "type": "tip",
+      "matchId": "sl-2-7",
+      "playerId": "boikos",
+      "h": 2,
+      "a": 1,
+      "qual": null,
+      "predOT": false,
+      "otH": 0,
+      "otA": 0,
+      "predPen": false,
+      "penH": 0,
+      "penA": 0,
+      "ts": "2026-08-29T08:26:42.425Z"
+    },
+    {
+      "type": "tip",
+      "matchId": "sl-2-3",
+      "playerId": "boikos",
+      "h": 5,
+      "a": 5,
+      "qual": null,
+      "predOT": false,
+      "otH": 0,
+      "otA": 0,
+      "predPen": false,
+      "penH": 0,
+      "penA": 0,
+      "ts": "2026-08-29T08:28:23.618Z"
+    },
+    {
+      "type": "tip",
+      "matchId": "sl-2-3",
+      "playerId": "boikos",
+      "h": 5,
+      "a": 5,
+      "qual": null,
+      "predOT": false,
+      "otH": 0,
+      "otA": 0,
+      "predPen": false,
+      "penH": 0,
+      "penA": 0,
+      "ts": "2026-08-29T08:28:44.552Z"
+    },
+    {
+      "type": "tip",
+      "matchId": "sl-2-3",
+      "playerId": "boikos",
+      "h": 0,
+      "a": 0,
+      "qual": null,
+      "predOT": false,
+      "otH": 0,
+      "otA": 0,
+      "predPen": false,
+      "penH": 0,
+      "penA": 0,
+      "ts": "2026-08-29T08:28:51.110Z"
+    },
+    {
+      "type": "tip",
+      "matchId": "sl-2-7",
+      "playerId": "chousiadas",
+      "h": 2,
+      "a": 1,
+      "qual": null,
+      "predOT": false,
+      "otH": 0,
+      "otA": 0,
+      "predPen": false,
+      "penH": 0,
+      "penA": 0,
+      "ts": "2026-08-29T09:21:16.512Z"
+    },
+    {
+      "type": "tip",
+      "matchId": "sl-2-4",
+      "playerId": "chousiadas",
+      "h": 3,
+      "a": 1,
+      "qual": null,
+      "predOT": false,
+      "otH": 0,
+      "otA": 0,
+      "predPen": false,
+      "penH": 0,
+      "penA": 0,
+      "ts": "2026-08-29T09:22:15.854Z"
     }
   ]
 }
