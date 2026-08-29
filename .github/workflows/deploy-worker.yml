@@ -59,5 +59,10 @@ jobs:
           import json
           d=json.load(open('/tmp/ping.json'))
           assert d.get('ok') is True, d
-          print('Worker OK version=', d.get('version'))
+          assert d.get('bridge') is not True, f"this URL is answering as the bridge, not the Worker: {d}"
+          version = d.get('version')
+          assert isinstance(version, (int, float)) and version >= 13, f"Worker version {version} still has broken /login (CF 1101)"
+          assert d.get('loginFixed') is True, f"Worker ping must advertise loginFixed:true: {d}"
+          print('Worker OK version=', version, 'loginFixed=', d.get('loginFixed'))
+          print('::notice::Run `node scripts/import-ledger-to-worker.mjs` once to migrate bridge-era tips into this Worker.')
           PY
