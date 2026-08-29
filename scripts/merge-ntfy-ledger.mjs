@@ -36,6 +36,8 @@ const SKIP_MATCH_IDS = new Set(['test', 'diag-test'])
 
 const predictions = {}
 const results = {}
+const brackets = {}
+const bracketResults = {}
 for (const ev of events) {
   if (SKIP_MATCH_IDS.has(ev.matchId)) continue
   const isTip =
@@ -69,36 +71,52 @@ for (const ev of events) {
       setAt: ev.ts || null,
       source: 'bridge',
     }
+  } else if (ev.type === 'bracket' && ev.team && ev.playerId && ev.pick) {
+    if (!brackets[ev.team]) brackets[ev.team] = {}
+    brackets[ev.team][ev.playerId] = ev.pick
+  } else if (ev.type === 'bracket-result' && ev.team && ev.actual) {
+    bracketResults[ev.team] = ev.actual
   }
 }
 
-let prev = { predictions: {}, results: {}, events: [] }
+let prev = { predictions: {}, results: {}, brackets: {}, bracketResults: {}, events: [] }
 try {
   prev = JSON.parse(fs.readFileSync(ledgerPath, 'utf8'))
 } catch { /* fresh */ }
 
-// Merge: keep prior tips not present in this poll (ntfy retention window)
+// Merge: keep prior tips/picks not present in this poll (ntfy retention window)
 const mergedPreds = { ...(prev.predictions || {}) }
 for (const [mid, row] of Object.entries(predictions)) {
   mergedPreds[mid] = { ...(mergedPreds[mid] || {}), ...row }
 }
 const mergedResults = { ...(prev.results || {}), ...results }
+const mergedBrackets = { ...(prev.brackets || {}) }
+for (const [team, row] of Object.entries(brackets)) {
+  mergedBrackets[team] = { ...(mergedBrackets[team] || {}), ...row }
+}
+const mergedBracketResults = { ...(prev.bracketResults || {}), ...bracketResults }
 
 const next = {
   version: 1,
   updatedAt: new Date().toISOString(),
   predictions: mergedPreds,
   results: mergedResults,
+  brackets: mergedBrackets,
+  bracketResults: mergedBracketResults,
   events: events.slice(-200),
 }
 
 const prevStr = JSON.stringify({
   predictions: prev.predictions || {},
   results: prev.results || {},
+  brackets: prev.brackets || {},
+  bracketResults: prev.bracketResults || {},
 })
 const nextStr = JSON.stringify({
   predictions: next.predictions,
   results: next.results,
+  brackets: next.brackets,
+  bracketResults: next.bracketResults,
 })
 if (prevStr === nextStr) {
   console.log('no tip ledger changes')
@@ -110,4 +128,5 @@ console.log(
   'updated live-ledger.json',
   'matches=', Object.keys(next.predictions).length,
   'results=', Object.keys(next.results).length,
+  'brackets=', Object.keys(next.brackets).length,
 )

@@ -1,4 +1,4 @@
-import { mergeSeededPredictions, applyTipResultLocks } from './data.js'
+import { mergeSeededPredictions, applyTipResultLocks, LEAGUE_PHASE_TEAMS, BRACKET_OPTIONS } from './data.js'
 
 const WORKER_BASE = (typeof __WORKER_URL__ !== 'undefined' && __WORKER_URL__)
   ? __WORKER_URL__
@@ -28,6 +28,7 @@ function bridgeAvailableHost() {
 let BASE = WORKER_BASE
 
 const OFFLINE_PREDS_KEY = 'kouv_offline_preds'
+const OFFLINE_BRACKETS_KEY = 'kouv_offline_brackets'
 
 /**
  * Original CareDirect roster — same passwords as worker BASE_USERS.
@@ -135,6 +136,10 @@ function mergeTipEventsIntoState(state, events) {
   const predictions = { ...(state?.predictions || {}) }
   const results = { ...(state?.results || {}) }
   const revealed = { ...(state?.revealed || {}) }
+  const brackets = Object.fromEntries(
+    Object.entries(state?.brackets || {}).map(([team, byPlayer]) => [team, { ...(byPlayer || {}) }]),
+  )
+  const bracketResults = { ...(state?.bracketResults || {}) }
   const chatEvents = []
   for (const ev of events || []) {
     const isTip =
@@ -172,6 +177,11 @@ function mergeTipEventsIntoState(state, events) {
       revealed[ev.matchId] = true
     } else if (ev.type === 'chat' && ev.text) {
       chatEvents.push({ p: ev.name || ev.playerId || '?', t: ev.text, ts: ev.ts || new Date().toISOString(), a: !!ev.admin })
+    } else if (ev.type === 'bracket' && ev.team && ev.playerId && BRACKET_OPTIONS.includes(ev.pick)) {
+      if (!brackets[ev.team]) brackets[ev.team] = {}
+      brackets[ev.team][ev.playerId] = ev.pick
+    } else if (ev.type === 'bracket-result' && ev.team && BRACKET_OPTIONS.includes(ev.actual)) {
+      bracketResults[ev.team] = ev.actual
     }
   }
   // ntfy retains the full 48h window every poll — rebuild chat from scratch
@@ -182,6 +192,8 @@ function mergeTipEventsIntoState(state, events) {
     predictions: mergeSeededPredictions(predictions),
     results: applyTipResultLocks(results).results,
     revealed,
+    brackets,
+    bracketResults,
     chat: chatEvents.length ? chatEvents.slice(-200) : (state?.chat || []),
   }
 }
@@ -213,6 +225,32 @@ function writeOfflinePredictions(predictions) {
   try {
     localStorage.setItem(OFFLINE_PREDS_KEY, JSON.stringify(predictions || {}))
   } catch { /* quota / private mode */ }
+}
+
+function readOfflineBrackets() {
+  try {
+    const raw = localStorage.getItem(OFFLINE_BRACKETS_KEY)
+    if (!raw) return {}
+    const parsed = JSON.parse(raw)
+    return parsed && typeof parsed === 'object' ? parsed : {}
+  } catch {
+    return {}
+  }
+}
+
+function writeOfflineBrackets(brackets) {
+  try {
+    localStorage.setItem(OFFLINE_BRACKETS_KEY, JSON.stringify(brackets || {}))
+  } catch { /* quota / private mode */ }
+}
+
+/** Merge a bracket pick into the offline localStorage ledger (mirrors saveOfflinePrediction). */
+export function saveOfflineBracket(team, playerId, pick) {
+  if (!team || !playerId || !pick) return readOfflineBrackets()
+  const all = readOfflineBrackets()
+  all[team] = { ...(all[team] || {}), [playerId]: pick }
+  writeOfflineBrackets(all)
+  return all
 }
 
 /** Merge a tip into the offline localStorage ledger (survives reload + state sync). */
@@ -260,6 +298,8 @@ function offlineState() {
     revealed,
     thavmaStats: {},
     kickoffOverrides: {},
+    brackets: readOfflineBrackets(),
+    bracketResults: {},
     offline: true,
   }
 }
@@ -436,6 +476,12 @@ async function call(method, path, body) {
       saveOfflinePrediction(body.matchId, user.id, body)
       return { ok: true, offline: true, persisted: true }
     }
+    if (path === '/bracket' && method === 'PATCH' && body?.team && body?.pick) {
+      const user = getStoredUser()
+      if (!user?.id) return { ok: false, offline: true }
+      saveOfflineBracket(body.team, user.id, body.pick)
+      return { ok: true, offline: true, persisted: true }
+    }
     if (method === 'GET') return {}
     return { ok: true, offline: true }
   }
@@ -487,6 +533,41 @@ async function call(method, path, body) {
       })
     } catch { /* ack optional */ }
     return { ok: true, bridge: true, ledger: 'ntfy-client' }
+  }
+
+  // Bridge bracket pick save: browser → ntfy (shared), plus local mirror
+  if (onBridge && path === '/bracket' && method === 'PATCH' && body?.team && body?.pick) {
+    const user = getStoredUser()
+    const pid = (user?.role === 'admin' && body.playerId) ? body.playerId : user?.id
+    if (!pid) return { ok: false, offline: true }
+    try {
+      await publishClientTip({
+        type: 'bracket',
+        team: body.team,
+        playerId: pid,
+        pick: body.pick,
+        ts: new Date().toISOString(),
+      })
+    } catch (e) {
+      console.warn('ntfy bracket publish failed', e?.message || e)
+    }
+    saveOfflineBracket(body.team, pid, body.pick)
+    return { ok: true, playerId: pid, bridge: true, ledger: 'ntfy-client' }
+  }
+
+  if (onBridge && path === '/bracket-result' && method === 'PATCH' && body?.team && body?.actual) {
+    try {
+      await publishClientTip({
+        type: 'bracket-result',
+        team: body.team,
+        actual: body.actual,
+        ts: new Date().toISOString(),
+      })
+      return { ok: true, bridge: true, ledger: 'ntfy-client' }
+    } catch (e) {
+      console.warn('ntfy bracket-result publish failed', e?.message || e)
+      return { ok: false, bridge: true }
+    }
   }
 
   if (onBridge && path === '/chat' && method === 'PATCH' && body?.text) {
@@ -547,6 +628,14 @@ async function call(method, path, body) {
         return { ok: true, offline: true, persisted: true }
       }
     }
+    if (path === '/bracket' && method === 'PATCH' && body?.team && body?.pick) {
+      const prev = getStoredUser()
+      if (prev?.id) {
+        ensureOfflineSession(prev)
+        saveOfflineBracket(body.team, prev.id, body.pick)
+        return { ok: true, offline: true, persisted: true }
+      }
+    }
     throw new Error(`${method} ${path} → network`)
   }
 
@@ -559,6 +648,10 @@ async function call(method, path, body) {
       if (path === '/state' && method === 'GET') return offlineState()
       if (path === '/prediction' && method === 'PATCH' && body) {
         saveOfflinePrediction(body.matchId, prev.id, body)
+        return { ok: true, offline: true, persisted: true }
+      }
+      if (path === '/bracket' && method === 'PATCH' && body?.team && body?.pick) {
+        saveOfflineBracket(body.team, prev.id, body.pick)
         return { ok: true, offline: true, persisted: true }
       }
       if (method === 'GET') return {}
@@ -576,6 +669,14 @@ async function call(method, path, body) {
       if (prev?.id) {
         ensureOfflineSession(prev)
         saveOfflinePrediction(body.matchId, prev.id, body)
+        return { ok: true, offline: true, persisted: true }
+      }
+    }
+    if (path === '/bracket' && method === 'PATCH' && body?.team && body?.pick && res.status >= 500) {
+      const prev = getStoredUser()
+      if (prev?.id) {
+        ensureOfflineSession(prev)
+        saveOfflineBracket(body.team, prev.id, body.pick)
         return { ok: true, offline: true, persisted: true }
       }
     }
@@ -707,6 +808,16 @@ export async function tryUpgradeOfflineSession() {
       } catch { /* locked / network — keep local copy */ }
     }
 
+    // Push device-local bracket picks too
+    const localBrackets = readOfflineBrackets()
+    for (const [team, byPlayer] of Object.entries(localBrackets || {})) {
+      const pick = byPlayer?.[prev.id]
+      if (!pick || !LEAGUE_PHASE_TEAMS.includes(team) || !BRACKET_OPTIONS.includes(pick)) continue
+      try {
+        await call('PATCH', '/bracket', { team, pick })
+      } catch { /* locked / network — keep local copy */ }
+    }
+
     return remote
   } catch {
     return null
@@ -726,6 +837,8 @@ export const api = {
     call('PATCH', '/prediction', { matchId, h, a, qual, predOT, otH, otA, predPen, penH, penA }),
   saveResult: (matchId, h, a, ot, otH, otA, pen, penH, penA, qual) =>
     call('PATCH', '/result', { matchId, h, a, overtime: ot, otH, otA, penalties: pen, penH, penA, qual }),
+  saveBracket: (team, pick, playerId) => call('PATCH', '/bracket', { team, pick, playerId }),
+  saveBracketResult: (team, actual) => call('PATCH', '/bracket-result', { team, actual }),
   fetchScores: (matchId) => call('POST', '/fetch-scores', { matchId }),
   setKickoff: (matchId, athensTime, date) =>
     call('POST', '/set-kickoff', { matchId, athensTime, date }),

@@ -873,7 +873,7 @@ export function mergeScoringResults(results = {}, liveScores = {}, finishedHints
   return out
 }
 
-export function computeLeaderboard(fixtures, predictions, results) {
+export function computeLeaderboard(fixtures, predictions, results, brackets, bracketResults) {
   // Full tip ledger → score every finished fixture.
   // Sparse offline seeds only → locked Saturday baseline + later fixtures.
   const useBaseline = usesPointsBaseline(predictions)
@@ -887,6 +887,8 @@ export function computeLeaderboard(fixtures, predictions, results) {
       qual: 0,
       dq: 0,
       played: 0,
+      bracket: 0,
+      bracketDq: 0,
     }
   })
   fixtures.forEach((m) => {
@@ -904,6 +906,7 @@ export function computeLeaderboard(fixtures, predictions, results) {
       if (sc.qualCorrect) t[p].qual++
     })
   })
+  applyBracketScores(t, brackets, bracketResults)
   return PLAYERS.slice()
     .sort((a, b) => t[b].pts - t[a].pts)
     .map((p, i) => ({ player: p, rank: i + 1, ...t[p] }))
@@ -1028,6 +1031,79 @@ export const LOCK_BEFORE_MS = 15 * 60 * 1000
 export const isLocked = iso => Date.now() >= new Date(iso).getTime() - LOCK_BEFORE_MS
 /** True once lock window opens (reveal predictions; no more edits) */
 export const isRevealOpen = iso => isLocked(iso)
+
+// ── LEAGUE PHASE FINAL-STANDING BRACKET PREDICTIONS ─────────────────────────
+// One pick per team, per player, for where that team finishes its UEFA
+// League Phase: 1–8 (round of 16 direct), 9–16 / 17–24 (knockout playoff),
+// 25–36 (eliminated). Locks 15′ before that team's OWN first League Phase
+// match (same KO−15′ rule as everything else) — independent of any single
+// match lock. Correct pick = +1. No pick once the deadline passes and the
+// final bracket is known = −1 (DQ), same policy as a missed match tip.
+export const LEAGUE_PHASE_TEAMS = ['AEK', 'OLY', 'OFI', 'PAO']
+export const BRACKET_OPTIONS = ['1-8', '9-16', '17-24', '25-36']
+export const BRACKET_LABELS = {
+  AEK: 'ΑΕΚ · Champions League',
+  OLY: 'Ολυμπιακός · Europa League',
+  OFI: 'ΟΦΗ · Europa League',
+  PAO: 'Παναθηναϊκός · Conference League',
+}
+/** First League Phase fixture per team — gates the bracket-pick deadline. */
+export const BRACKET_FIRST_FIXTURE = {
+  AEK: 'ucl-aek-lp1',
+  OLY: 'uel-oly-lp1',
+  OFI: 'uel-ofi-lp1',
+  PAO: 'uecl-pao-lp1',
+}
+
+/** The fixture used to gate a team's bracket-pick lock, or null if not found. */
+export function bracketLockMatch(team, fixtures = ALL_FIXTURES) {
+  const id = BRACKET_FIRST_FIXTURE[team]
+  if (!id) return null
+  return fixtures.find((m) => m.id === id) || null
+}
+
+/** Bracket picks never lock while that team's first match kickoff is still TBD. */
+export function isBracketLocked(team, fixtures = ALL_FIXTURES) {
+  const m = bracketLockMatch(team, fixtures)
+  if (!m || m.postponed || m.timeTbd) return false
+  return isLocked(m.kickoff)
+}
+
+/** True once everyone's bracket picks for a team are revealed (same as locked). */
+export function isBracketRevealOpen(team, fixtures = ALL_FIXTURES) {
+  return isBracketLocked(team, fixtures)
+}
+
+/**
+ * Score one player's bracket pick for one team.
+ * `actual` unknown (League Phase not finished) → null, not yet scoreable.
+ */
+export function scoreBracketPick(pick, actual) {
+  if (actual == null) return null
+  if (!pick) return { points: -1, dq: true, exact: false }
+  return { points: pick === actual ? 1 : 0, dq: false, exact: pick === actual }
+}
+
+/**
+ * Fold bracket points into leaderboard totals in place.
+ * brackets: { AEK: { boikos: '1-8', ... }, ... } — picks per team per player.
+ * bracketResults: { AEK: '1-8', ... } — admin-set once a League Phase ends.
+ */
+export function applyBracketScores(totals, brackets = {}, bracketResults = {}) {
+  for (const team of LEAGUE_PHASE_TEAMS) {
+    const actual = bracketResults?.[team]
+    if (actual == null) continue
+    PLAYERS.forEach((p) => {
+      const pick = brackets?.[team]?.[p] || null
+      const sc = scoreBracketPick(pick, actual)
+      if (!sc || !totals[p]) return
+      totals[p].pts += sc.points
+      totals[p].bracket = (totals[p].bracket || 0) + (sc.exact ? 1 : 0)
+      totals[p].bracketDq = (totals[p].bracketDq || 0) + (sc.dq ? 1 : 0)
+    })
+  }
+  return totals
+}
 
 /** Live score window: kickoff → +200′ (wait for final even if late) */
 export const LIVE_AFTER_MIN = 200

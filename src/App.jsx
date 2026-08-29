@@ -10,6 +10,7 @@ import {
   anyLiveScoreActivity, msUntilNextLiveScoreBand, inLiveScoreBand,
   applyKickoffOverrides, athensYmd, athensHm, applyTipResultLocks,
   SEEDED_PREDICTIONS, mergeSeededPredictions,
+  LEAGUE_PHASE_TEAMS, BRACKET_OPTIONS, BRACKET_LABELS, bracketLockMatch, isBracketLocked, scoreBracketPick,
 } from './lib/data'
 import { mapPipelineToLiveScores } from './lib/pipelineScores'
 import { fetchClientLiveScores } from './lib/clientLiveScores'
@@ -852,8 +853,8 @@ function AddPlayerModal({ onClose, onAdded }) {
 
 
 // ─── DESKTOP SIDEBAR ─────────────────────────────────────────────────────────
-const LeaderSidebar = memo(function LeaderSidebar({ predictions, results, compact }) {
-  const board = computeLeaderboard(ALL_FIXTURES, predictions, results)
+const LeaderSidebar = memo(function LeaderSidebar({ predictions, results, brackets, bracketResults, compact }) {
+  const board = computeLeaderboard(ALL_FIXTURES, predictions, results, brackets, bracketResults)
   const maxPts = ALL_FIXTURES.filter(m=>results?.[m.id]!=null).length*2
   const hasLivePts = Object.values(results||{}).some(r=>r?.provisional)
   // Compact horizontal strip for mobile
@@ -1080,7 +1081,7 @@ function useBreakpoint() {
 
 export default function App({ user, onLogout }) {
   const [screen,  setScreen]  = useState('matchday')
-  const [state,   setState]   = useState({ predictions:{...SEEDED_PREDS}, results:{...SEEDED_RES}, chat:[], slStandings:[] })
+  const [state,   setState]   = useState({ predictions:{...SEEDED_PREDS}, results:{...SEEDED_RES}, chat:[], slStandings:[], brackets:{}, bracketResults:{} })
   const [liveScores, setLiveScores] = useState({})
   const [pipelineHints, setPipelineHints] = useState({})
   const [loading, setLoading] = useState(true)
@@ -1367,6 +1368,17 @@ export default function App({ user, onLogout }) {
     }catch{setSyncOk(false);throw new Error('Save failed')}finally{setSyncing(false)}
   }
 
+  async function saveBracket(team,pick){
+    setSyncing(true)
+    try{await api.saveBracket(team,pick);setState(prev=>({...prev,brackets:{...(prev.brackets||{}),[team]:{...((prev.brackets||{})[team]||{}),[user.id]:pick}}}));setSyncOk(true)}
+    catch{setSyncOk(false);throw new Error('Save failed')}finally{setSyncing(false)}
+  }
+  async function saveBracketResult(team,actual){
+    setSyncing(true)
+    try{await api.saveBracketResult(team,actual);setState(prev=>({...prev,bracketResults:{...(prev.bracketResults||{}),[team]:actual}}));setSyncOk(true)}
+    catch{setSyncOk(false);throw new Error('Save failed')}finally{setSyncing(false)}
+  }
+
   async function sendChat(text){
     const msg={p:user.name,t:text,ts:nowGR(),a:user.id==='boikos'}
     setState(prev=>{
@@ -1403,9 +1415,9 @@ export default function App({ user, onLogout }) {
   )
 
   const pages = screen === 'matchday' ? (
-    <MatchdayPage fixtures={fixtures} predictions={predictions} results={state.results} scoringResults={scoringResults} onRefresh={load} currentUser={user} revealed={state.revealed} onSave={savePrediction} liveScores={liveScores} pipelineHints={pipelineHints} slStandings={state.slStandings}/>
+    <MatchdayPage fixtures={fixtures} predictions={predictions} results={state.results} scoringResults={scoringResults} onRefresh={load} currentUser={user} revealed={state.revealed} onSave={savePrediction} liveScores={liveScores} pipelineHints={pipelineHints} slStandings={state.slStandings} brackets={state.brackets} bracketResults={state.bracketResults} onSaveBracket={saveBracket} onSaveBracketResult={saveBracketResult}/>
   ) : screen === 'league' ? (
-    <LeaguePage predictions={predictions} results={scoringResults} thavmaStats={state.thavmaStats}/>
+    <LeaguePage predictions={predictions} results={scoringResults} thavmaStats={state.thavmaStats} brackets={state.brackets} bracketResults={state.bracketResults}/>
   ) : screen === 'schedule' ? (
     <SchedulePage fixtures={fixtures} slStandings={state.slStandings}/>
   ) : screen === 'history' ? (
@@ -1443,7 +1455,7 @@ export default function App({ user, onLogout }) {
             height: screen==='banter' ? '100%' : undefined,
           }}>
             <div style={{position: screen==='banter' ? 'relative' : 'sticky', top: screen==='banter' ? undefined : 24, alignSelf:'start'}}>
-              <LeaderSidebar predictions={predictions} results={scoringResults}/>
+              <LeaderSidebar predictions={predictions} results={scoringResults} brackets={state.brackets} bracketResults={state.bracketResults}/>
             </div>
             <div style={{minWidth:0, display: screen==='banter' ? 'flex' : undefined, flexDirection:'column', minHeight: screen==='banter' ? 0 : undefined, flex: screen==='banter' ? 1 : undefined}}>
               {pages}
@@ -1463,7 +1475,7 @@ export default function App({ user, onLogout }) {
       <TabBackdrop bgUrl={tabBgs[screen]} fillChildren={screen==='banter'}>
         {screen!=='banter' && (
           <div style={{padding:'8px 16px 0'}}>
-            <LeaderSidebar predictions={predictions} results={scoringResults} compact/>
+            <LeaderSidebar predictions={predictions} results={scoringResults} brackets={state.brackets} bracketResults={state.bracketResults} compact/>
             <div style={{background:'rgba(8,9,13,.40)',borderRadius:12,padding:'10px 12px',marginTop:6,border:'1px solid rgba(255,255,255,.10)'}}>
               <div style={{fontSize:10,fontWeight:700,letterSpacing:'.08em',textTransform:'uppercase',color:'rgba(255,255,255,.45)',marginBottom:6}}>📈 Εξέλιξη Διαγωνισμού</div>
               <H2HGraph predictions={predictions} results={scoringResults}/>
@@ -1484,8 +1496,8 @@ export default function App({ user, onLogout }) {
     </div>
   )
 }// ─── LEAGUE PAGE ─────────────────────────────────────────────────────────────
-function LeaguePage({predictions,results,thavmaStats}){
-  const board=computeLeaderboard(ALL_FIXTURES,predictions,results)
+function LeaguePage({predictions,results,thavmaStats,brackets,bracketResults}){
+  const board=computeLeaderboard(ALL_FIXTURES,predictions,results,brackets,bracketResults)
   const [tab,setTab]=useState('standings')
   const [openPlayer,setOpenPlayer]=useState(null)
   const [openCat,setOpenCat]=useState({}) // `${playerId}:${cat}` → bool
@@ -1567,12 +1579,12 @@ function LeaguePage({predictions,results,thavmaStats}){
             <div style={{flex:1}}>
               <div style={{fontSize:14,fontWeight:700,color:TEXT}}>{PLAYER_NAMES[row.player]} <span style={{fontSize:11,color:MUTED}}>{expanded?'▾':'▸'}</span></div>
               <div style={{fontSize:10,color:MUTED,marginTop:1}}>
-                {row.exact} exact · {row.correct} 1Χ2 · <span style={{color:BLUE}}>{qualPts} πρόκριση</span> · {row.played} αγώνες
+                {row.exact} exact · {row.correct} 1Χ2 · <span style={{color:BLUE}}>{qualPts} πρόκριση</span>{(row.bracket||row.bracketDq)?<> · <span style={{color:row.bracket?GREEN:RED}}>{row.bracket||0} bracket{row.bracketDq?` (${row.bracketDq} DQ)`:''}</span></>:null} · {row.played} αγώνες
               </div>
             </div>
             <div style={{textAlign:'right'}}>
               <div style={{fontSize:22,fontWeight:900,color:pcr.p}}>{row.pts}<span style={{fontSize:12,color:MUTED,fontWeight:500}}>p</span></div>
-              <div style={{fontSize:9,color:MUTED,marginTop:2}}>{scorePts} σκορ + <span style={{color:BLUE}}>{qualPts}🔑</span></div>
+              <div style={{fontSize:9,color:MUTED,marginTop:2}}>{scorePts} σκορ + <span style={{color:BLUE}}>{qualPts}🔑</span>{(row.bracket||row.bracketDq)?<> + <span style={{color:row.bracket?GREEN:RED}}>{(row.bracket||0)-(row.bracketDq||0)}🏆</span></>:null}</div>
             </div>
           </button>
 
@@ -1737,12 +1749,98 @@ function LeaguePage({predictions,results,thavmaStats}){
   </div>
 }
 
+// ─── LEAGUE PHASE FINAL-STANDING BRACKET PICKER ──────────────────────────────
+function BracketPanel({fixtures,currentUser,brackets,bracketResults,onSaveBracket,onSaveBracketResult}){
+  const [open,setOpen]=useState(false)
+  const [busy,setBusy]=useState(null) // team currently saving
+  const [adminPick,setAdminPick]=useState({}) // team -> draft bracket before confirm
+  if(!currentUser) return null
+  return <div style={{background:SURF,border:`1px solid ${LINE}`,borderRadius:12,padding:'12px 14px',marginBottom:16}}>
+    <button type="button" onClick={()=>setOpen(o=>!o)} style={{display:'flex',alignItems:'center',justifyContent:'space-between',width:'100%',background:'none',border:'none',padding:0,cursor:'pointer',color:'inherit'}}>
+      <div>
+        <div style={{fontSize:13,fontWeight:800,color:TEXT}}>🏆 Τελική βαθμολογία League Phase</div>
+        <div style={{fontSize:10,color:MUTED,marginTop:2}}>1 πρόβλεψη ανά ομάδα · κλείδωμα 15′ πριν τον 1ο αγώνα κάθε ομάδας</div>
+      </div>
+      <span style={{fontSize:12,color:MUTED}}>{open?'▾':'▸'}</span>
+    </button>
+    {open && <div style={{marginTop:12,display:'flex',flexDirection:'column',gap:10}}>
+      {LEAGUE_PHASE_TEAMS.map(team=>{
+        const lockMatch=bracketLockMatch(team,fixtures)
+        const locked=isBracketLocked(team,fixtures)
+        const myPick=brackets?.[team]?.[currentUser.id]||null
+        const actual=bracketResults?.[team]||null
+        const deadlineLabel = !lockMatch ? '—' : lockMatch.timeTbd ? 'Ώρα TBA' : `${grDate(lockMatch.kickoff)} ${grKick(lockMatch)}`
+        async function pick(opt){
+          if(locked||busy) return
+          setBusy(team)
+          try{ await onSaveBracket(team,opt) }catch{}
+          setBusy(null)
+        }
+        async function confirmResult(){
+          const opt=adminPick[team]
+          if(!opt) return
+          setBusy(`res:${team}`)
+          try{ await onSaveBracketResult(team,opt) }catch{}
+          setBusy(null)
+        }
+        return <div key={team} style={{background:'rgba(255,255,255,.03)',border:`1px solid ${LINE}`,borderRadius:10,padding:'10px 12px'}}>
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:6}}>
+            <div style={{fontSize:12,fontWeight:700,color:TEXT}}>{BRACKET_LABELS[team]||team}</div>
+            <div style={{fontSize:9,color:locked?RED:MUTED}}>{locked?'🔒 Κλειδωμένο':`Κλείδωμα: ${deadlineLabel}`}</div>
+          </div>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:5}}>
+            {BRACKET_OPTIONS.map(opt=>{
+              const mine=myPick===opt
+              const isActual=actual===opt
+              return <button key={opt} type="button" disabled={locked||busy===team}
+                onClick={()=>pick(opt)}
+                style={{
+                  fontSize:11,fontWeight:800,padding:'8px 4px',borderRadius:8,cursor:locked?'default':'pointer',
+                  border:`1px solid ${isActual?GREEN:mine?BLUE:LINE}`,
+                  background:isActual?'rgba(0,255,136,.14)':mine?'rgba(77,159,255,.16)':'rgba(255,255,255,.04)',
+                  color:isActual?GREEN:mine?BLUE:MUTED,
+                  opacity:locked&&!mine&&!isActual?0.55:1,
+                }}>{opt}</button>
+            })}
+          </div>
+          {!locked && myPick && <div style={{fontSize:9,color:BLUE,marginTop:6}}>Η πρόβλεψή σου: {myPick}</div>}
+          {locked && <div style={{marginTop:8,paddingTop:8,borderTop:`1px solid ${LINE}`}}>
+            <div style={{fontSize:9,fontWeight:700,color:MUTED,textTransform:'uppercase',letterSpacing:'.05em',marginBottom:4}}>Προβλέψεις όλων</div>
+            <div style={{display:'flex',gap:10,flexWrap:'wrap'}}>
+              {PLAYERS.map(pid=>{
+                const p=brackets?.[team]?.[pid]
+                const sc=actual?scoreBracketPick(p,actual):null
+                return <div key={pid} style={{fontSize:10,color:MUTED}}>
+                  <span style={{color:PC[pid].p,fontWeight:700}}>{PLAYER_NAMES[pid]}</span>: {p||'—'}
+                  {sc && (sc.dq?<span style={{color:RED}}> (DQ −1)</span>:sc.exact?<span style={{color:GREEN}}> (+1)</span>:<span style={{color:MUTED}}> (0)</span>)}
+                </div>
+              })}
+            </div>
+            {!actual && currentUser.role==='admin' && <div style={{marginTop:8,display:'flex',gap:6,alignItems:'center'}}>
+              <select value={adminPick[team]||''} onChange={e=>setAdminPick(prev=>({...prev,[team]:e.target.value}))}
+                style={{fontSize:10,background:'#0d0f14',border:`1px solid ${LINE}`,borderRadius:6,color:TEXT,padding:'5px 6px'}}>
+                <option value="">Τελική θέση…</option>
+                {BRACKET_OPTIONS.map(o=><option key={o} value={o}>{o}</option>)}
+              </select>
+              <button type="button" disabled={!adminPick[team]||busy===`res:${team}`} onClick={confirmResult}
+                style={{fontSize:10,fontWeight:700,padding:'5px 10px',borderRadius:6,border:`1px solid ${GREEN}55`,background:'rgba(0,255,136,.12)',color:GREEN,cursor:'pointer'}}>
+                Καταχώρηση
+              </button>
+            </div>}
+            {actual && <div style={{fontSize:9,color:GREEN,marginTop:6}}>Τελική θέση: {actual}</div>}
+          </div>}
+        </div>
+      })}
+    </div>}
+  </div>
+}
+
 // ─── MATCHDAY PAGE ────────────────────────────────────────────────────────────
 /** Only tip-relevant fixtures — full-season dump (~180 cards) freezes score entry. */
 const PRED_HORIZON_MS = 14 * 24 * 3600 * 1000
 const PRED_KEEP_AFTER_KO_MS = 4 * 3600 * 1000
 
-function MatchdayPage({fixtures=ALL_FIXTURES,predictions,results,scoringResults,onRefresh,currentUser,revealed,onSave,liveScores,pipelineHints,slStandings}){
+function MatchdayPage({fixtures=ALL_FIXTURES,predictions,results,scoringResults,onRefresh,currentUser,revealed,onSave,liveScores,pipelineHints,slStandings,brackets,bracketResults,onSaveBracket,onSaveBracketResult}){
   const now=Date.now()
   const ONE_HOUR=3600000
   const isLive=(m,res)=>{
@@ -1775,6 +1873,7 @@ function MatchdayPage({fixtures=ALL_FIXTURES,predictions,results,scoringResults,
       return new Date(a.kickoff).getTime()-new Date(b.kickoff).getTime()
     })
   return <div style={{padding:'12px 16px 24px'}}>
+    <BracketPanel fixtures={fixtures} currentUser={currentUser} brackets={brackets} bracketResults={bracketResults} onSaveBracket={onSaveBracket} onSaveBracketResult={onSaveBracketResult}/>
     <div style={{fontSize:10,fontWeight:700,letterSpacing:'.08em',textTransform:'uppercase',color:MUTED,marginBottom:14}}>
       Χρονολογικά · Ζωντανοί αγώνες επάνω · πόντοι live · {sorted.length} αγώνες
     </div>
