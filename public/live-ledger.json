@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-08-29T09:24:22.745Z",
+  "updatedAt": "2026-08-29T14:36:26.264Z",
   "predictions": {
     "ucl-aek-2": {
       "boikos": {
@@ -219,6 +219,20 @@
         "penA": 0,
         "savedAt": "2026-08-29T09:21:16.512Z"
       }
+    },
+    "ucl-aek-lp1": {
+      "boikos": {
+        "h": 0,
+        "a": 0,
+        "qual": null,
+        "predOT": false,
+        "otH": 0,
+        "otA": 0,
+        "predPen": false,
+        "penH": 0,
+        "penA": 0,
+        "savedAt": "2026-08-29T14:11:35.987Z"
+      }
     }
   },
   "results": {
@@ -261,6 +275,12 @@
       "source": "bridge"
     }
   },
+  "brackets": {
+    "AEK": {
+      "boikos": "9-16"
+    }
+  },
+  "bracketResults": {},
   "events": [
     {
       "type": "tip",
@@ -389,6 +409,28 @@
       "penH": 0,
       "penA": 0,
       "ts": "2026-08-29T09:22:15.854Z"
+    },
+    {
+      "type": "bracket",
+      "team": "AEK",
+      "playerId": "boikos",
+      "pick": "9-16",
+      "ts": "2026-08-29T14:08:02.466Z"
+    },
+    {
+      "type": "tip",
+      "matchId": "ucl-aek-lp1",
+      "playerId": "boikos",
+      "h": 0,
+      "a": 0,
+      "qual": null,
+      "predOT": false,
+      "otH": 0,
+      "otA": 0,
+      "predPen": false,
+      "penH": 0,
+      "penA": 0,
+      "ts": "2026-08-29T14:11:35.987Z"
     }
   ]
 }
