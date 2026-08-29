@@ -65,14 +65,14 @@ export const SUPER_LEAGUE = [
   {id:'sl-1-6',t:'SL',md:1,home:'PNE', away:'AST', kickoff:'2026-08-23T18:30:00Z',round:'Αγωνιστική 1'}, // Κυρ 23/8 21:30
   {id:'sl-1-7',t:'SL',md:1,home:'PAOK',away:'LEV', kickoff:'2026-08-23T18:00:00Z',round:'Αγωνιστική 1'}, // Κυρ 23/8 21:00
 
-  // ── 2η Αγωνιστική ──
-  {id:'sl-2-1',t:'SL',md:2,home:'AST', away:'OLY', kickoff:'2026-08-29T17:00:00Z',round:'Αγωνιστική 2', timeTbd:true},
-  {id:'sl-2-2',t:'SL',md:2,home:'ARI', away:'OFI', kickoff:'2026-08-29T17:00:00Z',round:'Αγωνιστική 2', timeTbd:true},
-  {id:'sl-2-3',t:'SL',md:2,home:'ATR', away:'PAOK',kickoff:'2026-08-29T17:00:00Z',round:'Αγωνιστική 2', timeTbd:true},
-  {id:'sl-2-4',t:'SL',md:2,home:'VOL', away:'IRA', kickoff:'2026-08-29T17:00:00Z',round:'Αγωνιστική 2', timeTbd:true},
-  {id:'sl-2-5',t:'SL',md:2,home:'KIF', away:'AEK', kickoff:'2026-08-29T17:00:00Z',round:'Αγωνιστική 2', timeTbd:true},
-  {id:'sl-2-6',t:'SL',md:2,home:'LEV', away:'PAO', kickoff:'2026-08-29T17:00:00Z',round:'Αγωνιστική 2', timeTbd:true},
-  {id:'sl-2-7',t:'SL',md:2,home:'PNE', away:'KAL', kickoff:'2026-08-29T17:00:00Z',round:'Αγωνιστική 2', timeTbd:true},
+  // ── 2η Αγωνιστική — official times (slgr.gr, confirmed 29/8/2026) ──
+  {id:'sl-2-4',t:'SL',md:2,home:'VOL', away:'IRA', kickoff:'2026-08-29T16:30:00Z',round:'Αγωνιστική 2'}, // Σαβ 29/8 19:30
+  {id:'sl-2-7',t:'SL',md:2,home:'PNE', away:'KAL', kickoff:'2026-08-29T18:30:00Z',round:'Αγωνιστική 2'}, // Σαβ 29/8 21:30
+  {id:'sl-2-2',t:'SL',md:2,home:'ARI', away:'OFI', kickoff:'2026-08-30T16:30:00Z',round:'Αγωνιστική 2'}, // Κυρ 30/8 19:30
+  {id:'sl-2-3',t:'SL',md:2,home:'ATR', away:'PAOK',kickoff:'2026-08-30T17:15:00Z',round:'Αγωνιστική 2'}, // Κυρ 30/8 20:15
+  {id:'sl-2-1',t:'SL',md:2,home:'AST', away:'OLY', kickoff:'2026-08-30T18:00:00Z',round:'Αγωνιστική 2'}, // Κυρ 30/8 21:00
+  {id:'sl-2-5',t:'SL',md:2,home:'KIF', away:'AEK', kickoff:'2026-08-30T18:00:00Z',round:'Αγωνιστική 2'}, // Κυρ 30/8 21:00
+  {id:'sl-2-6',t:'SL',md:2,home:'LEV', away:'PAO', kickoff:'2026-08-31T16:30:00Z',round:'Αγωνιστική 2'}, // Δευ 31/8 19:30
 
   // ── 3η Αγωνιστική ──
   {id:'sl-3-1',t:'SL',md:3,home:'AEK', away:'ARI', kickoff:'2026-09-05T17:00:00Z',round:'Αγωνιστική 3', timeTbd:true},
