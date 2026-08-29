@@ -85,17 +85,64 @@ variables → Actions → New repository secret.
 | `FDORG_TOKEN` *(optional)* | Better live-score coverage (football-data.org) | Free account at [football-data.org/client/register](https://www.football-data.org/client/register) → API key from your account page. Gazzetta scraping still works without it. |
 | `CF_R2_ACCESS_KEY_ID` / `CF_R2_SECRET_ACCESS_KEY` *(optional)* | R2-backed live score image caching | Cloudflare dashboard → R2 → Manage R2 API Tokens → Create API Token (Object Read & Write), scoped to bucket `kouvadeiros-scores`. |
 
-Additionally, once the Worker is deployed, set these directly on the
-**Worker** (not GitHub) for WhatsApp reminders — `wrangler secret put <NAME>`
-from a machine with Cloudflare access, or via the dashboard's Worker →
-Settings → Variables → "Encrypt":
+Additionally, once the Worker is deployed, set these directly **on the
+Worker itself** (not GitHub — these are runtime secrets the Worker reads,
+not CI credentials) to enable WhatsApp reminders:
 
-| Worker secret | Purpose | Where to get it |
-|---|---|---|
-| `TWILIO_SID` | WhatsApp via Twilio | Twilio Console → Account SID |
-| `TWILIO_TOKEN` | WhatsApp via Twilio | Twilio Console → Auth Token |
-| `TWILIO_FROM` *(optional)* | WhatsApp sender number | Defaults to Twilio's sandbox `whatsapp:+14155238886` |
-| `ADMIN_PHONE` *(optional)* | Fallback contact number | Any E.164 number, e.g. `+3069...` |
+| Worker secret | Purpose |
+|---|---|
+| `TWILIO_SID` | WhatsApp via Twilio |
+| `TWILIO_TOKEN` | WhatsApp via Twilio |
+| `TWILIO_FROM` *(optional)* | Sender number — defaults to Twilio's sandbox `whatsapp:+14155238886` if unset |
+| `ADMIN_PHONE` *(optional)* | Fallback contact number, any E.164 format e.g. `+3069...` |
+
+### Get `TWILIO_SID` / `TWILIO_TOKEN`
+
+1. Sign in (or sign up free) at [twilio.com/console](https://www.twilio.com/console).
+2. The main Console dashboard shows **Account SID** directly — copy it as
+   `TWILIO_SID`.
+3. Next to it, **Auth Token** is masked — click "Show" (or the eye icon) to
+   reveal it, then copy it as `TWILIO_TOKEN`. Treat it like a password;
+   regenerate from the same page if it's ever exposed.
+
+### Enable WhatsApp (free sandbox — no business verification needed)
+
+Twilio's WhatsApp Sandbox is free and enough for a 3-player group:
+
+1. Console → **Messaging → Try it out → Send a WhatsApp message**.
+2. It shows a join code and the sandbox number `+1 415 523 8886`
+   (`whatsapp:+14155238886` — this is exactly the default `TWILIO_FROM`, so
+   you don't need to set that secret unless you later move to a real
+   WhatsApp Business number).
+3. **Each recipient** (Boikos, Mavromichalis, Chousiadas) must send
+   `join <the-code-shown>` once, from their own WhatsApp, to that sandbox
+   number. Until they do, Twilio will reject messages to their number.
+4. Sandbox sessions expire after ~72 hours of inactivity — if reminders
+   stop working after a quiet week, have everyone re-send the join message.
+
+### Add the secrets to the Worker
+
+Pick whichever is easier — both are equivalent and persist across future
+`wrangler deploy` runs from CI (they won't get wiped by GitHub Actions
+redeploys):
+
+**Dashboard** (no local setup needed):
+1. [dash.cloudflare.com](https://dash.cloudflare.com) → **Workers & Pages**
+   → select `kouvadeiros-api` → **Settings**
+2. Under **"Variables and Secrets"** → **Add**
+3. Type: **Secret**, Name: `TWILIO_SID`, Value: (paste). Click **Add
+   variable** to add another row for `TWILIO_TOKEN` the same way.
+4. Click **Deploy** to apply.
+
+**CLI** (needs `wrangler` + Cloudflare login locally):
+```bash
+npx wrangler@4 secret put TWILIO_SID -c worker/wrangler-api.toml
+npx wrangler@4 secret put TWILIO_TOKEN -c worker/wrangler-api.toml
+# optional:
+npx wrangler@4 secret put TWILIO_FROM -c worker/wrangler-api.toml
+npx wrangler@4 secret put ADMIN_PHONE -c worker/wrangler-api.toml
+```
+Each prompts for the value interactively (not shown/echoed).
 
 After adding `CLOUDFLARE_API_TOKEN` + `CF_ACCOUNT_ID`: re-run **Actions →
 Deploy Worker** (or push any change under `worker/`). The updated
