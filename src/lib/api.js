@@ -1,4 +1,4 @@
-import { mergeSeededPredictions, applyTipResultLocks, LEAGUE_PHASE_TEAMS, BRACKET_OPTIONS } from './data.js'
+import { mergeSeededPredictions, applyTipResultLocks, LEAGUE_PHASE_TEAMS, BRACKET_OPTIONS, isPlayerBlocked } from './data.js'
 
 const WORKER_BASE = (typeof __WORKER_URL__ !== 'undefined' && __WORKER_URL__)
   ? __WORKER_URL__
@@ -365,6 +365,7 @@ function resolveLocalUser(email, password) {
   const passNorm = String(password || '').trim()
   const user = LOCAL_USERS[key]
   if (!user || passNorm !== String(user.password)) return null
+  if (isPlayerBlocked(user.id)) return null
   const emailOut = ROSTER_CREDENTIALS.find((r) => r.id === user.id)?.email || key
   return {
     token: `local:${user.id}:${Date.now()}`,
@@ -381,6 +382,7 @@ function resolveLocalUser(email, password) {
 export function ensureOfflineSession(userLike) {
   const id = userLike?.id
   if (!id || !LOCAL_PHONES[id]) return null
+  if (isPlayerBlocked(id)) return null
   const row = ROSTER_CREDENTIALS.find((r) => r.id === id)
   const name = userLike.name || row?.name || id
   const role = userLike.role || (id === 'boikos' ? 'admin' : 'player')
@@ -524,6 +526,15 @@ async function postLogin(email, password, ms = 6000) {
 
 async function call(method, path, body) {
   if (isOfflineToken()) {
+    // Offline mode never round-trips to a server, so a device that already
+    // has a cached offline session for a now-blocked player would otherwise
+    // keep working indefinitely. Re-check on every call and force logout.
+    const offlineUser = getStoredUser()
+    if (offlineUser?.id && isPlayerBlocked(offlineUser.id)) {
+      clearAuth()
+      try { window.dispatchEvent(new Event('kouv:session-lost')) } catch {}
+      throw new Error('Access blocked')
+    }
     if (path === '/state' && method === 'GET') return offlineState()
     if (path === '/logout' && method === 'POST') return { ok: true }
     if (path === '/prediction' && method === 'PATCH' && body) {
@@ -837,6 +848,7 @@ export async function tryUpgradeOfflineSession() {
   if (!usingFallback) return null
   const prev = getStoredUser()
   if (!prev?.id) return null
+  if (isPlayerBlocked(prev.id)) return null
   const row = ROSTER_CREDENTIALS.find((r) => r.id === prev.id)
   if (!row) return null
   if (!(await workerLoginSafe()) || BASE !== WORKER_BASE) return null

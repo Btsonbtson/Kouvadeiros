@@ -27,6 +27,7 @@ import {
   LEAGUE_PHASE_TEAMS,
   BRACKET_OPTIONS,
   bracketLockMatch,
+  isPlayerBlocked,
 } from '../src/lib/data.js'
 import {
   pollGazzettaForMatches,
@@ -386,7 +387,13 @@ async function getUser(req, env) {
   const email = await env.KOUV.get(`token:${token}`)
   if (!email) return null
   const users = await getAllUsers(env)
-  return users[email] ? { ...users[email], email } : null
+  const user = users[email]
+  if (!user) return null
+  // Blocked players are rejected on every request, not just at /login — this
+  // invalidates any session/token they already hold immediately, since every
+  // call re-validates against the current (blocked) list.
+  if (isPlayerBlocked(user.id)) return null
+  return { ...user, email }
 }
 
 async function sendWA(env, to, body, mediaUrl) {
@@ -644,9 +651,10 @@ async function sendNewspaperEdition(env, { ymd, adminOnly = false, force = false
     return { ok: false, error: 'Already sent', edition: { splash: edition.headlines.splash, ranking: edition.ranking } }
   }
 
-  const targets = adminOnly
+  const targets = (adminOnly
     ? Object.values(users).filter((u) => u.role === 'admin')
     : Object.values(users)
+  ).filter((u) => !isPlayerBlocked(u.id))
 
   const pageUrl = `https://kouvadeiros-api.jboikos.workers.dev/newspaper?date=${ymd}&r=${round}`
   const mediaUrl = `https://kouvadeiros-api.jboikos.workers.dev/newspaper-media?date=${ymd}&slot=hero&r=${round}`
@@ -989,6 +997,7 @@ export default {
                   const q = result.qual ? ` · →${result.qual}` : ''
                   const msg = `🏁 *Αποτέλεσμα!*\n\n⚽ *${match.label}*\n*${tipLine}*${ot}${pen}${q}\n\nΔες τους πόντους: kouvadeiros.pages.dev`
                   for (const [, user] of Object.entries(users)) {
+                    if (isPlayerBlocked(user.id)) continue
                     const phone = phones[user.id]
                     if (phone) await sendWA(env, phone, msg)
                   }
@@ -998,6 +1007,7 @@ export default {
             } else if (score.isHT && !sent[`ht:${match.id}`]) {
               const msg = `⏸ *Ημίχρονο!* ${match.label}\n*${score.h}–${score.a}* (45')`
               for (const [, user] of Object.entries(users)) {
+                if (isPlayerBlocked(user.id)) continue
                 const phone = phones[user.id]
                 if (phone) await sendWA(env, phone, msg)
               }
@@ -1018,6 +1028,7 @@ export default {
         if (!(minsUntil <= target && minsUntil > target - 8)) continue
         const urgency = target === 30 ? '🟡' : '🔴'
         for (const user of Object.values(users)) {
+          if (isPlayerBlocked(user.id)) continue
           const phone = phones[user.id]
           if (!phone) continue
           if (state.predictions?.[match.id]?.[user.id]) continue
@@ -1065,6 +1076,7 @@ export default {
             `🔒 *ΚΛΕΙΔΩΜΑ!*\n\n⚽ *${match.label}*\nΠροβλέψεις κλειδωμένες · 15′ πριν τη σέντρα\n\n📊 *Προβλέψεις:*\n${predText}\n\nΠοιος θα έχει δίκιο; 🍔`
           let lockOk = false
           for (const user of Object.values(users)) {
+            if (isPlayerBlocked(user.id)) continue
             const phone = phones[user.id]
             if (!phone) continue
             const wa = await sendWA(env, phone, msg)
@@ -1114,6 +1126,7 @@ export default {
         const users = await getAllUsers(env)
         const user = users[email]
         if (!user || user.password !== password) return json({ error: 'Invalid credentials' }, 401)
+        if (isPlayerBlocked(user.id)) return json({ error: 'Access blocked' }, 403)
         const token = makeToken()
         try {
           await env.KOUV.put(`token:${token}`, email, { expirationTtl: 86400 * 30 })
@@ -1605,6 +1618,7 @@ export default {
           `kouvadeiros.pages.dev`
         for (const u of Object.values(users)) {
           if (!u?.id || u.id === user.id) continue
+          if (isPlayerBlocked(u.id)) continue
           const phone = phones[u.id]
           if (!phone) {
             waNotify.push({ id: u.id, ok: false, error: 'no phone' })
@@ -1668,6 +1682,10 @@ export default {
         const playerId = Object.entries(phones).find(([, p]) => p === from || p === `+${from}`)?.[0]
         const match = MATCHES.find((x) => x.id === matchId)
         const minsUntil = match ? (new Date(match.kickoff).getTime() - Date.now()) / 60000 : -999
+        if (playerId && isPlayerBlocked(playerId)) {
+          await sendWA(env, from, '❌ Δεν έχεις πλέον πρόσβαση.')
+          return new Response('<?xml version="1.0"?><Response/>', { headers: { 'Content-Type': 'text/xml' } })
+        }
         if (playerId && match && !state.results?.[matchId] && minsUntil > LOCK_TARGET) {
           if (!state.predictions) state.predictions = {}
           if (!state.predictions[matchId]) state.predictions[matchId] = {}

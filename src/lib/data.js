@@ -4,6 +4,21 @@ export const PLAYERS = ['boikos','mavromichalis','chousiadas']
 export const PLAYER_NAMES = { boikos:'Boikos', mavromichalis:'Mavromichalis', chousiadas:'Chousiadas' }
 export const PCOL = { boikos:'#ff2244', mavromichalis:'#ffdd00', chousiadas:'#00ff88' }
 
+/**
+ * Access-blocked player ids — 2026-08-30, on request. These players are
+ * removed from every login table (Worker BASE_USERS, bridge BASE_USERS,
+ * client LOCAL_USERS/ROSTER_CREDENTIALS) so they can no longer log in.
+ * getUser() on both the Worker and bridge also reject this list explicitly,
+ * which invalidates any session/token they already hold — not just future
+ * login attempts — since every request re-validates against this list.
+ * Historical tips/scores are intentionally NOT removed from the season
+ * ledger; this only blocks access, it does not erase the record.
+ */
+export const BLOCKED_PLAYER_IDS = ['mavromichalis', 'chousiadas']
+export function isPlayerBlocked(id) {
+  return BLOCKED_PLAYER_IDS.includes(id)
+}
+
 export const TEAMS = {
   PAO: {name:'Παναθηναϊκός',abbr:'PAO',color:'#1a7c2a'},
   KIF: {name:'Kifisia',abbr:'KIF',color:'#1a3c6a'},

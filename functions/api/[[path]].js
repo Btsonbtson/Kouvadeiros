@@ -17,7 +17,7 @@ import {
   json,
   publishLedgerEvent,
 } from '../_lib/kouv.js'
-import { LEAGUE_PHASE_TEAMS, BRACKET_OPTIONS, bracketLockMatch, applyKickoffOverrides } from '../../src/lib/data.js'
+import { LEAGUE_PHASE_TEAMS, BRACKET_OPTIONS, bracketLockMatch, applyKickoffOverrides, isPlayerBlocked } from '../../src/lib/data.js'
 
 function pathOf(context) {
   const parts = context.params?.path
@@ -60,6 +60,7 @@ export async function onRequest(context) {
       const password = String(body?.password || '')
       const user = BASE_USERS[email]
       if (!user || user.password !== password) return json({ error: 'Invalid credentials' }, 401)
+      if (isPlayerBlocked(user.id)) return json({ error: 'Access blocked' }, 403)
       const token = await issueToken(user, email)
       return json({
         token,

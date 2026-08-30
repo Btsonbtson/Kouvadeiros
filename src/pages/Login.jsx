@@ -1,5 +1,10 @@
 import { useState } from 'react'
 import { api, storeToken, storeUser, ROSTER_CREDENTIALS, quickLogin } from '../lib/api'
+import { isPlayerBlocked } from '../lib/data'
+
+// Blocked players' tiles are hidden from the login screen entirely — showing
+// a one-tap tile for an account that can no longer log in would be confusing.
+const VISIBLE_ROSTER = ROSTER_CREDENTIALS.filter((r) => !isPlayerBlocked(r.id))
 
 const BG='#08090d', SURF='#111318', LINE='rgba(255,255,255,.1)'
 const GREEN='#00ff88', RED='#ff2244', MUTED='rgba(255,255,255,.4)', GOLD='#ffdd00'
@@ -114,7 +119,7 @@ export default function Login({ onLogin }) {
                   Πρωτότυποι κωδικοί
                 </div>
                 <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-                  {ROSTER_CREDENTIALS.map((q) => (
+                  {VISIBLE_ROSTER.map((q) => (
                     <button
                       key={q.id}
                       type="button"
