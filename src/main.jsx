@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import App from './App'
 import Login from './pages/Login'
 import { getStoredUser, storeUser, hasSession, clearAuth, ensureOfflineSession, isOfflineToken, isBridgeToken, tryUpgradeOfflineSession } from './lib/api'
+import { isPlayerBlocked } from './lib/data'
 
 /** React-safe fatal UI — never wipe #root with innerHTML (that causes removeChild cascades). */
 function FatalScreen({ title, message }) {
@@ -87,6 +88,13 @@ class ErrorBoundary extends Component {
 function bootUser() {
   if (hasSession()) {
     const u = getStoredUser()
+    // Blocked players get rejected on the very next API call regardless
+    // (server-side re-validation, or the offline-mode check in call()) —
+    // reject here too so a cached session never even flashes the app shell.
+    if (u?.id && isPlayerBlocked(u.id)) {
+      clearAuth()
+      return null
+    }
     // If somehow we have a real token while Worker login is still broken,
     // keep the user but mark offline on next 401 demotion. Don't clear here.
     return u

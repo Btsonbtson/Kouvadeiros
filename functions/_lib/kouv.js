@@ -9,6 +9,7 @@ import {
   applyTipResultLocks,
   mergeSeededPredictions,
   BRACKET_OPTIONS,
+  isPlayerBlocked,
 } from '../../src/lib/data.js'
 
 export const CORS = {
@@ -115,6 +116,10 @@ export async function verifyToken(token) {
     if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) return null
     const user = BASE_USERS[payload.email]
     if (!user || user.id !== payload.id) return null
+    // Blocked players are rejected on every request — since bridge tokens are
+    // self-contained (not stored server-side), this is the only place that
+    // can invalidate an already-issued token, not just future logins.
+    if (isPlayerBlocked(user.id)) return null
     return { ...user, email: payload.email }
   } catch {
     return null
@@ -332,7 +337,9 @@ export async function getUser(req, env) {
     const email = await env.KOUV.get(`token:${token}`)
     if (!email) return null
     const users = await getAllUsers(env)
-    return users[email] ? { ...users[email], email } : null
+    const user = users[email]
+    if (!user || isPlayerBlocked(user.id)) return null
+    return { ...user, email }
   } catch {
     return null
   }
