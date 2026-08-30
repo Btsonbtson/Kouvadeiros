@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-08-29T20:14:48.693Z",
+  "updatedAt": "2026-08-30T00:06:33.612Z",
   "predictions": {
     "ucl-aek-2": {
       "boikos": {
@@ -461,6 +461,15 @@
       "qual": "OFI",
       "setAt": "2026-08-27T19:53:00.672740Z",
       "source": "bridge"
+    },
+    "sl-2-4": {
+      "h": 1,
+      "a": 1,
+      "overtime": false,
+      "penalties": false,
+      "qual": null,
+      "setAt": "2026-08-30T00:06:22.356564Z",
+      "source": "bridge"
     }
   },
   "brackets": {
@@ -470,111 +479,6 @@
   },
   "bracketResults": {},
   "events": [
-    {
-      "type": "tip",
-      "matchId": "sl-2-4",
-      "playerId": "boikos",
-      "h": 3,
-      "a": 1,
-      "qual": null,
-      "predOT": false,
-      "otH": 0,
-      "otA": 0,
-      "predPen": false,
-      "penH": 0,
-      "penA": 0,
-      "ts": "2026-08-29T08:26:02.115Z"
-    },
-    {
-      "type": "tip",
-      "matchId": "sl-2-7",
-      "playerId": "boikos",
-      "h": 2,
-      "a": 1,
-      "qual": null,
-      "predOT": false,
-      "otH": 0,
-      "otA": 0,
-      "predPen": false,
-      "penH": 0,
-      "penA": 0,
-      "ts": "2026-08-29T08:26:42.425Z"
-    },
-    {
-      "type": "tip",
-      "matchId": "sl-2-3",
-      "playerId": "boikos",
-      "h": 5,
-      "a": 5,
-      "qual": null,
-      "predOT": false,
-      "otH": 0,
-      "otA": 0,
-      "predPen": false,
-      "penH": 0,
-      "penA": 0,
-      "ts": "2026-08-29T08:28:23.618Z"
-    },
-    {
-      "type": "tip",
-      "matchId": "sl-2-3",
-      "playerId": "boikos",
-      "h": 5,
-      "a": 5,
-      "qual": null,
-      "predOT": false,
-      "otH": 0,
-      "otA": 0,
-      "predPen": false,
-      "penH": 0,
-      "penA": 0,
-      "ts": "2026-08-29T08:28:44.552Z"
-    },
-    {
-      "type": "tip",
-      "matchId": "sl-2-3",
-      "playerId": "boikos",
-      "h": 0,
-      "a": 0,
-      "qual": null,
-      "predOT": false,
-      "otH": 0,
-      "otA": 0,
-      "predPen": false,
-      "penH": 0,
-      "penA": 0,
-      "ts": "2026-08-29T08:28:51.110Z"
-    },
-    {
-      "type": "tip",
-      "matchId": "sl-2-7",
-      "playerId": "chousiadas",
-      "h": 2,
-      "a": 1,
-      "qual": null,
-      "predOT": false,
-      "otH": 0,
-      "otA": 0,
-      "predPen": false,
-      "penH": 0,
-      "penA": 0,
-      "ts": "2026-08-29T09:21:16.512Z"
-    },
-    {
-      "type": "tip",
-      "matchId": "sl-2-4",
-      "playerId": "chousiadas",
-      "h": 3,
-      "a": 1,
-      "qual": null,
-      "predOT": false,
-      "otH": 0,
-      "otA": 0,
-      "predPen": false,
-      "penH": 0,
-      "penA": 0,
-      "ts": "2026-08-29T09:22:15.854Z"
-    },
     {
       "type": "bracket",
       "team": "AEK",
@@ -829,6 +733,14 @@
       "penH": 0,
       "penA": 0,
       "ts": "2026-08-29T19:32:10.295Z"
+    },
+    {
+      "type": "result",
+      "matchId": "sl-2-4",
+      "h": 1,
+      "a": 1,
+      "setBy": "boikos",
+      "ts": "2026-08-30T00:06:22.356564Z"
     }
   ]
 }
